@@ -1,0 +1,95 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model User {
+  id           String   @id @default(cuid())
+  name         String
+  email        String   @unique
+  passwordHash String
+  createdAt    DateTime @default(now())
+
+  setting       Setting?
+  customers     Customer[]
+  oneTimeOrders OneTimeOrder[]
+}
+
+model Setting {
+  id                 String @id @default(cuid())
+  userId             String @unique
+  user               User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  businessName       String @default("My Dairy")
+  defaultPricePerUnit Float  @default(60)
+  defaultCostPerUnit  Float  @default(45)
+  reminderDayOfMonth Int    @default(28)
+}
+
+model Customer {
+  id                  String    @id @default(cuid())
+  userId              String
+  user                User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  name                String
+  phone               String?
+  address             String?
+  defaultPricePerUnit Float?
+  dailyQuantity       Float    @default(1)
+  manualTrustRating   Int?
+  lastReminderSentAt  DateTime?
+  createdAt           DateTime  @default(now())
+  active              Boolean   @default(true)
+
+  deliveries DeliveryEntry[]
+  payments   Payment[]
+
+  @@index([userId])
+}
+
+model DeliveryEntry {
+  id           String   @id @default(cuid())
+  customerId   String
+  customer     Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  date         DateTime
+  quantity     Float
+  pricePerUnit Float
+  costPerUnit  Float
+  createdAt    DateTime @default(now())
+
+  @@index([customerId, date])
+}
+
+model Payment {
+  id         String   @id @default(cuid())
+  customerId String
+  customer   Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  amount     Float
+  date       DateTime
+  note       String?
+  createdAt  DateTime @default(now())
+
+  @@index([customerId, date])
+}
+
+model OneTimeOrder {
+  id           String   @id @default(cuid())
+  userId       String
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  customerName String
+  phone        String?
+  product      String   @default("Milk")
+  quantity     Float    @default(0)
+  pricePerUnit Float    @default(0)
+  amount       Float
+  paid         Boolean  @default(false)
+  date         DateTime @default(now())
+  createdAt    DateTime @default(now())
+
+  @@index([userId, date])
+}

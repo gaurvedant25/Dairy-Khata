@@ -1,0 +1,210 @@
+import { prisma } from "@/lib/prisma";
+
+export type TrustLevel = {
+  score: number; // 1-5, floor 1
+  label: "Excellent" | "Good" | "Fair" | "Poor" | "Very Poor";
+  daysOverdue: number;
+};
+
+const DAY_MS = 24 * 60 * 60 * 1000;
+
+function trustLabel(score: number): TrustLevel["label"] {
+  if (score >= 5) return "Excellent";
+  if (score >= 4) return "Good";
+  if (score >= 3) return "Fair";
+  if (score >= 2) return "Poor";
+  return "Very Poor";
+}
+
+/**
+ * Dues = total billed - total paid, tracked oldest-unpaid-first so we can
+ * tell how many days a customer has been carrying an outstanding balance.
+ */
+export function computeDues(
+  deliveries: { date: Date; quantity: number; pricePerUnit: number }[],
+  payments: { date: Date; amount: number }[]
+) {
+  const totalBilled = deliveries.reduce((sum, d) => sum + d.quantity * d.pricePerUnit, 0);
+  const totalPaid = payments.reduce((sum, p) => sum + p.amount, 0);
+  const dues = Math.round((totalBilled - totalPaid) * 100) / 100;
+
+  let daysOverdue = 0;
+  if (dues > 0 && deliveries.length > 0) {
+    // Apply payments FIFO against the oldest deliveries; the earliest bill
+    // still not fully covered marks when the outstanding balance began.
+    const sortedDeliveries = [...deliveries].sort((a, b) => a.date.getTime() - b.date.getTime());
+    let remainingPaid = totalPaid;
+    let oldestUnpaidDate: Date | null = null;
+    for (const d of sortedDeliveries) {
+      const cost = d.quantity * d.pricePerUnit;
+      if (remainingPaid >= cost) {
+        remainingPaid -= cost;
+      } else {
+        oldestUnpaidDate = d.date;
+        break;
+      }
+    }
+    if (oldestUnpaidDate) {
+      daysOverdue = Math.max(0, Math.floor((Date.now() - oldestUnpaidDate.getTime()) / DAY_MS));
+    }
+  }
+
+  return { totalBilled, totalPaid, dues, daysOverdue };
+}
+
+/**
+ * Trust score starts from the owner's manual rating (default 3/5) and is
+ * penalized the longer an outstanding balance goes unpaid. Recomputed live
+ * on every read, so it needs no scheduled job to "auto-lower".
+ */
+export function computeTrustLevel(manualTrustRating: number | null, daysOverdue: number): TrustLevel {
+  const base = manualTrustRating ?? 3;
+  let penalty = 0;
+  if (daysOverdue >= 45) penalty = 3;
+  else if (daysOverdue >= 30) penalty = 2;
+  else if (daysOverdue >= 15) penalty = 1;
+
+  const score = Math.min(5, Math.max(1, base - penalty));
+  return { score, label: trustLabel(score), daysOverdue };
+}
+
+export async function getCustomerWithStats(customerId: string, userId: string) {
+  const customer = await prisma.customer.findFirst({
+    where: { id: customerId, userId },
+    include: {
+      deliveries: { orderBy: { date: "desc" } },
+      payments: { orderBy: { date: "desc" } },
+    },
+  });
+  if (!customer) return null;
+
+  const duesInfo = computeDues(customer.deliveries, customer.payments);
+  const trust = computeTrustLevel(customer.manualTrustRating, duesInfo.daysOverdue);
+
+  return { customer, duesInfo, trust };
+}
+
+export async function listCustomersWithStats(userId: string) {
+  const customers = await prisma.customer.findMany({
+    where: { userId },
+    include: { deliveries: true, payments: true },
+    orderBy: { name: "asc" },
+  });
+
+  return customers.map((customer) => {
+    const duesInfo = computeDues(customer.deliveries, customer.payments);
+    const trust = computeTrustLevel(customer.manualTrustRating, duesInfo.daysOverdue);
+    return { customer, duesInfo, trust };
+  });
+}
+
+export type Period = "today" | "week" | "month";
+
+function periodStart(period: Period): Date {
+  const now = new Date();
+  if (period === "today") {
+    return new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  }
+  if (period === "week") {
+    const d = new Date(now);
+    d.setDate(d.getDate() - 6);
+    return new Date(d.getFullYear(), d.getMonth(), d.getDate());
+  }
+  return new Date(now.getFullYear(), now.getMonth(), 1);
+}
+
+export async function getStats(userId: string, period: Period) {
+  const start = periodStart(period);
+
+  const [deliveries, oneTimeInPeriod, unpaidOneTime, allWithStats] = await Promise.all([
+    prisma.deliveryEntry.findMany({ where: { customer: { userId }, date: { gte: start } } }),
+    prisma.oneTimeOrder.findMany({ where: { userId, date: { gte: start } } }),
+    prisma.oneTimeOrder.findMany({ where: { userId, paid: false } }),
+    listCustomersWithStats(userId),
+  ]);
+
+  const deliverySales = deliveries.reduce((s, d) => s + d.quantity * d.pricePerUnit, 0);
+  const deliveryCost = deliveries.reduce((s, d) => s + d.quantity * d.costPerUnit, 0);
+  const oneTimeSales = oneTimeInPeriod.reduce((s, o) => s + o.amount, 0);
+
+  const sales = deliverySales + oneTimeSales;
+  const profit = deliverySales - deliveryCost + oneTimeSales; // one-time has no tracked cost
+  const litersDelivered = deliveries.reduce((s, d) => s + d.quantity, 0);
+
+  const customerOutstanding = allWithStats.reduce((s, c) => s + Math.max(0, c.duesInfo.dues), 0);
+  const oneTimeOutstanding = unpaidOneTime.reduce((s, o) => s + o.amount, 0);
+
+  return {
+    sales: round2(sales),
+    cost: round2(deliveryCost),
+    profit: round2(profit),
+    litersDelivered: round2(litersDelivered),
+    totalOutstanding: round2(customerOutstanding + oneTimeOutstanding),
+  };
+}
+
+export async function listOneTimeOrders(userId: string, limit = 20) {
+  return prisma.oneTimeOrder.findMany({
+    where: { userId },
+    orderBy: { date: "desc" },
+    take: limit,
+  });
+}
+
+export async function getDailyTrend(userId: string, days = 14) {
+  const start = new Date();
+  start.setDate(start.getDate() - (days - 1));
+  start.setHours(0, 0, 0, 0);
+
+  const deliveries = await prisma.deliveryEntry.findMany({
+    where: { customer: { userId }, date: { gte: start } },
+  });
+
+  const buckets = new Map<string, { sales: number; profit: number }>();
+  for (let i = 0; i < days; i++) {
+    const d = new Date(start);
+    d.setDate(d.getDate() + i);
+    buckets.set(d.toISOString().slice(0, 10), { sales: 0, profit: 0 });
+  }
+
+  for (const d of deliveries) {
+    const key = d.date.toISOString().slice(0, 10);
+    const bucket = buckets.get(key);
+    if (bucket) {
+      bucket.sales += d.quantity * d.pricePerUnit;
+      bucket.profit += d.quantity * (d.pricePerUnit - d.costPerUnit);
+    }
+  }
+
+  return Array.from(buckets.entries()).map(([date, v]) => ({
+    date,
+    sales: round2(v.sales),
+    profit: round2(v.profit),
+  }));
+}
+
+/**
+ * A customer shows up on the "remind" list once dues are outstanding and
+ * we've reached/passed the owner's configured reminder day of the month.
+ */
+export async function getReminderList(userId: string) {
+  const setting = await prisma.setting.findUnique({ where: { userId } });
+  const reminderDay = setting?.reminderDayOfMonth ?? 28;
+  const today = new Date();
+  const pastReminderDay = today.getDate() >= reminderDay;
+
+  const withStats = await listCustomersWithStats(userId);
+  const due = withStats.filter((c) => c.duesInfo.dues > 0);
+
+  return { customers: due, pastReminderDay, reminderDay };
+}
+
+function round2(n: number) {
+  return Math.round(n * 100) / 100;
+}
+
+export async function getOrCreateSetting(userId: string) {
+  const existing = await prisma.setting.findUnique({ where: { userId } });
+  if (existing) return existing;
+  return prisma.setting.create({ data: { userId } });
+}
