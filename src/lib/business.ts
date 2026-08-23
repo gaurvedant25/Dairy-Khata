@@ -74,11 +74,16 @@ export async function getCustomerWithStats(customerId: string, userId: string) {
     include: {
       deliveries: { orderBy: { date: "desc" } },
       payments: { orderBy: { date: "desc" } },
+      oneTimeOrders: { orderBy: { date: "desc" } },
     },
   });
   if (!customer) return null;
 
-  const duesInfo = computeDues(customer.deliveries, customer.payments);
+  const extraCharges = customer.oneTimeOrders
+    .filter((o) => !o.paid)
+    .map((o) => ({ date: o.date, quantity: 1, pricePerUnit: o.amount }));
+
+  const duesInfo = computeDues([...customer.deliveries, ...extraCharges], customer.payments);
   const trust = computeTrustLevel(customer.manualTrustRating, duesInfo.daysOverdue);
 
   return { customer, duesInfo, trust };
@@ -87,12 +92,15 @@ export async function getCustomerWithStats(customerId: string, userId: string) {
 export async function listCustomersWithStats(userId: string) {
   const customers = await prisma.customer.findMany({
     where: { userId },
-    include: { deliveries: true, payments: true },
+    include: { deliveries: true, payments: true, oneTimeOrders: true },
     orderBy: { name: "asc" },
   });
 
   return customers.map((customer) => {
-    const duesInfo = computeDues(customer.deliveries, customer.payments);
+    const extraCharges = customer.oneTimeOrders
+      .filter((o) => !o.paid)
+      .map((o) => ({ date: o.date, quantity: 1, pricePerUnit: o.amount }));
+    const duesInfo = computeDues([...customer.deliveries, ...extraCharges], customer.payments);
     const trust = computeTrustLevel(customer.manualTrustRating, duesInfo.daysOverdue);
     return { customer, duesInfo, trust };
   });
@@ -116,10 +124,13 @@ function periodStart(period: Period): Date {
 export async function getStats(userId: string, period: Period) {
   const start = periodStart(period);
 
-  const [deliveries, oneTimeInPeriod, unpaidOneTime, allWithStats] = await Promise.all([
+  const [deliveries, oneTimeInPeriod, unpaidWalkInOnly, allWithStats] = await Promise.all([
     prisma.deliveryEntry.findMany({ where: { customer: { userId }, date: { gte: start } } }),
     prisma.oneTimeOrder.findMany({ where: { userId, date: { gte: start } } }),
-    prisma.oneTimeOrder.findMany({ where: { userId, paid: false } }),
+    // Only untagged walk-ins here — tagged ones already show up under
+    // their customer's dues via listCustomersWithStats, so counting them
+    // in both places would double the "To collect" total.
+    prisma.oneTimeOrder.findMany({ where: { userId, paid: false, customerId: null } }),
     listCustomersWithStats(userId),
   ]);
 
@@ -132,7 +143,7 @@ export async function getStats(userId: string, period: Period) {
   const litersDelivered = deliveries.reduce((s, d) => s + d.quantity, 0);
 
   const customerOutstanding = allWithStats.reduce((s, c) => s + Math.max(0, c.duesInfo.dues), 0);
-  const oneTimeOutstanding = unpaidOneTime.reduce((s, o) => s + o.amount, 0);
+  const oneTimeOutstanding = unpaidWalkInOnly.reduce((s, o) => s + o.amount, 0);
 
   return {
     sales: round2(sales),

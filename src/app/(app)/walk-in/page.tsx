@@ -36,6 +36,7 @@ export default async function WalkInPage() {
 
       <OneTimeOrders
         defaultPricePerUnit={setting.defaultPricePerUnit}
+        defaultChaiPricePerCup={setting.defaultChaiPricePerCup}
         dailyCustomers={dailyCustomers.map((c) => ({
           id: c.id,
           name: c.name,
@@ -46,6 +47,7 @@ export default async function WalkInPage() {
           customerName: o.customerName,
           phone: o.phone,
           product: o.product,
+          unit: o.unit,
           quantity: o.quantity,
           amount: o.amount,
           paid: o.paid,

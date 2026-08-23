@@ -6,12 +6,19 @@ import { useRouter } from "next/navigation";
 export function SettingsForm({
   initial,
 }: {
-  initial: { businessName: string; defaultPricePerUnit: number; defaultCostPerUnit: number; reminderDayOfMonth: number };
+  initial: {
+    businessName: string;
+    defaultPricePerUnit: number;
+    defaultCostPerUnit: number;
+    defaultChaiPricePerCup: number;
+    reminderDayOfMonth: number;
+  };
 }) {
   const router = useRouter();
   const [businessName, setBusinessName] = useState(initial.businessName);
   const [price, setPrice] = useState(initial.defaultPricePerUnit.toString());
   const [cost, setCost] = useState(initial.defaultCostPerUnit.toString());
+  const [chaiPrice, setChaiPrice] = useState(initial.defaultChaiPricePerCup.toString());
   const [reminderDay, setReminderDay] = useState(initial.reminderDayOfMonth.toString());
   const [message, setMessage] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
@@ -27,6 +34,7 @@ export function SettingsForm({
         businessName,
         defaultPricePerUnit: Number(price),
         defaultCostPerUnit: Number(cost),
+        defaultChaiPricePerCup: Number(chaiPrice),
         reminderDayOfMonth: Number(reminderDay),
       }),
     });
@@ -68,6 +76,16 @@ export function SettingsForm({
             step="0.01"
             value={cost}
             onChange={(e) => setCost(e.target.value)}
+            className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
+          />
+        </div>
+        <div>
+          <label className="block text-xs font-medium text-slate-500">Chai price per cup (₹)</label>
+          <input
+            type="number"
+            step="0.01"
+            value={chaiPrice}
+            onChange={(e) => setChaiPrice(e.target.value)}
             className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
           />
         </div>

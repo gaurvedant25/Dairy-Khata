@@ -19,6 +19,7 @@ export default async function SettingsPage() {
             businessName: setting.businessName,
             defaultPricePerUnit: setting.defaultPricePerUnit,
             defaultCostPerUnit: setting.defaultCostPerUnit,
+            defaultChaiPricePerCup: setting.defaultChaiPricePerCup,
             reminderDayOfMonth: setting.reminderDayOfMonth,
           }}
         />

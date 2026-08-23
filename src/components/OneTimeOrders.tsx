@@ -8,23 +8,27 @@ type Order = {
   customerName: string;
   phone: string | null;
   product: string;
+  unit: string;
   quantity: number;
   amount: number;
   paid: boolean;
   date: string; // ISO
 };
 
-const PRODUCTS = ["Milk"] as const;
+type ProductKind = "Milk" | "Chai" | "Custom";
+const PRODUCTS: ProductKind[] = ["Milk", "Chai", "Custom"];
 
 type DailyCustomerOption = { id: string; name: string; pricePerUnit: number };
 
 export function OneTimeOrders({
   initialOrders,
   defaultPricePerUnit,
+  defaultChaiPricePerCup,
   dailyCustomers = [],
 }: {
   initialOrders: Order[];
   defaultPricePerUnit: number;
+  defaultChaiPricePerCup: number;
   dailyCustomers?: DailyCustomerOption[];
 }) {
   const router = useRouter();
@@ -32,21 +36,28 @@ export function OneTimeOrders({
   const [existingCustomerId, setExistingCustomerId] = useState<string>("");
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
-  const [product, setProduct] = useState<(typeof PRODUCTS)[number]>("Milk");
+  const [product, setProduct] = useState<ProductKind>("Milk");
   const [quantity, setQuantity] = useState("");
+  const [customProductName, setCustomProductName] = useState("");
+  const [customAmount, setCustomAmount] = useState("");
   const [paid, setPaid] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [busyId, setBusyId] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
 
   const selectedCustomer = dailyCustomers.find((c) => c.id === existingCustomerId) ?? null;
-  const activePricePerUnit = selectedCustomer?.pricePerUnit ?? defaultPricePerUnit;
+  const milkPricePerUnit = selectedCustomer?.pricePerUnit ?? defaultPricePerUnit;
 
   const computedAmount = useMemo(() => {
+    if (product === "Custom") {
+      const a = Number(customAmount);
+      return Number.isFinite(a) && a > 0 ? Math.round(a * 100) / 100 : 0;
+    }
     const q = Number(quantity);
     if (!Number.isFinite(q) || q <= 0) return 0;
-    return Math.round(q * activePricePerUnit * 100) / 100;
-  }, [quantity, activePricePerUnit]);
+    const perUnit = product === "Chai" ? defaultChaiPricePerCup : milkPricePerUnit;
+    return Math.round(q * perUnit * 100) / 100;
+  }, [product, quantity, customAmount, milkPricePerUnit, defaultChaiPricePerCup]);
 
   function resetForm() {
     setExistingCustomerId("");
@@ -54,6 +65,8 @@ export function OneTimeOrders({
     setPhone("");
     setProduct("Milk");
     setQuantity("");
+    setCustomProductName("");
+    setCustomAmount("");
     setPaid(false);
     setError(null);
   }
@@ -70,7 +83,9 @@ export function OneTimeOrders({
         customerName: existingCustomerId ? undefined : name,
         phone: existingCustomerId ? undefined : phone,
         product,
-        quantity,
+        quantity: product === "Custom" ? undefined : quantity,
+        customProductName: product === "Custom" ? customProductName : undefined,
+        customAmount: product === "Custom" ? customAmount : undefined,
         paid,
       }),
     });
@@ -97,12 +112,20 @@ export function OneTimeOrders({
   }
 
   async function remove(order: Order) {
-    if (!confirm(`Delete this one-time order for ${order.customerName}?`)) return;
+    if (!confirm(`Delete this order for ${order.customerName}?`)) return;
     setBusyId(order.id);
     await fetch(`/api/one-time-orders/${order.id}`, { method: "DELETE" });
     setBusyId(null);
     router.refresh();
   }
+
+  const unitLabel = product === "Milk" ? "liters" : product === "Chai" ? "cups" : "";
+  const perUnitLabel =
+    product === "Milk"
+      ? `at ₹${milkPricePerUnit.toFixed(2)}/L`
+      : product === "Chai"
+      ? `at ₹${defaultChaiPricePerCup.toFixed(2)}/cup`
+      : "";
 
   return (
     <div className="rounded-xl bg-white p-4 border border-slate-200">
@@ -151,7 +174,7 @@ export function OneTimeOrders({
                     required={!existingCustomerId}
                     value={name}
                     onChange={(e) => setName(e.target.value)}
-                    className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 placeholder:text-slate-400"
+                    className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900"
                   />
                 </label>
                 <label className="block">
@@ -161,41 +184,72 @@ export function OneTimeOrders({
                   <input
                     value={phone}
                     onChange={(e) => setPhone(e.target.value)}
-                    className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 placeholder:text-slate-400"
+                    className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900"
                   />
                 </label>
               </>
             )}
-            <label className="block">
+
+            <label className="block sm:col-span-2">
               <span className="mb-1 block text-xs font-semibold text-slate-700">Product</span>
               <select
                 value={product}
-                onChange={(e) => setProduct(e.target.value as (typeof PRODUCTS)[number])}
+                onChange={(e) => setProduct(e.target.value as ProductKind)}
                 className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900"
               >
                 {PRODUCTS.map((p) => (
                   <option key={p} value={p}>
-                    {p}
+                    {p === "Custom" ? "Custom item…" : p}
                   </option>
                 ))}
               </select>
             </label>
-            <label className="block">
-              <span className="mb-1 block text-xs font-semibold text-slate-700">
-                How many liters? <span className="font-normal text-slate-400">(at ₹{activePricePerUnit.toFixed(2)}/L)</span>
-              </span>
-              <input
-                type="number"
-                inputMode="decimal"
-                step="0.1"
-                min={0}
-                required
-                value={quantity}
-                onChange={(e) => setQuantity(e.target.value)}
-                className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 placeholder:text-slate-400"
-              />
-            </label>
-            <div className="rounded-lg bg-white px-3 py-2 text-sm ring-1 ring-slate-200 sm:col-span-2">
+
+            {product !== "Custom" ? (
+              <label className="block sm:col-span-2">
+                <span className="mb-1 block text-xs font-semibold text-slate-700">
+                  How many {unitLabel}? <span className="font-normal text-slate-400">({perUnitLabel})</span>
+                </span>
+                <input
+                  type="number"
+                  inputMode="decimal"
+                  step={product === "Chai" ? "1" : "0.1"}
+                  min={0}
+                  required
+                  value={quantity}
+                  onChange={(e) => setQuantity(e.target.value)}
+                  className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900"
+                />
+              </label>
+            ) : (
+              <>
+                <label className="block">
+                  <span className="mb-1 block text-xs font-semibold text-slate-700">Item name</span>
+                  <input
+                    required
+                    value={customProductName}
+                    onChange={(e) => setCustomProductName(e.target.value)}
+                    placeholder="e.g. Paneer, Butter, Ghee"
+                    className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 placeholder:text-slate-400"
+                  />
+                </label>
+                <label className="block">
+                  <span className="mb-1 block text-xs font-semibold text-slate-700">Amount (₹)</span>
+                  <input
+                    type="number"
+                    inputMode="decimal"
+                    step="0.01"
+                    min={0}
+                    required
+                    value={customAmount}
+                    onChange={(e) => setCustomAmount(e.target.value)}
+                    className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900"
+                  />
+                </label>
+              </>
+            )}
+
+            <div className="rounded-lg bg-white px-3 py-2 text-sm border border-slate-200 sm:col-span-2">
               <span className="text-slate-500">Total: </span>
               <span className="font-semibold text-slate-900">₹{computedAmount.toFixed(2)}</span>
             </div>
@@ -215,7 +269,7 @@ export function OneTimeOrders({
                 }`}
               >
                 {paid
-                  ? `Logged as a one-time sale for ${selectedCustomer.name} — will not affect their ledger.`
+                  ? `Logged as a sale for ${selectedCustomer.name} — will not affect their ledger.`
                   : `Will be added to ${selectedCustomer.name}'s bill (₹${computedAmount.toFixed(2)}).`}
               </p>
             )}
@@ -249,12 +303,16 @@ export function OneTimeOrders({
         <ul className="divide-y divide-slate-100">
           {initialOrders.map((order) => {
             const busy = busyId === order.id;
+            const qtyLabel = order.unit
+              ? `${order.quantity.toFixed(order.unit === "cup" ? 0 : 2)} ${order.unit}`
+              : "";
             return (
               <li key={order.id} className="flex items-center gap-3 py-3">
                 <div className="min-w-0 flex-1">
                   <p className="truncate font-medium text-slate-900">{order.customerName}</p>
                   <p className="text-xs text-slate-500">
-                    {order.product} · {order.quantity.toFixed(2)} L · {new Date(order.date).toLocaleDateString()}
+                    {order.product}
+                    {qtyLabel ? ` · ${qtyLabel}` : ""} · {new Date(order.date).toLocaleDateString()}
                     {order.phone ? ` · ${order.phone}` : ""}
                   </p>
                 </div>

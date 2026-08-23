@@ -23,13 +23,14 @@ model User {
 }
 
 model Setting {
-  id                 String @id @default(cuid())
-  userId             String @unique
-  user               User   @relation(fields: [userId], references: [id], onDelete: Cascade)
-  businessName       String @default("My Dairy")
-  defaultPricePerUnit Float  @default(60)
-  defaultCostPerUnit  Float  @default(45)
-  reminderDayOfMonth Int    @default(28)
+  id                     String @id @default(cuid())
+  userId                 String @unique
+  user                   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  businessName           String @default("My Dairy")
+  defaultPricePerUnit    Float  @default(60)
+  defaultCostPerUnit     Float  @default(45)
+  defaultChaiPricePerCup Float  @default(10)
+  reminderDayOfMonth     Int    @default(28)
 }
 
 model Customer {
@@ -46,8 +47,9 @@ model Customer {
   createdAt           DateTime  @default(now())
   active              Boolean   @default(true)
 
-  deliveries DeliveryEntry[]
-  payments   Payment[]
+  deliveries    DeliveryEntry[]
+  payments      Payment[]
+  oneTimeOrders OneTimeOrder[]
 
   @@index([userId])
 }
@@ -81,9 +83,12 @@ model OneTimeOrder {
   id           String   @id @default(cuid())
   userId       String
   user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  customerId   String?
+  customer     Customer? @relation(fields: [customerId], references: [id], onDelete: SetNull)
   customerName String
   phone        String?
   product      String   @default("Milk")
+  unit         String   @default("L")
   quantity     Float    @default(0)
   pricePerUnit Float    @default(0)
   amount       Float
@@ -92,4 +97,5 @@ model OneTimeOrder {
   createdAt    DateTime @default(now())
 
   @@index([userId, date])
+  @@index([customerId])
 }
