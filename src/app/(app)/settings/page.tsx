@@ -20,6 +20,8 @@ export default async function SettingsPage() {
             defaultPricePerUnit: setting.defaultPricePerUnit,
             defaultCostPerUnit: setting.defaultCostPerUnit,
             defaultChaiPricePerCup: setting.defaultChaiPricePerCup,
+            defaultDahiPricePerCup: setting.defaultDahiPricePerCup,
+            defaultPaneerPricePerPiece: setting.defaultPaneerPricePerPiece,
             reminderDayOfMonth: setting.reminderDayOfMonth,
           }}
         />

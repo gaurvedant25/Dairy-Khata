@@ -4,6 +4,15 @@ import { prisma } from "@/lib/prisma";
 import { oneTimeOrderSchema } from "@/lib/validation";
 import { getOrCreateSetting } from "@/lib/business";
 
+type ResolvedLine = {
+  productLabel: string;
+  unit: string;
+  quantity: number;
+  pricePerUnit: number;
+  amount: number;
+  isMilk: boolean;
+};
+
 export async function POST(req: Request) {
   const session = await auth();
   if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -14,18 +23,7 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: parsed.error.issues[0]?.message ?? "Invalid input" }, { status: 400 });
   }
 
-  const {
-    existingCustomerId,
-    customerName,
-    phone,
-    product,
-    customProductName,
-    quantity,
-    customAmount,
-    paid,
-    date,
-  } = parsed.data;
-
+  const { existingCustomerId, customerName, phone, items, paid, date } = parsed.data;
   const setting = await getOrCreateSetting(session.user.id);
   const orderDate = date ? new Date(date) : new Date();
 
@@ -39,65 +37,98 @@ export async function POST(req: Request) {
     }
   }
 
-  // Resolve product name, unit, per-unit price and total amount from the
-  // three modes (Milk uses per-customer liter price when available;
-  // Chai uses the business's per-cup price; Custom is a lump-sum amount).
-  let productLabel: string;
-  let unit: string;
-  let effectiveQuantity: number;
-  let pricePerUnit: number;
-  let amount: number;
+  const milkPrice = existingCustomer?.defaultPricePerUnit ?? setting.defaultPricePerUnit;
 
-  if (product === "Milk") {
-    productLabel = "Milk";
-    unit = "L";
-    effectiveQuantity = quantity!;
-    pricePerUnit = existingCustomer?.defaultPricePerUnit ?? setting.defaultPricePerUnit;
-    amount = Math.round(effectiveQuantity * pricePerUnit * 100) / 100;
-  } else if (product === "Chai") {
-    productLabel = "Chai";
-    unit = "cup";
-    effectiveQuantity = quantity!;
-    pricePerUnit = setting.defaultChaiPricePerCup;
-    amount = Math.round(effectiveQuantity * pricePerUnit * 100) / 100;
-  } else {
-    productLabel = (customProductName ?? "Item").trim();
-    unit = "";
-    effectiveQuantity = 1;
-    amount = customAmount!;
-    pricePerUnit = amount;
-  }
+  const resolved: ResolvedLine[] = items.map((item) => {
+    if (item.product === "Milk") {
+      return {
+        productLabel: "Milk",
+        unit: "L",
+        quantity: item.quantity!,
+        pricePerUnit: milkPrice,
+        amount: Math.round(item.quantity! * milkPrice * 100) / 100,
+        isMilk: true,
+      };
+    }
+    if (item.product === "Chai") {
+      return {
+        productLabel: "Chai",
+        unit: "cup",
+        quantity: item.quantity!,
+        pricePerUnit: setting.defaultChaiPricePerCup,
+        amount: Math.round(item.quantity! * setting.defaultChaiPricePerCup * 100) / 100,
+        isMilk: false,
+      };
+    }
+    if (item.product === "Dahi") {
+      return {
+        productLabel: "Dahi",
+        unit: "cup",
+        quantity: item.quantity!,
+        pricePerUnit: setting.defaultDahiPricePerCup,
+        amount: Math.round(item.quantity! * setting.defaultDahiPricePerCup * 100) / 100,
+        isMilk: false,
+      };
+    }
+    if (item.product === "Paneer") {
+      return {
+        productLabel: "Paneer",
+        unit: "piece",
+        quantity: item.quantity!,
+        pricePerUnit: setting.defaultPaneerPricePerPiece,
+        amount: Math.round(item.quantity! * setting.defaultPaneerPricePerPiece * 100) / 100,
+        isMilk: false,
+      };
+    }
+    // Custom
+    const amt = item.customAmount!;
+    return {
+      productLabel: (item.customProductName ?? "Item").trim(),
+      unit: "",
+      quantity: 1,
+      pricePerUnit: amt,
+      amount: amt,
+      isMilk: false,
+    };
+  });
 
-  // Milk sold on credit to a daily customer folds straight into their
-  // milk ledger as a real delivery so dues + trust math keeps working
-  // through the existing DeliveryEntry-based pipeline.
-  if (existingCustomer && !paid && product === "Milk") {
-    const delivery = await prisma.deliveryEntry.create({
+  const created: unknown[] = [];
+
+  for (const line of resolved) {
+    // Milk sold on credit to a daily customer folds into their milk ledger
+    // as a real delivery so dues + trust math keep working through the
+    // existing DeliveryEntry-based pipeline.
+    if (existingCustomer && !paid && line.isMilk) {
+      const delivery = await prisma.deliveryEntry.create({
+        data: {
+          customerId: existingCustomer.id,
+          date: orderDate,
+          quantity: line.quantity,
+          pricePerUnit: line.pricePerUnit,
+          costPerUnit: setting.defaultCostPerUnit,
+        },
+      });
+      created.push({ kind: "delivery", delivery });
+      continue;
+    }
+
+    const order = await prisma.oneTimeOrder.create({
       data: {
-        customerId: existingCustomer.id,
+        userId: session.user.id,
+        customerId: existingCustomer?.id ?? null,
+        customerName: existingCustomer?.name ?? (customerName ?? "").trim(),
+        phone: existingCustomer?.phone ?? (phone || null),
+        product: line.productLabel,
+        unit: line.unit,
+        quantity: line.quantity,
+        pricePerUnit: line.pricePerUnit,
+        amount: line.amount,
+        paid: paid ?? false,
         date: orderDate,
-        quantity: effectiveQuantity,
-        pricePerUnit,
-        costPerUnit: setting.defaultCostPerUnit,
       },
     });
-    return NextResponse.json({ mode: "added-to-ledger", delivery }, { status: 201 });
+    created.push({ kind: "order", order });
   }
 
-  const order = await prisma.oneTimeOrder.create({
-    data: {
-      userId: session.user.id,
-      customerId: existingCustomer?.id ?? null,
-      customerName: existingCustomer?.name ?? (customerName ?? "").trim(),
-      phone: existingCustomer?.phone ?? (phone || null),
-      product: productLabel,
-      unit,
-      quantity: effectiveQuantity,
-      pricePerUnit,
-      amount,
-      paid: paid ?? false,
-      date: orderDate,
-    },
-  });
-  return NextResponse.json({ mode: "walk-in-logged", order }, { status: 201 });
+  return NextResponse.json({ created: created.length, results: created }, { status: 201 });
 }

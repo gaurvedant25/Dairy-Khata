@@ -1,0 +1,3 @@
+-- AlterTable
+ALTER TABLE "Setting" ADD COLUMN     "defaultDahiPricePerCup" DOUBLE PRECISION NOT NULL DEFAULT 20,
+ADD COLUMN     "defaultPaneerPricePerPiece" DOUBLE PRECISION NOT NULL DEFAULT 80;

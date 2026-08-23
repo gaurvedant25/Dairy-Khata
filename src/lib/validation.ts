@@ -32,26 +32,16 @@ export const paymentSchema = z.object({
   note: z.string().trim().max(300).optional().or(z.literal("")),
 });
 
-export const BUILTIN_PRODUCTS = ["Milk", "Chai", "Custom"] as const;
+export const BUILTIN_PRODUCTS = ["Milk", "Chai", "Dahi", "Paneer", "Custom"] as const;
 export type ProductKind = (typeof BUILTIN_PRODUCTS)[number];
 
-export const oneTimeOrderSchema = z
+const orderItemSchema = z
   .object({
-    existingCustomerId: z.string().min(1).optional().or(z.literal("")),
-    customerName: z.string().trim().max(100).optional().or(z.literal("")),
-    phone: z.string().trim().max(30).optional().or(z.literal("")),
-    product: z.enum(BUILTIN_PRODUCTS).default("Milk"),
+    product: z.enum(BUILTIN_PRODUCTS),
     customProductName: z.string().trim().max(100).optional().or(z.literal("")),
-    // Milk = liters, Chai = cups, Custom = ignored (uses customAmount directly)
     quantity: z.coerce.number().nonnegative().optional(),
     customAmount: z.coerce.number().positive().optional(),
-    paid: z.coerce.boolean().optional(),
-    date: z.string().optional(),
   })
-  .refine(
-    (v) => (v.existingCustomerId && v.existingCustomerId !== "") || (v.customerName && v.customerName.trim() !== ""),
-    { message: "Pick a customer or enter a walk-in name", path: ["customerName"] }
-  )
   .refine(
     (v) => {
       if (v.product === "Custom") {
@@ -70,6 +60,20 @@ export const oneTimeOrderSchema = z
     }
   );
 
+export const oneTimeOrderSchema = z
+  .object({
+    existingCustomerId: z.string().min(1).optional().or(z.literal("")),
+    customerName: z.string().trim().max(100).optional().or(z.literal("")),
+    phone: z.string().trim().max(30).optional().or(z.literal("")),
+    items: z.array(orderItemSchema).min(1, "Add at least one item"),
+    paid: z.coerce.boolean().optional(),
+    date: z.string().optional(),
+  })
+  .refine(
+    (v) => (v.existingCustomerId && v.existingCustomerId !== "") || (v.customerName && v.customerName.trim() !== ""),
+    { message: "Pick a customer or enter a walk-in name", path: ["customerName"] }
+  );
+
 export const oneTimeOrderUpdateSchema = z.object({
   paid: z.coerce.boolean().optional(),
 });
@@ -79,5 +83,7 @@ export const settingSchema = z.object({
   defaultPricePerUnit: z.coerce.number().positive(),
   defaultCostPerUnit: z.coerce.number().positive(),
   defaultChaiPricePerCup: z.coerce.number().nonnegative(),
+  defaultDahiPricePerCup: z.coerce.number().nonnegative(),
+  defaultPaneerPricePerPiece: z.coerce.number().nonnegative(),
   reminderDayOfMonth: z.coerce.number().int().min(1).max(28),
 });

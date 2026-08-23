@@ -29,8 +29,10 @@ model Setting {
   businessName           String @default("My Dairy")
   defaultPricePerUnit    Float  @default(60)
   defaultCostPerUnit     Float  @default(45)
-  defaultChaiPricePerCup Float  @default(10)
-  reminderDayOfMonth     Int    @default(28)
+  defaultChaiPricePerCup   Float @default(10)
+  defaultDahiPricePerCup   Float @default(20)
+  defaultPaneerPricePerPiece Float @default(80)
+  reminderDayOfMonth       Int   @default(28)
 }
 
 model Customer {

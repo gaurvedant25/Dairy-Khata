@@ -11,6 +11,8 @@ export function SettingsForm({
     defaultPricePerUnit: number;
     defaultCostPerUnit: number;
     defaultChaiPricePerCup: number;
+    defaultDahiPricePerCup: number;
+    defaultPaneerPricePerPiece: number;
     reminderDayOfMonth: number;
   };
 }) {
@@ -19,6 +21,8 @@ export function SettingsForm({
   const [price, setPrice] = useState(initial.defaultPricePerUnit.toString());
   const [cost, setCost] = useState(initial.defaultCostPerUnit.toString());
   const [chaiPrice, setChaiPrice] = useState(initial.defaultChaiPricePerCup.toString());
+  const [dahiPrice, setDahiPrice] = useState(initial.defaultDahiPricePerCup.toString());
+  const [paneerPrice, setPaneerPrice] = useState(initial.defaultPaneerPricePerPiece.toString());
   const [reminderDay, setReminderDay] = useState(initial.reminderDayOfMonth.toString());
   const [message, setMessage] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
@@ -35,6 +39,8 @@ export function SettingsForm({
         defaultPricePerUnit: Number(price),
         defaultCostPerUnit: Number(cost),
         defaultChaiPricePerCup: Number(chaiPrice),
+        defaultDahiPricePerCup: Number(dahiPrice),
+        defaultPaneerPricePerPiece: Number(paneerPrice),
         reminderDayOfMonth: Number(reminderDay),
       }),
     });
@@ -86,6 +92,26 @@ export function SettingsForm({
             step="0.01"
             value={chaiPrice}
             onChange={(e) => setChaiPrice(e.target.value)}
+            className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
+          />
+        </div>
+        <div>
+          <label className="block text-xs font-medium text-slate-500">Dahi price per cup (₹)</label>
+          <input
+            type="number"
+            step="0.01"
+            value={dahiPrice}
+            onChange={(e) => setDahiPrice(e.target.value)}
+            className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
+          />
+        </div>
+        <div>
+          <label className="block text-xs font-medium text-slate-500">Paneer price per piece (₹)</label>
+          <input
+            type="number"
+            step="0.01"
+            value={paneerPrice}
+            onChange={(e) => setPaneerPrice(e.target.value)}
             className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
           />
         </div>
