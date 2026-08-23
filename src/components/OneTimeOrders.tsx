@@ -213,7 +213,7 @@ export function OneTimeOrders({
                 <input
                   type="number"
                   inputMode="decimal"
-                  step={product === "Chai" ? "1" : "0.1"}
+                  step={product === "Chai" ? "0.5" : "0.1"}
                   min={0}
                   required
                   value={quantity}
@@ -304,7 +304,7 @@ export function OneTimeOrders({
           {initialOrders.map((order) => {
             const busy = busyId === order.id;
             const qtyLabel = order.unit
-              ? `${order.quantity.toFixed(order.unit === "cup" ? 0 : 2)} ${order.unit}`
+              ? `${order.quantity.toFixed(order.unit === "cup" ? 1 : 2)} ${order.unit}`
               : "";
             return (
               <li key={order.id} className="flex items-center gap-3 py-3">
