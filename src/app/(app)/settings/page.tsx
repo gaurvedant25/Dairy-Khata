@@ -1,8 +1,9 @@
 import { auth } from "@/lib/auth";
-import { getOrCreateSetting } from "@/lib/business";
+import { getOrCreateSetting, BUILTIN_UNITS } from "@/lib/business";
 import { prisma } from "@/lib/prisma";
 import { SettingsForm } from "@/components/SettingsForm";
 import { CustomProductsManager } from "@/components/CustomProductsManager";
+import { StarredProductsPicker } from "@/components/StarredProductsPicker";
 
 export default async function SettingsPage() {
   const session = await auth();
@@ -41,6 +42,16 @@ export default async function SettingsPage() {
             unit: p.unit,
             pricePerUnit: p.pricePerUnit,
           }))}
+        />
+      </div>
+
+      <div className="rounded-xl bg-white p-6 border border-slate-200">
+        <StarredProductsPicker
+          initialStarred={setting.starredProducts}
+          options={[
+            ...Object.entries(BUILTIN_UNITS).map(([name, unit]) => ({ name, unit, builtin: true })),
+            ...customProducts.map((p) => ({ name: p.name, unit: p.unit, builtin: false })),
+          ]}
         />
       </div>
     </div>

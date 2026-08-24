@@ -154,6 +154,71 @@ export async function getStats(userId: string, period: Period) {
   };
 }
 
+export const BUILTIN_UNITS: Record<string, string> = {
+  Milk: "L",
+  Chai: "cup",
+  Dahi: "cup",
+  Paneer: "piece",
+};
+
+/**
+ * Per-product totals for the products the owner starred. Milk is special:
+ * it also accrues through DeliveryEntry (the daily round), so both sources
+ * are summed for it.
+ */
+export async function getStarredProductStats(userId: string, period: Period) {
+  const start = periodStart(period);
+  const setting = await getOrCreateSetting(userId);
+  const starred = setting.starredProducts;
+  if (starred.length === 0) return [];
+
+  const [orders, customProducts, milkDeliveries] = await Promise.all([
+    prisma.oneTimeOrder.findMany({
+      where: { userId, date: { gte: start }, product: { in: starred } },
+      select: { product: true, unit: true, quantity: true, amount: true },
+    }),
+    prisma.customProduct.findMany({
+      where: { userId, name: { in: starred } },
+      select: { name: true, unit: true },
+    }),
+    starred.includes("Milk")
+      ? prisma.deliveryEntry.findMany({
+          where: { customer: { userId }, date: { gte: start } },
+          select: { quantity: true, pricePerUnit: true },
+        })
+      : Promise.resolve([]),
+  ]);
+
+  const unitByName = new Map<string, string>(Object.entries(BUILTIN_UNITS));
+  for (const cp of customProducts) unitByName.set(cp.name, cp.unit);
+
+  const totals = new Map<string, { quantity: number; revenue: number; unit: string }>();
+  for (const name of starred) {
+    totals.set(name, { quantity: 0, revenue: 0, unit: unitByName.get(name) ?? "" });
+  }
+
+  for (const o of orders) {
+    const t = totals.get(o.product);
+    if (!t) continue;
+    t.quantity += o.quantity;
+    t.revenue += o.amount;
+    if (!t.unit && o.unit) t.unit = o.unit;
+  }
+
+  const milk = totals.get("Milk");
+  if (milk) {
+    for (const d of milkDeliveries) {
+      milk.quantity += d.quantity;
+      milk.revenue += d.quantity * d.pricePerUnit;
+    }
+  }
+
+  return starred.map((name) => {
+    const t = totals.get(name)!;
+    return { name, unit: t.unit, quantity: round2(t.quantity), revenue: round2(t.revenue) };
+  });
+}
+
 export async function listOneTimeOrders(userId: string, limit = 20) {
   return prisma.oneTimeOrder.findMany({
     where: { userId },

@@ -47,6 +47,7 @@ model Setting {
   defaultDahiPricePerCup   Float @default(20)
   defaultPaneerPricePerPiece Float @default(80)
   reminderDayOfMonth       Int   @default(28)
+  starredProducts          String[] @default([])
 }
 
 model Customer {

@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { auth } from "@/lib/auth";
-import { getStats, getReminderList, type Period } from "@/lib/business";
+import { getStats, getReminderList, getStarredProductStats, type Period } from "@/lib/business";
 import { TrustBadge } from "@/components/TrustBadge";
 
 const PERIODS: { value: Period; label: string }[] = [
@@ -22,9 +22,10 @@ export default async function DashboardPage({
     ? (params.period as Period)
     : "month";
 
-  const [stats, reminders] = await Promise.all([
+  const [stats, reminders, starredStats] = await Promise.all([
     getStats(userId, period),
     getReminderList(userId),
+    getStarredProductStats(userId, period),
   ]);
 
   return (
@@ -51,6 +52,34 @@ export default async function DashboardPage({
         <StatCard label="Liters delivered" value={stats.litersDelivered.toFixed(1)} accent="text-slate-700" />
         <StatCard label="To collect" value={`₹${stats.totalOutstanding.toFixed(2)}`} accent="text-red-700" />
       </div>
+
+      {starredStats.length > 0 && (
+        <div className="rounded-xl bg-white p-4 border border-slate-200">
+          <h2 className="mb-3 text-sm font-semibold text-slate-700">
+            <span className="text-amber-500">★</span> Starred items
+          </h2>
+          <ul className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+            {starredStats.map((s) => (
+              <li key={s.name} className="rounded-lg border border-slate-200 p-3">
+                <p className="text-sm font-medium text-slate-900">{s.name}</p>
+                <div className="mt-2 flex items-end justify-between gap-2">
+                  <div>
+                    <p className="text-xs text-slate-500">Sold</p>
+                    <p className="text-base font-semibold text-slate-800">
+                      {s.quantity.toFixed(s.unit === "piece" ? 0 : 1)}
+                      {s.unit ? ` ${s.unit}` : ""}
+                    </p>
+                  </div>
+                  <div className="text-right">
+                    <p className="text-xs text-slate-500">Earned</p>
+                    <p className="text-base font-semibold text-blue-700">₹{s.revenue.toFixed(2)}</p>
+                  </div>
+                </div>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
 
       <div className="rounded-xl bg-white p-4 border border-slate-200">
         <div className="mb-3 flex items-center justify-between">
