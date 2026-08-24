@@ -154,6 +154,95 @@ export async function getStats(userId: string, period: Period) {
   };
 }
 
+/**
+ * Line-by-line breakdown of what makes up the "Sales" figure for the period:
+ * the milk round (per customer) plus every walk-in / one-time order.
+ */
+export async function getSalesBreakdown(userId: string, period: Period) {
+  const start = periodStart(period);
+
+  const [deliveries, orders] = await Promise.all([
+    prisma.deliveryEntry.findMany({
+      where: { customer: { userId }, date: { gte: start } },
+      include: { customer: { select: { id: true, name: true } } },
+    }),
+    prisma.oneTimeOrder.findMany({
+      where: { userId, date: { gte: start } },
+      orderBy: { date: "desc" },
+    }),
+  ]);
+
+  // Roll up milk deliveries per customer so the list is short and readable.
+  const byCustomer = new Map<string, { customerId: string; name: string; liters: number; amount: number }>();
+  for (const d of deliveries) {
+    const key = d.customer.id;
+    const cur = byCustomer.get(key) ?? { customerId: key, name: d.customer.name, liters: 0, amount: 0 };
+    cur.liters += d.quantity;
+    cur.amount += d.quantity * d.pricePerUnit;
+    byCustomer.set(key, cur);
+  }
+  const deliveryRows = Array.from(byCustomer.values())
+    .map((r) => ({ ...r, liters: round2(r.liters), amount: round2(r.amount) }))
+    .sort((a, b) => b.amount - a.amount);
+
+  const walkInRows = orders.map((o) => ({
+    id: o.id,
+    customerName: o.customerName,
+    product: o.product,
+    unit: o.unit,
+    quantity: o.quantity,
+    amount: round2(o.amount),
+    paid: o.paid,
+  }));
+
+  return {
+    deliveryRows,
+    walkInRows,
+    deliveryTotal: round2(deliveryRows.reduce((s, r) => s + r.amount, 0)),
+    walkInTotal: round2(walkInRows.reduce((s, r) => s + r.amount, 0)),
+  };
+}
+
+/**
+ * Everyone who currently owes money, split into daily customers (dues from
+ * the ledger) and untagged walk-in orders that are still unpaid.
+ */
+export async function getOutstandingBreakdown(userId: string) {
+  const [allWithStats, unpaidWalkIns] = await Promise.all([
+    listCustomersWithStats(userId),
+    prisma.oneTimeOrder.findMany({
+      where: { userId, paid: false, customerId: null },
+      orderBy: { date: "desc" },
+    }),
+  ]);
+
+  const dailyRows = allWithStats
+    .filter((c) => c.duesInfo.dues > 0)
+    .map((c) => ({
+      customerId: c.customer.id,
+      name: c.customer.name,
+      dues: round2(c.duesInfo.dues),
+      daysOverdue: c.duesInfo.daysOverdue,
+    }))
+    .sort((a, b) => b.dues - a.dues);
+
+  const walkInRows = unpaidWalkIns.map((o) => ({
+    id: o.id,
+    customerName: o.customerName,
+    product: o.product,
+    unit: o.unit,
+    quantity: o.quantity,
+    amount: round2(o.amount),
+  }));
+
+  return {
+    dailyRows,
+    walkInRows,
+    dailyTotal: round2(dailyRows.reduce((s, r) => s + r.dues, 0)),
+    walkInTotal: round2(walkInRows.reduce((s, r) => s + r.amount, 0)),
+  };
+}
+
 export const BUILTIN_UNITS: Record<string, string> = {
   Milk: "L",
   Chai: "cup",

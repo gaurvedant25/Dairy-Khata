@@ -5,9 +5,12 @@ import {
   getStarredProductStats,
   getDaySummary,
   getMonthActivity,
+  getSalesBreakdown,
+  getOutstandingBreakdown,
   type Period,
 } from "@/lib/business";
 import { Calendar } from "@/components/Calendar";
+import { ExpandableStat } from "@/components/ExpandableStat";
 
 const PERIODS: { value: Period; label: string }[] = [
   { value: "today", label: "Today" },
@@ -46,12 +49,16 @@ export default async function DashboardPage({
   const selectedDate = /^\d{4}-\d{2}-\d{2}$/.test(params.date ?? "") ? params.date! : todayDate;
   const [sy, sm] = selectedDate.split("-").map(Number);
 
-  const [stats, starredStats, day, activity] = await Promise.all([
+  const [stats, starredStats, day, activity, salesBreakdown, outstanding] = await Promise.all([
     getStats(userId, period),
     getStarredProductStats(userId, period),
     getDaySummary(userId, selectedDate),
     getMonthActivity(userId, sy, sm - 1),
+    getSalesBreakdown(userId, period),
+    getOutstandingBreakdown(userId),
   ]);
+
+  const periodLabel = PERIODS.find((p) => p.value === period)!.label.toLowerCase();
 
   const isToday = selectedDate === todayDate;
 
@@ -74,9 +81,117 @@ export default async function DashboardPage({
         </div>
       </div>
 
-      <div className="grid grid-cols-2 gap-3">
-        <StatCard label="Sales" value={`₹${stats.sales.toFixed(2)}`} accent="text-blue-700" />
-        <StatCard label="To collect" value={`₹${stats.totalOutstanding.toFixed(2)}`} accent="text-red-700" />
+      <div className="space-y-3">
+        <ExpandableStat label="Sales" value={`₹${stats.sales.toFixed(2)}`} accent="text-blue-700">
+          <p className="mb-3 text-xs text-slate-400">Everything sold {periodLabel}.</p>
+
+          <div className="space-y-4">
+            <section>
+              <div className="mb-2 flex items-center justify-between">
+                <h4 className="text-xs font-semibold uppercase tracking-wide text-slate-500">Daily deliveries</h4>
+                <span className="text-xs font-medium text-slate-600">₹{salesBreakdown.deliveryTotal.toFixed(2)}</span>
+              </div>
+              {salesBreakdown.deliveryRows.length === 0 ? (
+                <p className="text-sm text-slate-400">No deliveries yet.</p>
+              ) : (
+                <ul className="divide-y divide-slate-100">
+                  {salesBreakdown.deliveryRows.map((r) => (
+                    <li key={r.customerId} className="flex items-center justify-between gap-3 py-2">
+                      <div className="min-w-0">
+                        <Link href={`/customers/${r.customerId}`} className="truncate text-sm font-medium text-slate-900 hover:underline">
+                          {r.name}
+                        </Link>
+                        <p className="text-xs text-slate-500">{r.liters.toFixed(1)} L</p>
+                      </div>
+                      <span className="text-sm font-medium text-slate-800">₹{r.amount.toFixed(2)}</span>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </section>
+
+            <section>
+              <div className="mb-2 flex items-center justify-between">
+                <h4 className="text-xs font-semibold uppercase tracking-wide text-slate-500">Walk-in customers</h4>
+                <span className="text-xs font-medium text-slate-600">₹{salesBreakdown.walkInTotal.toFixed(2)}</span>
+              </div>
+              {salesBreakdown.walkInRows.length === 0 ? (
+                <p className="text-sm text-slate-400">No walk-in sales yet.</p>
+              ) : (
+                <ul className="divide-y divide-slate-100">
+                  {salesBreakdown.walkInRows.map((r) => (
+                    <li key={r.id} className="flex items-center justify-between gap-3 py-2">
+                      <div className="min-w-0">
+                        <p className="truncate text-sm font-medium text-slate-900">{r.customerName}</p>
+                        <p className="text-xs text-slate-500">
+                          {r.product}
+                          {r.unit ? ` · ${r.quantity.toFixed(r.unit === "piece" ? 0 : 1)} ${r.unit}` : ""}
+                          {r.paid ? "" : " · unpaid"}
+                        </p>
+                      </div>
+                      <span className="text-sm font-medium text-slate-800">₹{r.amount.toFixed(2)}</span>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </section>
+          </div>
+        </ExpandableStat>
+
+        <ExpandableStat label="To collect" value={`₹${stats.totalOutstanding.toFixed(2)}`} accent="text-red-700">
+          <p className="mb-3 text-xs text-slate-400">Everyone who owes you money right now.</p>
+
+          <div className="space-y-4">
+            <section>
+              <div className="mb-2 flex items-center justify-between">
+                <h4 className="text-xs font-semibold uppercase tracking-wide text-slate-500">Daily customers</h4>
+                <span className="text-xs font-medium text-slate-600">₹{outstanding.dailyTotal.toFixed(2)}</span>
+              </div>
+              {outstanding.dailyRows.length === 0 ? (
+                <p className="text-sm text-slate-400">Nobody owes from the daily round.</p>
+              ) : (
+                <ul className="divide-y divide-slate-100">
+                  {outstanding.dailyRows.map((r) => (
+                    <li key={r.customerId} className="flex items-center justify-between gap-3 py-2">
+                      <div className="min-w-0">
+                        <Link href={`/customers/${r.customerId}`} className="truncate text-sm font-medium text-slate-900 hover:underline">
+                          {r.name}
+                        </Link>
+                        <p className="text-xs text-slate-500">{r.daysOverdue} days overdue</p>
+                      </div>
+                      <span className="text-sm font-medium text-red-700">₹{r.dues.toFixed(2)}</span>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </section>
+
+            <section>
+              <div className="mb-2 flex items-center justify-between">
+                <h4 className="text-xs font-semibold uppercase tracking-wide text-slate-500">Walk-in customers</h4>
+                <span className="text-xs font-medium text-slate-600">₹{outstanding.walkInTotal.toFixed(2)}</span>
+              </div>
+              {outstanding.walkInRows.length === 0 ? (
+                <p className="text-sm text-slate-400">No unpaid walk-in orders.</p>
+              ) : (
+                <ul className="divide-y divide-slate-100">
+                  {outstanding.walkInRows.map((r) => (
+                    <li key={r.id} className="flex items-center justify-between gap-3 py-2">
+                      <div className="min-w-0">
+                        <p className="truncate text-sm font-medium text-slate-900">{r.customerName}</p>
+                        <p className="text-xs text-slate-500">
+                          {r.product}
+                          {r.unit ? ` · ${r.quantity.toFixed(r.unit === "piece" ? 0 : 1)} ${r.unit}` : ""}
+                        </p>
+                      </div>
+                      <span className="text-sm font-medium text-red-700">₹{r.amount.toFixed(2)}</span>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </section>
+          </div>
+        </ExpandableStat>
       </div>
 
       {starredStats.length > 0 && (
@@ -199,15 +314,6 @@ export default async function DashboardPage({
           )}
         </section>
       </div>
-    </div>
-  );
-}
-
-function StatCard({ label, value, accent }: { label: string; value: string; accent: string }) {
-  return (
-    <div className="rounded-xl border border-slate-200 bg-white p-4">
-      <p className="text-xs font-medium uppercase tracking-wide text-slate-500">{label}</p>
-      <p className={`mt-2 text-2xl font-semibold tracking-tight ${accent}`}>{value}</p>
     </div>
   );
 }
