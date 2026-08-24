@@ -219,6 +219,96 @@ export async function getStarredProductStats(userId: string, period: Period) {
   });
 }
 
+/**
+ * Everything that happened on one calendar day, split into the daily
+ * delivery round and walk-in/one-time sales.
+ */
+export async function getDaySummary(userId: string, dateStr: string) {
+  const parts = dateStr.split("-").map(Number);
+  const dayStart = new Date(parts[0], parts[1] - 1, parts[2]);
+  const dayEnd = new Date(dayStart);
+  dayEnd.setDate(dayEnd.getDate() + 1);
+
+  const [deliveries, walkIns] = await Promise.all([
+    prisma.deliveryEntry.findMany({
+      where: { customer: { userId }, date: { gte: dayStart, lt: dayEnd } },
+      include: { customer: { select: { id: true, name: true } } },
+      orderBy: { customer: { name: "asc" } },
+    }),
+    prisma.oneTimeOrder.findMany({
+      where: { userId, date: { gte: dayStart, lt: dayEnd } },
+      orderBy: { createdAt: "asc" },
+    }),
+  ]);
+
+  const deliveryRows = deliveries.map((d) => ({
+    id: d.id,
+    customerId: d.customer.id,
+    customerName: d.customer.name,
+    quantity: d.quantity,
+    pricePerUnit: d.pricePerUnit,
+    amount: round2(d.quantity * d.pricePerUnit),
+  }));
+
+  const walkInRows = walkIns.map((o) => ({
+    id: o.id,
+    customerName: o.customerName,
+    product: o.product,
+    unit: o.unit,
+    quantity: o.quantity,
+    amount: o.amount,
+    paid: o.paid,
+  }));
+
+  const deliveryTotal = round2(deliveryRows.reduce((s, r) => s + r.amount, 0));
+  const deliveryLiters = round2(deliveryRows.reduce((s, r) => s + r.quantity, 0));
+  const walkInTotal = round2(walkInRows.reduce((s, r) => s + r.amount, 0));
+  const walkInUnpaid = round2(walkInRows.filter((r) => !r.paid).reduce((s, r) => s + r.amount, 0));
+
+  return {
+    deliveries: deliveryRows,
+    walkIns: walkInRows,
+    deliveryTotal,
+    deliveryLiters,
+    walkInTotal,
+    walkInUnpaid,
+    grandTotal: round2(deliveryTotal + walkInTotal),
+  };
+}
+
+/**
+ * Per-day activity flags for one month, used to dot the calendar.
+ */
+export async function getMonthActivity(userId: string, year: number, month0: number) {
+  const start = new Date(year, month0, 1);
+  const end = new Date(year, month0 + 1, 1);
+
+  const [deliveries, walkIns] = await Promise.all([
+    prisma.deliveryEntry.findMany({
+      where: { customer: { userId }, date: { gte: start, lt: end } },
+      select: { date: true, quantity: true, pricePerUnit: true },
+    }),
+    prisma.oneTimeOrder.findMany({
+      where: { userId, date: { gte: start, lt: end } },
+      select: { date: true, amount: true },
+    }),
+  ]);
+
+  const byDay = new Map<number, number>();
+  for (const d of deliveries) {
+    const k = d.date.getDate();
+    byDay.set(k, (byDay.get(k) ?? 0) + d.quantity * d.pricePerUnit);
+  }
+  for (const o of walkIns) {
+    const k = o.date.getDate();
+    byDay.set(k, (byDay.get(k) ?? 0) + o.amount);
+  }
+
+  const out: Record<number, number> = {};
+  for (const [day, total] of byDay) out[day] = round2(total);
+  return out;
+}
+
 export async function listOneTimeOrders(userId: string, limit = 20) {
   return prisma.oneTimeOrder.findMany({
     where: { userId },
