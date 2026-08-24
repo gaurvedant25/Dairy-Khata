@@ -124,15 +124,20 @@ function periodStart(period: Period): Date {
 export async function getStats(userId: string, period: Period) {
   const start = periodStart(period);
 
-  const [deliveries, oneTimeInPeriod, unpaidWalkInOnly, allWithStats] = await Promise.all([
-    prisma.deliveryEntry.findMany({ where: { customer: { userId }, date: { gte: start } } }),
-    prisma.oneTimeOrder.findMany({ where: { userId, date: { gte: start } } }),
-    // Only untagged walk-ins here — tagged ones already show up under
-    // their customer's dues via listCustomersWithStats, so counting them
-    // in both places would double the "To collect" total.
-    prisma.oneTimeOrder.findMany({ where: { userId, paid: false, customerId: null } }),
-    listCustomersWithStats(userId),
-  ]);
+  const [deliveries, oneTimeInPeriod, unpaidWalkInOnly, allWithStats, paymentsInPeriod, paidWalkInsInPeriod] =
+    await Promise.all([
+      prisma.deliveryEntry.findMany({ where: { customer: { userId }, date: { gte: start } } }),
+      prisma.oneTimeOrder.findMany({ where: { userId, date: { gte: start } } }),
+      // Only untagged walk-ins here — tagged ones already show up under
+      // their customer's dues via listCustomersWithStats, so counting them
+      // in both places would double the "To collect" total.
+      prisma.oneTimeOrder.findMany({ where: { userId, paid: false, customerId: null } }),
+      listCustomersWithStats(userId),
+      // Money actually collected in the period: recorded payments...
+      prisma.payment.findMany({ where: { customer: { userId }, date: { gte: start } } }),
+      // ...plus walk-in orders paid on the spot in the period.
+      prisma.oneTimeOrder.findMany({ where: { userId, paid: true, date: { gte: start } } }),
+    ]);
 
   const deliverySales = deliveries.reduce((s, d) => s + d.quantity * d.pricePerUnit, 0);
   const deliveryCost = deliveries.reduce((s, d) => s + d.quantity * d.costPerUnit, 0);
@@ -142,6 +147,10 @@ export async function getStats(userId: string, period: Period) {
   const profit = deliverySales - deliveryCost + oneTimeSales; // one-time has no tracked cost
   const litersDelivered = deliveries.reduce((s, d) => s + d.quantity, 0);
 
+  const collected =
+    paymentsInPeriod.reduce((s, p) => s + p.amount, 0) +
+    paidWalkInsInPeriod.reduce((s, o) => s + o.amount, 0);
+
   const customerOutstanding = allWithStats.reduce((s, c) => s + Math.max(0, c.duesInfo.dues), 0);
   const oneTimeOutstanding = unpaidWalkInOnly.reduce((s, o) => s + o.amount, 0);
 
@@ -149,6 +158,7 @@ export async function getStats(userId: string, period: Period) {
     sales: round2(sales),
     cost: round2(deliveryCost),
     profit: round2(profit),
+    collected: round2(collected),
     litersDelivered: round2(litersDelivered),
     totalOutstanding: round2(customerOutstanding + oneTimeOutstanding),
   };
