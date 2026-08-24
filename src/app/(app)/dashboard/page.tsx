@@ -138,15 +138,6 @@ export default async function DashboardPage({
           </div>
         </ExpandableStat>
 
-        <div className="rounded-xl border border-slate-200 bg-white p-4">
-          <p className="text-xs font-medium uppercase tracking-wide text-slate-500">Collected {periodLabel}</p>
-          <p className="mt-2 text-2xl font-semibold tracking-tight text-emerald-700">
-            ₹{stats.collected.toFixed(2)}
-          </p>
-        </div>
-      </div>
-
-      <div>
         <ExpandableStat label="To collect" value={`₹${stats.totalOutstanding.toFixed(2)}`} accent="text-red-700">
           <p className="mb-3 text-xs text-slate-400">Everyone who owes you money right now.</p>
 
