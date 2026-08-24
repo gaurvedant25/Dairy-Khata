@@ -1,10 +1,10 @@
 "use client";
 
 import { usePathname } from "next/navigation";
-import { useRef } from "react";
+import { useEffect, useRef } from "react";
 
-// Order matches the bottom nav so we can tell "forward" (swipe left→right
-// through the tabs) from "back" and animate the slide direction accordingly.
+// Order matches the bottom nav so we can tell "forward" (moving right through
+// the tabs) from "back" and animate the slide direction accordingly.
 const ORDER = ["/dashboard", "/deliveries", "/customers", "/walk-in", "/settings"];
 
 function navIndex(pathname: string) {
@@ -14,11 +14,16 @@ function navIndex(pathname: string) {
 
 export function PageTransition({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
-  const prevIndex = useRef(navIndex(pathname));
+  const prevIndexRef = useRef(navIndex(pathname));
 
   const current = navIndex(pathname);
-  const direction = current >= prevIndex.current ? "forward" : "back";
-  prevIndex.current = current;
+  // Compare against the PREVIOUS committed index. The ref is only updated in
+  // the effect below (after paint), so double-renders in dev don't clobber it.
+  const direction = current >= prevIndexRef.current ? "forward" : "back";
+
+  useEffect(() => {
+    prevIndexRef.current = current;
+  }, [current]);
 
   return (
     <div className="overflow-x-hidden">
