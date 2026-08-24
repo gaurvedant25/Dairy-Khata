@@ -1,6 +1,7 @@
 import { auth } from "@/lib/auth";
 import { NavLinks } from "@/components/NavLinks";
 import { SignOutButton } from "@/components/SignOutButton";
+import { PageTransition } from "@/components/PageTransition";
 
 function Wordmark() {
   return (
@@ -33,7 +34,9 @@ export default async function AppLayout({ children }: { children: React.ReactNod
       </header>
 
       <main className="flex-1 pb-24 md:pb-0">
-        <div className="mx-auto max-w-5xl px-4 py-6 md:py-8">{children}</div>
+        <div className="mx-auto max-w-5xl px-4 py-6 md:py-8">
+          <PageTransition>{children}</PageTransition>
+        </div>
       </main>
 
       <nav className="fixed inset-x-0 bottom-0 border-t border-slate-200 bg-white md:hidden">

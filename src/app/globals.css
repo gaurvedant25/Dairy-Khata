@@ -23,3 +23,41 @@ body {
   outline: 2px solid var(--brand);
   outline-offset: 2px;
 }
+
+/* Page swipe transitions between nav tabs */
+@keyframes page-enter-right {
+  from {
+    opacity: 0;
+    transform: translateX(28px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes page-enter-left {
+  from {
+    opacity: 0;
+    transform: translateX(-28px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.page-enter-right {
+  animation: page-enter-right 0.28s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.page-enter-left {
+  animation: page-enter-left 0.28s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .page-enter-right,
+  .page-enter-left {
+    animation: none;
+  }
+}
