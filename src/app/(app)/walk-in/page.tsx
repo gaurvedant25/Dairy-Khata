@@ -6,13 +6,18 @@ import { OneTimeOrders } from "@/components/OneTimeOrders";
 export default async function WalkInPage() {
   const session = await auth();
   const userId = session!.user.id;
-  const [orders, setting, dailyCustomers] = await Promise.all([
+  const [orders, setting, dailyCustomers, userProducts] = await Promise.all([
     listOneTimeOrders(userId, 100),
     getOrCreateSetting(userId),
     prisma.customer.findMany({
       where: { userId, active: true },
       orderBy: { name: "asc" },
       select: { id: true, name: true, defaultPricePerUnit: true },
+    }),
+    prisma.customProduct.findMany({
+      where: { userId, active: true },
+      orderBy: { name: "asc" },
+      select: { id: true, name: true, unit: true, pricePerUnit: true },
     }),
   ]);
 
@@ -44,6 +49,7 @@ export default async function WalkInPage() {
           name: c.name,
           pricePerUnit: c.defaultPricePerUnit ?? setting.defaultPricePerUnit,
         }))}
+        userProducts={userProducts}
         initialOrders={orders.map((o) => ({
           id: o.id,
           customerName: o.customerName,

@@ -32,12 +32,13 @@ export const paymentSchema = z.object({
   note: z.string().trim().max(300).optional().or(z.literal("")),
 });
 
-export const BUILTIN_PRODUCTS = ["Milk", "Chai", "Dahi", "Paneer", "Custom"] as const;
+export const BUILTIN_PRODUCTS = ["Milk", "Chai", "Dahi", "Paneer", "Custom", "UserProduct"] as const;
 export type ProductKind = (typeof BUILTIN_PRODUCTS)[number];
 
 const orderItemSchema = z
   .object({
     product: z.enum(BUILTIN_PRODUCTS),
+    userProductId: z.string().min(1).optional().or(z.literal("")),
     customProductName: z.string().trim().max(100).optional().or(z.literal("")),
     quantity: z.coerce.number().nonnegative().optional(),
     customAmount: z.coerce.number().positive().optional(),
@@ -52,13 +53,24 @@ const orderItemSchema = z
           v.customAmount > 0
         );
       }
+      if (v.product === "UserProduct") {
+        return (
+          v.userProductId !== undefined && v.userProductId !== "" && v.quantity !== undefined && v.quantity > 0
+        );
+      }
       return v.quantity !== undefined && v.quantity > 0;
     },
     {
-      message: "Custom items need a name and an amount; other products need a quantity",
+      message: "Every item needs a valid quantity (or, for custom items, a name and amount)",
       path: ["quantity"],
     }
   );
+
+export const customProductSchema = z.object({
+  name: z.string().trim().min(1, "Name is required").max(100),
+  unit: z.string().trim().min(1, "Unit is required").max(20),
+  pricePerUnit: z.coerce.number().nonnegative(),
+});
 
 export const oneTimeOrderSchema = z
   .object({

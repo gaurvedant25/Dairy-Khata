@@ -17,9 +17,23 @@ model User {
   passwordHash String
   createdAt    DateTime @default(now())
 
-  setting       Setting?
-  customers     Customer[]
-  oneTimeOrders OneTimeOrder[]
+  setting        Setting?
+  customers      Customer[]
+  oneTimeOrders  OneTimeOrder[]
+  customProducts CustomProduct[]
+}
+
+model CustomProduct {
+  id           String   @id @default(cuid())
+  userId       String
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  name         String
+  unit         String
+  pricePerUnit Float
+  active       Boolean  @default(true)
+  createdAt    DateTime @default(now())
+
+  @@index([userId])
 }
 
 model Setting {

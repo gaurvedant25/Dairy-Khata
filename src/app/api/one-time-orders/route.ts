@@ -39,6 +39,23 @@ export async function POST(req: Request) {
 
   const milkPrice = existingCustomer?.defaultPricePerUnit ?? setting.defaultPricePerUnit;
 
+  const userProductIds = items
+    .filter((i) => i.product === "UserProduct" && i.userProductId)
+    .map((i) => i.userProductId!);
+  const userProducts = userProductIds.length
+    ? await prisma.customProduct.findMany({
+        where: { id: { in: userProductIds }, userId: session.user.id },
+      })
+    : [];
+  const userProductById = new Map(userProducts.map((p) => [p.id, p]));
+
+  const missingProduct = items.some(
+    (i) => i.product === "UserProduct" && !userProductById.has(i.userProductId ?? "")
+  );
+  if (missingProduct) {
+    return NextResponse.json({ error: "One of the selected items no longer exists" }, { status: 400 });
+  }
+
   const resolved: ResolvedLine[] = items.map((item) => {
     if (item.product === "Milk") {
       return {
@@ -77,6 +94,18 @@ export async function POST(req: Request) {
         quantity: item.quantity!,
         pricePerUnit: setting.defaultPaneerPricePerPiece,
         amount: Math.round(item.quantity! * setting.defaultPaneerPricePerPiece * 100) / 100,
+        isMilk: false,
+      };
+    }
+    if (item.product === "UserProduct") {
+      const up = userProductById.get(item.userProductId!);
+      if (!up) throw new Error("Custom product not found");
+      return {
+        productLabel: up.name,
+        unit: up.unit,
+        quantity: item.quantity!,
+        pricePerUnit: up.pricePerUnit,
+        amount: Math.round(item.quantity! * up.pricePerUnit * 100) / 100,
         isMilk: false,
       };
     }

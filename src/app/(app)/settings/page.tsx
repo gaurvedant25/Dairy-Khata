@@ -1,10 +1,16 @@
 import { auth } from "@/lib/auth";
 import { getOrCreateSetting } from "@/lib/business";
+import { prisma } from "@/lib/prisma";
 import { SettingsForm } from "@/components/SettingsForm";
+import { CustomProductsManager } from "@/components/CustomProductsManager";
 
 export default async function SettingsPage() {
   const session = await auth();
-  const setting = await getOrCreateSetting(session!.user.id);
+  const userId = session!.user.id;
+  const [setting, customProducts] = await Promise.all([
+    getOrCreateSetting(userId),
+    prisma.customProduct.findMany({ where: { userId }, orderBy: { name: "asc" } }),
+  ]);
 
   return (
     <div className="space-y-4">
@@ -24,6 +30,17 @@ export default async function SettingsPage() {
             defaultPaneerPricePerPiece: setting.defaultPaneerPricePerPiece,
             reminderDayOfMonth: setting.reminderDayOfMonth,
           }}
+        />
+      </div>
+
+      <div className="rounded-xl bg-white p-6 border border-slate-200">
+        <CustomProductsManager
+          products={customProducts.map((p) => ({
+            id: p.id,
+            name: p.name,
+            unit: p.unit,
+            pricePerUnit: p.pricePerUnit,
+          }))}
         />
       </div>
     </div>

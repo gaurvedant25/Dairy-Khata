@@ -15,14 +15,16 @@ type Order = {
   date: string; // ISO
 };
 
-type ProductKind = "Milk" | "Chai" | "Dahi" | "Paneer" | "Custom";
-const PRODUCTS: ProductKind[] = ["Milk", "Chai", "Dahi", "Paneer", "Custom"];
+type ProductKind = "Milk" | "Chai" | "Dahi" | "Paneer" | "Custom" | "UserProduct";
+const BUILTINS: ProductKind[] = ["Milk", "Chai", "Dahi", "Paneer"];
 
 type DailyCustomerOption = { id: string; name: string; pricePerUnit: number };
+type UserProduct = { id: string; name: string; unit: string; pricePerUnit: number };
 
 type ItemDraft = {
   key: string;
   product: ProductKind;
+  userProductId: string;
   quantity: string;
   customProductName: string;
   customAmount: string;
@@ -32,6 +34,7 @@ function newItem(): ItemDraft {
   return {
     key: Math.random().toString(36).slice(2, 9),
     product: "Milk",
+    userProductId: "",
     quantity: "",
     customProductName: "",
     customAmount: "",
@@ -45,6 +48,7 @@ export function OneTimeOrders({
   defaultDahiPricePerCup,
   defaultPaneerPricePerPiece,
   dailyCustomers = [],
+  userProducts = [],
 }: {
   initialOrders: Order[];
   defaultPricePerUnit: number;
@@ -52,6 +56,7 @@ export function OneTimeOrders({
   defaultDahiPricePerCup: number;
   defaultPaneerPricePerPiece: number;
   dailyCustomers?: DailyCustomerOption[];
+  userProducts?: UserProduct[];
 }) {
   const router = useRouter();
   const [showForm, setShowForm] = useState(false);
@@ -67,19 +72,28 @@ export function OneTimeOrders({
   const selectedCustomer = dailyCustomers.find((c) => c.id === existingCustomerId) ?? null;
   const milkPricePerUnit = selectedCustomer?.pricePerUnit ?? defaultPricePerUnit;
 
-  function unitFor(p: ProductKind) {
+  function unitFor(it: ItemDraft) {
+    const p = it.product;
     if (p === "Milk") return { unit: "liters", step: "0.1", per: `₹${milkPricePerUnit.toFixed(2)}/L` };
     if (p === "Chai") return { unit: "cups", step: "0.5", per: `₹${defaultChaiPricePerCup.toFixed(2)}/cup` };
     if (p === "Dahi") return { unit: "cups", step: "0.5", per: `₹${defaultDahiPricePerCup.toFixed(2)}/cup` };
     if (p === "Paneer") return { unit: "pieces", step: "1", per: `₹${defaultPaneerPricePerPiece.toFixed(2)}/piece` };
+    if (p === "UserProduct") {
+      const up = userProducts.find((u) => u.id === it.userProductId);
+      if (up) return { unit: up.unit, step: "0.1", per: `₹${up.pricePerUnit.toFixed(2)}/${up.unit}` };
+    }
     return { unit: "", step: "0.01", per: "" };
   }
 
-  function priceFor(p: ProductKind) {
+  function priceFor(it: ItemDraft) {
+    const p = it.product;
     if (p === "Milk") return milkPricePerUnit;
     if (p === "Chai") return defaultChaiPricePerCup;
     if (p === "Dahi") return defaultDahiPricePerCup;
     if (p === "Paneer") return defaultPaneerPricePerPiece;
+    if (p === "UserProduct") {
+      return userProducts.find((u) => u.id === it.userProductId)?.pricePerUnit ?? 0;
+    }
     return 0;
   }
 
@@ -90,7 +104,7 @@ export function OneTimeOrders({
     }
     const q = Number(it.quantity);
     if (!Number.isFinite(q) || q <= 0) return 0;
-    return Math.round(q * priceFor(it.product) * 100) / 100;
+    return Math.round(q * priceFor(it) * 100) / 100;
   }
 
   const total = useMemo(() => items.reduce((s, it) => s + lineAmount(it), 0), [items, milkPricePerUnit]);
@@ -116,15 +130,19 @@ export function OneTimeOrders({
     e.preventDefault();
     setError(null);
     setSaving(true);
-    const payloadItems = items.map((it) =>
-      it.product === "Custom"
-        ? {
-            product: "Custom",
-            customProductName: it.customProductName,
-            customAmount: it.customAmount,
-          }
-        : { product: it.product, quantity: it.quantity }
-    );
+    const payloadItems = items.map((it) => {
+      if (it.product === "Custom") {
+        return {
+          product: "Custom",
+          customProductName: it.customProductName,
+          customAmount: it.customAmount,
+        };
+      }
+      if (it.product === "UserProduct") {
+        return { product: "UserProduct", userProductId: it.userProductId, quantity: it.quantity };
+      }
+      return { product: it.product, quantity: it.quantity };
+    });
     const res = await fetch("/api/one-time-orders", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -243,7 +261,8 @@ export function OneTimeOrders({
             </div>
 
             {items.map((it, idx) => {
-              const { unit, step, per } = unitFor(it.product);
+              const { unit, step, per } = unitFor(it);
+              const selectValue = it.product === "UserProduct" ? `up:${it.userProductId}` : it.product;
               return (
                 <div
                   key={it.key}
@@ -266,15 +285,32 @@ export function OneTimeOrders({
                   <label className="block">
                     <span className="mb-1 block text-xs font-medium text-slate-600">Product</span>
                     <select
-                      value={it.product}
-                      onChange={(e) => updateItem(it.key, { product: e.target.value as ProductKind })}
+                      value={selectValue}
+                      onChange={(e) => {
+                        const v = e.target.value;
+                        if (v.startsWith("up:")) {
+                          updateItem(it.key, { product: "UserProduct", userProductId: v.slice(3) });
+                        } else {
+                          updateItem(it.key, { product: v as ProductKind, userProductId: "" });
+                        }
+                      }}
                       className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900"
                     >
-                      {PRODUCTS.map((p) => (
+                      {BUILTINS.map((p) => (
                         <option key={p} value={p}>
-                          {p === "Custom" ? "Custom item…" : p}
+                          {p}
                         </option>
                       ))}
+                      {userProducts.length > 0 && (
+                        <optgroup label="Your items">
+                          {userProducts.map((up) => (
+                            <option key={up.id} value={`up:${up.id}`}>
+                              {up.name}
+                            </option>
+                          ))}
+                        </optgroup>
+                      )}
+                      <option value="Custom">One-off item…</option>
                     </select>
                   </label>
 
