@@ -3,9 +3,9 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 
-export function AddPaymentForm({ customerId }: { customerId: string }) {
+export function AddPaymentForm({ customerId, defaultAmount }: { customerId: string; defaultAmount?: number }) {
   const router = useRouter();
-  const [amount, setAmount] = useState("");
+  const [amount, setAmount] = useState(defaultAmount && defaultAmount > 0 ? String(defaultAmount) : "");
   const [date, setDate] = useState(() => new Date().toISOString().slice(0, 10));
   const [note, setNote] = useState("");
   const [error, setError] = useState<string | null>(null);

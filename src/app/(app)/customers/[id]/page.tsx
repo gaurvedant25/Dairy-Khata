@@ -1,19 +1,43 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import { auth } from "@/lib/auth";
-import { getCustomerWithStats } from "@/lib/business";
+import { getCustomerWithStats, getOrCreateSetting } from "@/lib/business";
 import { TrustBadge } from "@/components/TrustBadge";
 import { AddPaymentForm } from "@/components/AddPaymentForm";
 import { EditCustomerForm } from "@/components/EditCustomerForm";
 import { RemindButton } from "@/components/RemindButton";
+import { WhatsAppBillButton } from "@/components/WhatsAppBillButton";
+import { toWhatsAppNumber, buildBillMessage, buildWhatsAppLink } from "@/lib/whatsapp";
 
 export default async function CustomerDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const session = await auth();
   const { id } = await params;
-  const result = await getCustomerWithStats(id, session!.user.id);
+  const [result, setting] = await Promise.all([
+    getCustomerWithStats(id, session!.user.id),
+    getOrCreateSetting(session!.user.id),
+  ]);
   if (!result) notFound();
 
   const { customer, duesInfo, trust } = result;
+
+  // Build the WhatsApp bill from the customer's outstanding activity.
+  const milkLiters = customer.deliveries.reduce((s, d) => s + d.quantity, 0);
+  const milkAmount = customer.deliveries.reduce((s, d) => s + d.quantity * d.pricePerUnit, 0);
+  const extraItems = customer.oneTimeOrders
+    .filter((o) => !o.paid)
+    .map((o) => ({ product: o.product, unit: o.unit, quantity: o.quantity, amount: o.amount }));
+
+  const waNumber = toWhatsAppNumber(customer.phone);
+  const billMessage = buildBillMessage({
+    customerName: customer.name,
+    businessName: setting.businessName,
+    milkLiters,
+    milkAmount,
+    extraItems,
+    totalPaid: duesInfo.totalPaid,
+    dues: duesInfo.dues,
+  });
+  const waLink = waNumber ? buildWhatsAppLink(waNumber, billMessage) : null;
 
   return (
     <div className="space-y-6">
@@ -37,6 +61,16 @@ export default async function CustomerDetailPage({ params }: { params: Promise<{
         <StatCard label="Days overdue" value={duesInfo.daysOverdue.toString()} accent="text-slate-800" />
       </div>
 
+      {duesInfo.dues > 0 && (
+        <section className="space-y-3 rounded-xl bg-white p-4 border border-slate-200">
+          <h2 className="text-sm font-semibold text-slate-700">Send bill on WhatsApp</h2>
+          <WhatsAppBillButton customerId={customer.id} link={waLink} />
+          {customer.lastReminderSentAt && (
+            <p className="text-xs text-slate-400">Last reminded: {customer.lastReminderSentAt.toLocaleDateString()}</p>
+          )}
+        </section>
+      )}
+
       <section className="space-y-3 rounded-xl bg-white p-4 border border-slate-200">
         <div className="flex items-center justify-between">
           <h2 className="text-sm font-semibold text-slate-700">Record payment</h2>
@@ -47,10 +81,7 @@ export default async function CustomerDetailPage({ params }: { params: Promise<{
             />
           )}
         </div>
-        <AddPaymentForm customerId={customer.id} />
-        {customer.lastReminderSentAt && (
-          <p className="text-xs text-slate-400">Last reminded: {customer.lastReminderSentAt.toLocaleDateString()}</p>
-        )}
+        <AddPaymentForm customerId={customer.id} defaultAmount={duesInfo.dues > 0 ? duesInfo.dues : undefined} />
       </section>
 
       <section className="rounded-xl bg-white p-4 border border-slate-200">
