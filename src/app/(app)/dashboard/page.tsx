@@ -1,7 +1,6 @@
 import Link from "next/link";
 import { auth } from "@/lib/auth";
-import { getStats, getReminderList, getStarredProductStats, type Period } from "@/lib/business";
-import { TrustBadge } from "@/components/TrustBadge";
+import { getStats, getStarredProductStats, type Period } from "@/lib/business";
 
 const PERIODS: { value: Period; label: string }[] = [
   { value: "today", label: "Today" },
@@ -22,9 +21,8 @@ export default async function DashboardPage({
     ? (params.period as Period)
     : "month";
 
-  const [stats, reminders, starredStats] = await Promise.all([
+  const [stats, starredStats] = await Promise.all([
     getStats(userId, period),
-    getReminderList(userId),
     getStarredProductStats(userId, period),
   ]);
 
@@ -47,9 +45,8 @@ export default async function DashboardPage({
         </div>
       </div>
 
-      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+      <div className="grid grid-cols-2 gap-3">
         <StatCard label="Sales" value={`₹${stats.sales.toFixed(2)}`} accent="text-blue-700" />
-        <StatCard label="Liters delivered" value={stats.litersDelivered.toFixed(1)} accent="text-slate-700" />
         <StatCard label="To collect" value={`₹${stats.totalOutstanding.toFixed(2)}`} accent="text-red-700" />
       </div>
 
@@ -80,36 +77,6 @@ export default async function DashboardPage({
           </ul>
         </div>
       )}
-
-      <div className="rounded-xl bg-white p-4 border border-slate-200">
-        <div className="mb-3 flex items-center justify-between">
-          <h2 className="text-sm font-semibold text-slate-700">Customers to remind</h2>
-          {reminders.pastReminderDay && (
-            <span className="text-xs text-slate-400">Reminder day: {reminders.reminderDay}th</span>
-          )}
-        </div>
-        {reminders.customers.length === 0 ? (
-          <p className="text-sm text-slate-500">
-            {reminders.pastReminderDay ? "Nobody owes you money right now." : "No reminders due yet this month."}
-          </p>
-        ) : (
-          <ul className="divide-y divide-slate-100">
-            {reminders.customers.map(({ customer, duesInfo, trust }) => (
-              <li key={customer.id} className="flex items-center justify-between py-3">
-                <div>
-                  <Link href={`/customers/${customer.id}`} className="font-medium text-slate-900 hover:underline">
-                    {customer.name}
-                  </Link>
-                  <p className="text-xs text-slate-500">
-                    ₹{duesInfo.dues.toFixed(2)} due · {duesInfo.daysOverdue} days
-                  </p>
-                </div>
-                <TrustBadge trust={trust} />
-              </li>
-            ))}
-          </ul>
-        )}
-      </div>
     </div>
   );
 }
