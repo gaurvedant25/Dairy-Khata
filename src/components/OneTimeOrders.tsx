@@ -15,10 +15,9 @@ type Order = {
   date: string; // ISO
 };
 
-type ProductKind = "Milk" | "Chai" | "Dahi" | "Paneer" | "Custom" | "UserProduct";
-const BUILTINS: ProductKind[] = ["Milk", "Chai", "Dahi", "Paneer"];
+type ProductKind = "UserProduct" | "Custom";
 
-type DailyCustomerOption = { id: string; name: string; pricePerUnit: number };
+type DailyCustomerOption = { id: string; name: string };
 type UserProduct = { id: string; name: string; unit: string; pricePerUnit: number };
 
 type ItemDraft = {
@@ -30,11 +29,11 @@ type ItemDraft = {
   customAmount: string;
 };
 
-function newItem(): ItemDraft {
+function makeItem(defaultUserProductId: string): ItemDraft {
   return {
     key: Math.random().toString(36).slice(2, 9),
-    product: "Milk",
-    userProductId: "",
+    product: defaultUserProductId ? "UserProduct" : "Custom",
+    userProductId: defaultUserProductId,
     quantity: "",
     customProductName: "",
     customAmount: "",
@@ -43,55 +42,39 @@ function newItem(): ItemDraft {
 
 export function OneTimeOrders({
   initialOrders,
-  defaultPricePerUnit,
-  defaultChaiPricePerCup,
-  defaultDahiPricePerCup,
-  defaultPaneerPricePerPiece,
   dailyCustomers = [],
   userProducts = [],
 }: {
   initialOrders: Order[];
-  defaultPricePerUnit: number;
-  defaultChaiPricePerCup: number;
-  defaultDahiPricePerCup: number;
-  defaultPaneerPricePerPiece: number;
   dailyCustomers?: DailyCustomerOption[];
   userProducts?: UserProduct[];
 }) {
   const router = useRouter();
+  const firstProductId = userProducts[0]?.id ?? "";
+  const newItem = () => makeItem(firstProductId);
+
   const [showForm, setShowForm] = useState(false);
   const [existingCustomerId, setExistingCustomerId] = useState<string>("");
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
-  const [items, setItems] = useState<ItemDraft[]>([newItem()]);
+  const [items, setItems] = useState<ItemDraft[]>([makeItem(firstProductId)]);
   const [paid, setPaid] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [busyId, setBusyId] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
 
   const selectedCustomer = dailyCustomers.find((c) => c.id === existingCustomerId) ?? null;
-  const milkPricePerUnit = selectedCustomer?.pricePerUnit ?? defaultPricePerUnit;
 
   function unitFor(it: ItemDraft) {
-    const p = it.product;
-    if (p === "Milk") return { unit: "liters", step: "0.1", per: `₹${milkPricePerUnit.toFixed(2)}/L` };
-    if (p === "Chai") return { unit: "cups", step: "0.5", per: `₹${defaultChaiPricePerCup.toFixed(2)}/cup` };
-    if (p === "Dahi") return { unit: "cups", step: "0.5", per: `₹${defaultDahiPricePerCup.toFixed(2)}/cup` };
-    if (p === "Paneer") return { unit: "pieces", step: "1", per: `₹${defaultPaneerPricePerPiece.toFixed(2)}/piece` };
-    if (p === "UserProduct") {
+    if (it.product === "UserProduct") {
       const up = userProducts.find((u) => u.id === it.userProductId);
-      if (up) return { unit: up.unit, step: "0.1", per: `₹${up.pricePerUnit.toFixed(2)}/${up.unit}` };
+      if (up) return { unit: up.unit, step: up.unit === "piece" ? "1" : "0.5", per: `₹${up.pricePerUnit.toFixed(2)}/${up.unit}` };
     }
     return { unit: "", step: "0.01", per: "" };
   }
 
   function priceFor(it: ItemDraft) {
-    const p = it.product;
-    if (p === "Milk") return milkPricePerUnit;
-    if (p === "Chai") return defaultChaiPricePerCup;
-    if (p === "Dahi") return defaultDahiPricePerCup;
-    if (p === "Paneer") return defaultPaneerPricePerPiece;
-    if (p === "UserProduct") {
+    if (it.product === "UserProduct") {
       return userProducts.find((u) => u.id === it.userProductId)?.pricePerUnit ?? 0;
     }
     return 0;
@@ -107,7 +90,7 @@ export function OneTimeOrders({
     return Math.round(q * priceFor(it) * 100) / 100;
   }
 
-  const total = useMemo(() => items.reduce((s, it) => s + lineAmount(it), 0), [items, milkPricePerUnit]);
+  const total = useMemo(() => items.reduce((s, it) => s + lineAmount(it), 0), [items]);
 
   function resetForm() {
     setExistingCustomerId("");
@@ -185,7 +168,7 @@ export function OneTimeOrders({
   }
 
   return (
-    <div className="rounded-xl bg-white p-4 border border-slate-200">
+    <div className="rounded-xl bg-[#FBF3D1] p-4 border border-[#E0CB9E]">
       <div className="mb-3 flex items-center justify-between">
         <div>
           <h2 className="text-sm font-semibold text-slate-700">One-time orders</h2>
@@ -194,7 +177,7 @@ export function OneTimeOrders({
         {!showForm && (
           <button
             onClick={() => setShowForm(true)}
-            className="rounded-lg bg-blue-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-blue-700"
+            className="rounded-lg bg-[#9D6638] px-3 py-1.5 text-xs font-medium text-white hover:bg-[#4E220F]"
           >
             + Add order
           </button>
@@ -202,14 +185,14 @@ export function OneTimeOrders({
       </div>
 
       {showForm && (
-        <form onSubmit={addOrder} className="mb-4 space-y-3 rounded-lg bg-slate-50 p-3">
+        <form onSubmit={addOrder} className="mb-4 space-y-3 rounded-lg bg-[#F3E7C7] p-3">
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
             <label className="block sm:col-span-2">
               <span className="mb-1 block text-xs font-semibold text-slate-700">Customer</span>
               <select
                 value={existingCustomerId}
                 onChange={(e) => setExistingCustomerId(e.target.value)}
-                className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900"
+                className="w-full rounded-lg border border-[#D6BE8C] bg-[#FBF3D1] px-3 py-2 text-sm text-[#4E220F]"
               >
                 <option value="">— New walk-in customer —</option>
                 {dailyCustomers.length > 0 && (
@@ -231,7 +214,7 @@ export function OneTimeOrders({
                     required={!existingCustomerId}
                     value={name}
                     onChange={(e) => setName(e.target.value)}
-                    className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900"
+                    className="w-full rounded-lg border border-[#D6BE8C] bg-[#FBF3D1] px-3 py-2 text-sm text-[#4E220F]"
                   />
                 </label>
                 <label className="block">
@@ -241,7 +224,7 @@ export function OneTimeOrders({
                   <input
                     value={phone}
                     onChange={(e) => setPhone(e.target.value)}
-                    className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900"
+                    className="w-full rounded-lg border border-[#D6BE8C] bg-[#FBF3D1] px-3 py-2 text-sm text-[#4E220F]"
                   />
                 </label>
               </>
@@ -254,7 +237,7 @@ export function OneTimeOrders({
               <button
                 type="button"
                 onClick={() => setItems((prev) => [...prev, newItem()])}
-                className="text-xs font-medium text-blue-600 hover:underline"
+                className="text-xs font-medium text-[#9D6638] hover:underline"
               >
                 + Add another item
               </button>
@@ -266,7 +249,7 @@ export function OneTimeOrders({
               return (
                 <div
                   key={it.key}
-                  className="rounded-lg border border-slate-200 bg-white p-3 space-y-2"
+                  className="rounded-lg border border-[#E0CB9E] bg-[#FBF3D1] p-3 space-y-2"
                 >
                   <div className="flex items-center justify-between gap-2">
                     <span className="text-xs font-semibold text-slate-500">Item {idx + 1}</span>
@@ -294,22 +277,13 @@ export function OneTimeOrders({
                           updateItem(it.key, { product: v as ProductKind, userProductId: "" });
                         }
                       }}
-                      className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900"
+                      className="w-full rounded-lg border border-[#D6BE8C] bg-[#FBF3D1] px-3 py-2 text-sm text-[#4E220F]"
                     >
-                      {BUILTINS.map((p) => (
-                        <option key={p} value={p}>
-                          {p}
+                      {userProducts.map((up) => (
+                        <option key={up.id} value={`up:${up.id}`}>
+                          {up.name}
                         </option>
                       ))}
-                      {userProducts.length > 0 && (
-                        <optgroup label="Your items">
-                          {userProducts.map((up) => (
-                            <option key={up.id} value={`up:${up.id}`}>
-                              {up.name}
-                            </option>
-                          ))}
-                        </optgroup>
-                      )}
                       <option value="Custom">One-off item…</option>
                     </select>
                   </label>
@@ -327,7 +301,7 @@ export function OneTimeOrders({
                         required
                         value={it.quantity}
                         onChange={(e) => updateItem(it.key, { quantity: e.target.value })}
-                        className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900"
+                        className="w-full rounded-lg border border-[#D6BE8C] bg-[#FBF3D1] px-3 py-2 text-sm text-[#4E220F]"
                       />
                     </label>
                   ) : (
@@ -339,7 +313,7 @@ export function OneTimeOrders({
                           value={it.customProductName}
                           onChange={(e) => updateItem(it.key, { customProductName: e.target.value })}
                           placeholder="e.g. Butter, Ghee"
-                          className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 placeholder:text-slate-400"
+                          className="w-full rounded-lg border border-[#D6BE8C] bg-[#FBF3D1] px-3 py-2 text-sm text-[#4E220F] placeholder:text-slate-400"
                         />
                       </label>
                       <label className="block">
@@ -352,7 +326,7 @@ export function OneTimeOrders({
                           required
                           value={it.customAmount}
                           onChange={(e) => updateItem(it.key, { customAmount: e.target.value })}
-                          className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900"
+                          className="w-full rounded-lg border border-[#D6BE8C] bg-[#FBF3D1] px-3 py-2 text-sm text-[#4E220F]"
                         />
                       </label>
                     </div>
@@ -366,9 +340,9 @@ export function OneTimeOrders({
             })}
           </div>
 
-          <div className="rounded-lg bg-white px-3 py-2 text-sm border border-slate-200 flex items-center justify-between">
+          <div className="rounded-lg bg-[#FBF3D1] px-3 py-2 text-sm border border-[#E0CB9E] flex items-center justify-between">
             <span className="text-slate-500">Order total</span>
-            <span className="font-semibold text-slate-900">₹{total.toFixed(2)}</span>
+            <span className="font-semibold text-[#4E220F]">₹{total.toFixed(2)}</span>
           </div>
 
           <label className="flex items-center gap-2 text-sm font-medium text-slate-700">
@@ -376,7 +350,7 @@ export function OneTimeOrders({
               type="checkbox"
               checked={paid}
               onChange={(e) => setPaid(e.target.checked)}
-              className="h-4 w-4 rounded border-slate-300"
+              className="h-4 w-4 rounded border-[#D6BE8C]"
             />
             Paid on the spot
           </label>
@@ -397,7 +371,7 @@ export function OneTimeOrders({
             <button
               type="submit"
               disabled={saving}
-              className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-60"
+              className="rounded-lg bg-[#9D6638] px-4 py-2 text-sm font-medium text-white hover:bg-[#4E220F] disabled:opacity-60"
             >
               {saving ? "Saving..." : "Save order"}
             </button>
@@ -427,7 +401,7 @@ export function OneTimeOrders({
             return (
               <li key={order.id} className="flex items-center gap-3 py-3">
                 <div className="min-w-0 flex-1">
-                  <p className="truncate font-medium text-slate-900">{order.customerName}</p>
+                  <p className="truncate font-medium text-[#4E220F]">{order.customerName}</p>
                   <p className="text-xs text-slate-500">
                     {order.product}
                     {qtyLabel ? ` · ${qtyLabel}` : ""} · {new Date(order.date).toLocaleDateString()}

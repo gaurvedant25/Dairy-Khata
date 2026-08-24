@@ -46,17 +46,17 @@ export default function SignupPage() {
     <div className="flex min-h-screen items-center justify-center px-4">
       <div className="w-full max-w-sm space-y-6">
         <div className="text-center">
-          <h1 className="text-2xl font-bold text-slate-900">Dairy Ledger</h1>
+          <h1 className="text-2xl font-bold text-[#4E220F]">Dairy Ledger</h1>
           <p className="mt-1 text-sm text-slate-500">Create your account</p>
         </div>
-        <form onSubmit={onSubmit} className="space-y-4 rounded-xl bg-white p-6 border border-slate-200">
+        <form onSubmit={onSubmit} className="space-y-4 rounded-xl bg-[#FBF3D1] p-6 border border-[#E0CB9E]">
           <div>
             <label className="block text-sm font-medium text-slate-700">Your name</label>
             <input
               required
               value={name}
               onChange={(e) => setName(e.target.value)}
-              className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-base focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+              className="mt-1 w-full rounded-lg border border-[#D6BE8C] px-3 py-2 text-base focus:border-[#9D6638] focus:outline-none focus:ring-1 focus:ring-[#9D6638]"
               autoComplete="name"
             />
           </div>
@@ -67,7 +67,7 @@ export default function SignupPage() {
               required
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-base focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+              className="mt-1 w-full rounded-lg border border-[#D6BE8C] px-3 py-2 text-base focus:border-[#9D6638] focus:outline-none focus:ring-1 focus:ring-[#9D6638]"
               autoComplete="email"
             />
           </div>
@@ -79,7 +79,7 @@ export default function SignupPage() {
               minLength={6}
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-base focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+              className="mt-1 w-full rounded-lg border border-[#D6BE8C] px-3 py-2 text-base focus:border-[#9D6638] focus:outline-none focus:ring-1 focus:ring-[#9D6638]"
               autoComplete="new-password"
             />
           </div>
@@ -87,14 +87,14 @@ export default function SignupPage() {
           <button
             type="submit"
             disabled={loading}
-            className="w-full rounded-lg bg-blue-600 py-2.5 text-base font-medium text-white hover:bg-blue-700 disabled:opacity-60"
+            className="w-full rounded-lg bg-[#9D6638] py-2.5 text-base font-medium text-white hover:bg-[#4E220F] disabled:opacity-60"
           >
             {loading ? "Creating account..." : "Create account"}
           </button>
         </form>
         <p className="text-center text-sm text-slate-500">
           Already have an account?{" "}
-          <Link href="/login" className="font-medium text-blue-600 hover:underline">
+          <Link href="/login" className="font-medium text-[#9D6638] hover:underline">
             Sign in
           </Link>
         </p>

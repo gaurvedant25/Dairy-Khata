@@ -8,21 +8,11 @@ export function SettingsForm({
 }: {
   initial: {
     businessName: string;
-    defaultPricePerUnit: number;
-    defaultCostPerUnit: number;
-    defaultChaiPricePerCup: number;
-    defaultDahiPricePerCup: number;
-    defaultPaneerPricePerPiece: number;
     reminderDayOfMonth: number;
   };
 }) {
   const router = useRouter();
   const [businessName, setBusinessName] = useState(initial.businessName);
-  const [price, setPrice] = useState(initial.defaultPricePerUnit.toString());
-  const [cost, setCost] = useState(initial.defaultCostPerUnit.toString());
-  const [chaiPrice, setChaiPrice] = useState(initial.defaultChaiPricePerCup.toString());
-  const [dahiPrice, setDahiPrice] = useState(initial.defaultDahiPricePerCup.toString());
-  const [paneerPrice, setPaneerPrice] = useState(initial.defaultPaneerPricePerPiece.toString());
   const [reminderDay, setReminderDay] = useState(initial.reminderDayOfMonth.toString());
   const [message, setMessage] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
@@ -36,11 +26,6 @@ export function SettingsForm({
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         businessName,
-        defaultPricePerUnit: Number(price),
-        defaultCostPerUnit: Number(cost),
-        defaultChaiPricePerCup: Number(chaiPrice),
-        defaultDahiPricePerCup: Number(dahiPrice),
-        defaultPaneerPricePerPiece: Number(paneerPrice),
         reminderDayOfMonth: Number(reminderDay),
       }),
     });
@@ -61,60 +46,8 @@ export function SettingsForm({
         <input
           value={businessName}
           onChange={(e) => setBusinessName(e.target.value)}
-          className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
+          className="mt-1 w-full rounded-lg border border-[#D6BE8C] px-3 py-2 text-sm"
         />
-      </div>
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-        <div>
-          <label className="block text-xs font-medium text-slate-500">Default price per liter (₹)</label>
-          <input
-            type="number"
-            step="0.01"
-            value={price}
-            onChange={(e) => setPrice(e.target.value)}
-            className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
-          />
-        </div>
-        <div>
-          <label className="block text-xs font-medium text-slate-500">Default cost per liter (₹)</label>
-          <input
-            type="number"
-            step="0.01"
-            value={cost}
-            onChange={(e) => setCost(e.target.value)}
-            className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
-          />
-        </div>
-        <div>
-          <label className="block text-xs font-medium text-slate-500">Chai price per cup (₹)</label>
-          <input
-            type="number"
-            step="0.01"
-            value={chaiPrice}
-            onChange={(e) => setChaiPrice(e.target.value)}
-            className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
-          />
-        </div>
-        <div>
-          <label className="block text-xs font-medium text-slate-500">Dahi price per cup (₹)</label>
-          <input
-            type="number"
-            step="0.01"
-            value={dahiPrice}
-            onChange={(e) => setDahiPrice(e.target.value)}
-            className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
-          />
-        </div>
-        <div>
-          <label className="block text-xs font-medium text-slate-500">Paneer price per piece (₹)</label>
-          <input
-            type="number"
-            step="0.01"
-            value={paneerPrice}
-            onChange={(e) => setPaneerPrice(e.target.value)}
-            className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
-          />
-        </div>
       </div>
       <div>
         <label className="block text-xs font-medium text-slate-500">Reminder day of month (1–28)</label>
@@ -124,15 +57,17 @@ export function SettingsForm({
           max={28}
           value={reminderDay}
           onChange={(e) => setReminderDay(e.target.value)}
-          className="mt-1 w-24 rounded-lg border border-slate-300 px-3 py-2 text-sm"
+          className="mt-1 w-24 rounded-lg border border-[#D6BE8C] px-3 py-2 text-sm"
         />
-        <p className="mt-1 text-xs text-slate-400">Reminders appear starting on this day for customers with outstanding dues.</p>
+        <p className="mt-1 text-xs text-slate-400">
+          Reminders appear starting on this day for customers with outstanding dues.
+        </p>
       </div>
       <div className="flex items-center gap-3">
         <button
           type="submit"
           disabled={loading}
-          className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-60"
+          className="rounded-lg bg-[#9D6638] px-4 py-2 text-sm font-medium text-white hover:bg-[#4E220F] disabled:opacity-60"
         >
           {loading ? "Saving..." : "Save settings"}
         </button>

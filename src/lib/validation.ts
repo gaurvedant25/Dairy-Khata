@@ -16,11 +16,19 @@ export const customerSchema = z.object({
 });
 
 export const deliveryBatchSchema = z.object({
-  date: z.string(),
-  entries: z.array(
+  date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+  customers: z.array(
     z.object({
       customerId: z.string(),
-      quantity: z.coerce.number().nonnegative(),
+      lines: z.array(
+        z.object({
+          product: z.string().trim().min(1).max(100),
+          unit: z.string().trim().max(20),
+          quantity: z.coerce.number().nonnegative(),
+          pricePerUnit: z.coerce.number().nonnegative(),
+          costPerUnit: z.coerce.number().nonnegative(),
+        })
+      ),
     })
   ),
 });
@@ -32,12 +40,11 @@ export const paymentSchema = z.object({
   note: z.string().trim().max(300).optional().or(z.literal("")),
 });
 
-export const BUILTIN_PRODUCTS = ["Milk", "Chai", "Dahi", "Paneer", "Custom", "UserProduct"] as const;
-export type ProductKind = (typeof BUILTIN_PRODUCTS)[number];
-
+// A walk-in line is either one of the user's saved products (by id) or a
+// one-off custom item typed inline.
 const orderItemSchema = z
   .object({
-    product: z.enum(BUILTIN_PRODUCTS),
+    product: z.enum(["UserProduct", "Custom"]),
     userProductId: z.string().min(1).optional().or(z.literal("")),
     customProductName: z.string().trim().max(100).optional().or(z.literal("")),
     quantity: z.coerce.number().nonnegative().optional(),
@@ -53,12 +60,7 @@ const orderItemSchema = z
           v.customAmount > 0
         );
       }
-      if (v.product === "UserProduct") {
-        return (
-          v.userProductId !== undefined && v.userProductId !== "" && v.quantity !== undefined && v.quantity > 0
-        );
-      }
-      return v.quantity !== undefined && v.quantity > 0;
+      return v.userProductId !== undefined && v.userProductId !== "" && v.quantity !== undefined && v.quantity > 0;
     },
     {
       message: "Every item needs a valid quantity (or, for custom items, a name and amount)",
@@ -92,10 +94,5 @@ export const oneTimeOrderUpdateSchema = z.object({
 
 export const settingSchema = z.object({
   businessName: z.string().trim().min(1).max(100),
-  defaultPricePerUnit: z.coerce.number().positive(),
-  defaultCostPerUnit: z.coerce.number().positive(),
-  defaultChaiPricePerCup: z.coerce.number().nonnegative(),
-  defaultDahiPricePerCup: z.coerce.number().nonnegative(),
-  defaultPaneerPricePerPiece: z.coerce.number().nonnegative(),
   reminderDayOfMonth: z.coerce.number().int().min(1).max(28),
 });

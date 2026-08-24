@@ -42,7 +42,7 @@ export function AddPaymentForm({ customerId, defaultAmount }: { customerId: stri
           required
           value={amount}
           onChange={(e) => setAmount(e.target.value)}
-          className="w-28 rounded-lg border border-slate-300 px-3 py-2 text-sm"
+          className="w-28 rounded-lg border border-[#D6BE8C] px-3 py-2 text-sm"
         />
       </div>
       <div>
@@ -52,7 +52,7 @@ export function AddPaymentForm({ customerId, defaultAmount }: { customerId: stri
           required
           value={date}
           onChange={(e) => setDate(e.target.value)}
-          className="rounded-lg border border-slate-300 px-3 py-2 text-sm"
+          className="rounded-lg border border-[#D6BE8C] px-3 py-2 text-sm"
         />
       </div>
       <div className="flex-1 min-w-[120px]">
@@ -60,7 +60,7 @@ export function AddPaymentForm({ customerId, defaultAmount }: { customerId: stri
         <input
           value={note}
           onChange={(e) => setNote(e.target.value)}
-          className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
+          className="w-full rounded-lg border border-[#D6BE8C] px-3 py-2 text-sm"
         />
       </div>
       <button

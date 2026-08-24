@@ -16,7 +16,7 @@ export function ExpandableStat({
   const [open, setOpen] = useState(false);
 
   return (
-    <div className="rounded-xl border border-slate-200 bg-white">
+    <div className="rounded-xl border border-[#E0CB9E] bg-[#FBF3D1]">
       <button
         type="button"
         onClick={() => setOpen((o) => !o)}

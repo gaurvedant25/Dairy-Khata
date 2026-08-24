@@ -1,9 +1,11 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #0f172a;
-  --brand: #2563eb;
+  --background: #e8d7b0; /* deeper sand page so cream cards pop */
+  --foreground: #4e220f; /* dark brown text */
+  --brand: #9d6638; /* warm brown accent */
+  --brand-dark: #4e220f;
+  --sage: #b0ba99;
 }
 
 @theme inline {

@@ -2,7 +2,8 @@ import { notFound } from "next/navigation";
 import Link from "next/link";
 import { auth } from "@/lib/auth";
 import { getCustomerWithStats, getOrCreateSetting } from "@/lib/business";
-import { TrustBadge } from "@/components/TrustBadge";
+import { CustomerHeader } from "@/components/CustomerHeader";
+import { Collapsible } from "@/components/Collapsible";
 import { AddPaymentForm } from "@/components/AddPaymentForm";
 import { EditCustomerForm } from "@/components/EditCustomerForm";
 import { RemindButton } from "@/components/RemindButton";
@@ -18,11 +19,21 @@ export default async function CustomerDetailPage({ params }: { params: Promise<{
   ]);
   if (!result) notFound();
 
-  const { customer, duesInfo, trust } = result;
+  const { customer, duesInfo } = result;
 
-  // Build the WhatsApp bill from the customer's outstanding activity.
-  const milkLiters = customer.deliveries.reduce((s, d) => s + d.quantity, 0);
-  const milkAmount = customer.deliveries.reduce((s, d) => s + d.quantity * d.pricePerUnit, 0);
+  // Build the WhatsApp bill from the customer's activity, grouping the daily
+  // round by product (Milk, Dahi, …) plus any unpaid one-time items.
+  const deliveryGroups = new Map<string, { product: string; unit: string; quantity: number; amount: number }>();
+  for (const d of customer.deliveries) {
+    const g = deliveryGroups.get(d.product) ?? { product: d.product, unit: d.unit, quantity: 0, amount: 0 };
+    g.quantity += d.quantity;
+    g.amount += d.quantity * d.pricePerUnit;
+    deliveryGroups.set(d.product, g);
+  }
+  const deliveryItems = Array.from(deliveryGroups.values()).map((g) => ({
+    ...g,
+    amount: Math.round(g.amount * 100) / 100,
+  }));
   const extraItems = customer.oneTimeOrders
     .filter((o) => !o.paid)
     .map((o) => ({ product: o.product, unit: o.unit, quantity: o.quantity, amount: o.amount }));
@@ -31,8 +42,7 @@ export default async function CustomerDetailPage({ params }: { params: Promise<{
   const billMessage = buildBillMessage({
     customerName: customer.name,
     businessName: setting.businessName,
-    milkLiters,
-    milkAmount,
+    deliveryItems,
     extraItems,
     totalPaid: duesInfo.totalPaid,
     dues: duesInfo.dues,
@@ -40,76 +50,73 @@ export default async function CustomerDetailPage({ params }: { params: Promise<{
   const waLink = waNumber ? buildWhatsAppLink(waNumber, billMessage) : null;
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-5">
       <div>
         <Link href="/customers" className="text-sm text-slate-500 hover:underline">
           ← Back to daily customers
         </Link>
-        <div className="mt-2 flex flex-wrap items-center justify-between gap-3">
-          <div>
-            <h1 className="text-2xl font-bold text-slate-900">{customer.name}</h1>
-            {customer.address && <p className="text-sm text-slate-500">{customer.address}</p>}
-          </div>
-          <TrustBadge trust={trust} />
-        </div>
-      </div>
-
-      <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-        <StatCard label="Total billed" value={`₹${duesInfo.totalBilled.toFixed(2)}`} accent="text-slate-800" />
-        <StatCard label="Total paid" value={`₹${duesInfo.totalPaid.toFixed(2)}`} accent="text-emerald-700" />
-        <StatCard label="Outstanding" value={`₹${duesInfo.dues.toFixed(2)}`} accent={duesInfo.dues > 0 ? "text-red-700" : "text-slate-800"} />
-        <StatCard label="Days overdue" value={duesInfo.daysOverdue.toString()} accent="text-slate-800" />
-      </div>
-
-      {duesInfo.dues > 0 && (
-        <section className="space-y-3 rounded-xl bg-white p-4 border border-slate-200">
-          <h2 className="text-sm font-semibold text-slate-700">Send bill on WhatsApp</h2>
-          <WhatsAppBillButton customerId={customer.id} link={waLink} />
-          {customer.lastReminderSentAt && (
-            <p className="text-xs text-slate-400">Last reminded: {customer.lastReminderSentAt.toLocaleDateString()}</p>
-          )}
-        </section>
-      )}
-
-      <section className="space-y-3 rounded-xl bg-white p-4 border border-slate-200">
-        <div className="flex items-center justify-between">
-          <h2 className="text-sm font-semibold text-slate-700">Record payment</h2>
-          {duesInfo.dues > 0 && (
-            <RemindButton
+        <div className="mt-2">
+          <CustomerHeader name={customer.name} address={customer.address}>
+            <EditCustomerForm
               customerId={customer.id}
-              lastRemindedAt={customer.lastReminderSentAt ? customer.lastReminderSentAt.toISOString() : null}
+              initial={{
+                name: customer.name,
+                phone: customer.phone ?? "",
+                address: customer.address ?? "",
+              }}
             />
-          )}
+          </CustomerHeader>
         </div>
-        <AddPaymentForm customerId={customer.id} defaultAmount={duesInfo.dues > 0 ? duesInfo.dues : undefined} />
-      </section>
+      </div>
 
-      <section className="rounded-xl bg-white p-4 border border-slate-200">
-        <h2 className="mb-3 text-sm font-semibold text-slate-700">Customer details</h2>
-        <EditCustomerForm
-          customerId={customer.id}
-          initial={{
-            phone: customer.phone ?? "",
-            address: customer.address ?? "",
-            defaultPricePerUnit: customer.defaultPricePerUnit?.toString() ?? "",
-            dailyQuantity: customer.dailyQuantity.toString(),
-            manualTrustRating: customer.manualTrustRating ?? 3,
-          }}
+      <div className="grid grid-cols-3 gap-3">
+        <StatCard label="Billed" value={`₹${duesInfo.totalBilled.toFixed(2)}`} accent="text-slate-800" />
+        <StatCard label="Paid" value={`₹${duesInfo.totalPaid.toFixed(2)}`} accent="text-emerald-700" />
+        <StatCard
+          label="Outstanding"
+          value={`₹${duesInfo.dues.toFixed(2)}`}
+          accent={duesInfo.dues > 0 ? "text-red-700" : "text-slate-800"}
         />
-      </section>
+      </div>
 
-      <section className="rounded-xl bg-white p-4 border border-slate-200">
-        <h2 className="mb-3 text-sm font-semibold text-slate-700">Recent deliveries</h2>
+      {/* Money actions grouped on a tinted panel */}
+      <div className="space-y-3 rounded-2xl border border-[#B0BA99] bg-[#B0BA99]/25 p-3">
+        {duesInfo.dues > 0 && (
+          <section className="rounded-xl border border-[#E0CB9E] bg-[#FBF3D1] p-4">
+            <div className="mb-2 flex items-center justify-between gap-2">
+              <h2 className="text-sm font-semibold text-slate-700">Send bill on WhatsApp</h2>
+              <RemindButton
+                customerId={customer.id}
+                lastRemindedAt={customer.lastReminderSentAt ? customer.lastReminderSentAt.toISOString() : null}
+              />
+            </div>
+            <WhatsAppBillButton customerId={customer.id} link={waLink} />
+            {customer.lastReminderSentAt && (
+              <p className="mt-2 text-xs text-slate-400">
+                Last reminded: {customer.lastReminderSentAt.toLocaleDateString()}
+              </p>
+            )}
+          </section>
+        )}
+
+        <section className="rounded-xl border border-[#E0CB9E] bg-[#FBF3D1] p-4">
+          <h2 className="mb-2 text-sm font-semibold text-slate-700">Record payment</h2>
+          <AddPaymentForm customerId={customer.id} defaultAmount={duesInfo.dues > 0 ? duesInfo.dues : undefined} />
+        </section>
+      </div>
+
+      <Collapsible title="Recent deliveries" subtitle={`${customer.deliveries.length}`}>
         {customer.deliveries.length === 0 ? (
           <p className="text-sm text-slate-500">No deliveries yet.</p>
         ) : (
           <ul className="divide-y divide-slate-100 text-sm">
-            {customer.deliveries.slice(0, 30).map((d) => (
+            {customer.deliveries.slice(0, 40).map((d) => (
               <li key={d.id} className="flex items-center justify-between py-2">
                 <div>
                   <p className="font-medium text-slate-800">{d.date.toLocaleDateString()}</p>
                   <p className="text-xs text-slate-500">
-                    {d.quantity.toFixed(2)} L × ₹{d.pricePerUnit.toFixed(2)}
+                    {d.product} · {d.quantity.toFixed(d.unit === "piece" ? 0 : 2)}
+                    {d.unit ? ` ${d.unit}` : ""} × ₹{d.pricePerUnit.toFixed(2)}
                   </p>
                 </div>
                 <span className="font-medium text-slate-800">₹{(d.quantity * d.pricePerUnit).toFixed(2)}</span>
@@ -117,10 +124,9 @@ export default async function CustomerDetailPage({ params }: { params: Promise<{
             ))}
           </ul>
         )}
-      </section>
+      </Collapsible>
 
-      <section className="rounded-xl bg-white p-4 border border-slate-200">
-        <h2 className="mb-3 text-sm font-semibold text-slate-700">Payment history</h2>
+      <Collapsible title="Payment history" subtitle={`${customer.payments.length}`}>
         {customer.payments.length === 0 ? (
           <p className="text-sm text-slate-500">No payments yet.</p>
         ) : (
@@ -136,16 +142,16 @@ export default async function CustomerDetailPage({ params }: { params: Promise<{
             ))}
           </ul>
         )}
-      </section>
+      </Collapsible>
     </div>
   );
 }
 
 function StatCard({ label, value, accent }: { label: string; value: string; accent: string }) {
   return (
-    <div className="rounded-xl bg-white p-4 border border-slate-200">
+    <div className="rounded-xl bg-[#FBF3D1] p-3 border border-[#E0CB9E]">
       <p className="text-xs font-medium text-slate-500">{label}</p>
-      <p className={`mt-1 text-lg font-bold ${accent}`}>{value}</p>
+      <p className={`mt-1 text-base font-bold ${accent}`}>{value}</p>
     </div>
   );
 }

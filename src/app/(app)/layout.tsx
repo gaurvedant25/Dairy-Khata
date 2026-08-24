@@ -6,8 +6,8 @@ import { PageTransition } from "@/components/PageTransition";
 function Wordmark() {
   return (
     <div className="flex items-center gap-2">
-      <span className="inline-block h-2.5 w-2.5 rounded-full bg-blue-600" aria-hidden />
-      <span className="text-base font-semibold tracking-tight text-slate-900">Dairy Ledger</span>
+      <span className="inline-block h-2.5 w-2.5 rounded-full bg-[#9D6638]" aria-hidden />
+      <span className="text-base font-semibold tracking-tight text-[#4E220F]">Dairy Ledger</span>
     </div>
   );
 }
@@ -17,7 +17,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
 
   return (
     <div className="flex min-h-screen flex-col md:flex-row">
-      <aside className="hidden w-60 shrink-0 border-r border-slate-200 bg-white p-4 md:flex md:flex-col">
+      <aside className="hidden w-60 shrink-0 border-r border-[#E0CB9E] bg-[#FBF3D1] p-4 md:flex md:flex-col">
         <div className="mb-6 px-2">
           <Wordmark />
           <p className="mt-1 truncate text-xs text-slate-500">{session?.user?.name}</p>
@@ -28,7 +28,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
         </div>
       </aside>
 
-      <header className="flex items-center justify-between border-b border-slate-200 bg-white px-4 py-3 md:hidden">
+      <header className="flex items-center justify-between border-b border-[#E0CB9E] bg-[#FBF3D1] px-4 py-3 md:hidden">
         <Wordmark />
         <SignOutButton />
       </header>
@@ -39,7 +39,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
         </div>
       </main>
 
-      <nav className="fixed inset-x-0 bottom-0 border-t border-slate-200 bg-white md:hidden">
+      <nav className="fixed inset-x-0 bottom-0 border-t border-[#E0CB9E] bg-[#FBF3D1] md:hidden">
         <NavLinks orientation="horizontal" />
       </nav>
     </div>

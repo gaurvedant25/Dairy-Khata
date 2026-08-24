@@ -1,18 +1,18 @@
 import { auth } from "@/lib/auth";
-import { getOrCreateSetting, listOneTimeOrders } from "@/lib/business";
+import { listOneTimeOrders, ensureDefaultProducts } from "@/lib/business";
 import { prisma } from "@/lib/prisma";
 import { OneTimeOrders } from "@/components/OneTimeOrders";
 
 export default async function WalkInPage() {
   const session = await auth();
   const userId = session!.user.id;
-  const [orders, setting, dailyCustomers, userProducts] = await Promise.all([
+  await ensureDefaultProducts(userId);
+  const [orders, dailyCustomers, userProducts] = await Promise.all([
     listOneTimeOrders(userId, 100),
-    getOrCreateSetting(userId),
     prisma.customer.findMany({
       where: { userId, active: true },
       orderBy: { name: "asc" },
-      select: { id: true, name: true, defaultPricePerUnit: true },
+      select: { id: true, name: true },
     }),
     prisma.customProduct.findMany({
       where: { userId, active: true },
@@ -27,7 +27,7 @@ export default async function WalkInPage() {
   return (
     <div className="space-y-4">
       <div>
-        <h1 className="text-xl font-bold text-slate-900">Walk-in orders</h1>
+        <h1 className="text-xl font-bold text-[#4E220F]">Walk-in orders</h1>
         <p className="text-sm text-slate-500">
           One-time or casual sales that aren&apos;t tied to a regular customer.
         </p>
@@ -40,15 +40,7 @@ export default async function WalkInPage() {
       </div>
 
       <OneTimeOrders
-        defaultPricePerUnit={setting.defaultPricePerUnit}
-        defaultChaiPricePerCup={setting.defaultChaiPricePerCup}
-        defaultDahiPricePerCup={setting.defaultDahiPricePerCup}
-        defaultPaneerPricePerPiece={setting.defaultPaneerPricePerPiece}
-        dailyCustomers={dailyCustomers.map((c) => ({
-          id: c.id,
-          name: c.name,
-          pricePerUnit: c.defaultPricePerUnit ?? setting.defaultPricePerUnit,
-        }))}
+        dailyCustomers={dailyCustomers}
         userProducts={userProducts}
         initialOrders={orders.map((o) => ({
           id: o.id,
@@ -68,7 +60,7 @@ export default async function WalkInPage() {
 
 function StatCard({ label, value, accent }: { label: string; value: string; accent: string }) {
   return (
-    <div className="rounded-xl bg-white p-4 border border-slate-200">
+    <div className="rounded-xl bg-[#FBF3D1] p-4 border border-[#E0CB9E]">
       <p className="text-xs font-medium text-slate-500">{label}</p>
       <p className={`mt-1 text-lg font-bold ${accent}`}>{value}</p>
     </div>

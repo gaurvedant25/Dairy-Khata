@@ -9,8 +9,6 @@ export function AddCustomerForm() {
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
   const [address, setAddress] = useState("");
-  const [dailyQuantity, setDailyQuantity] = useState("1");
-  const [price, setPrice] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
@@ -21,13 +19,7 @@ export function AddCustomerForm() {
     const res = await fetch("/api/customers", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        name,
-        phone,
-        address,
-        dailyQuantity: dailyQuantity ? Number(dailyQuantity) : 1,
-        defaultPricePerUnit: price ? Number(price) : null,
-      }),
+      body: JSON.stringify({ name, phone, address }),
     });
     setLoading(false);
     if (!res.ok) {
@@ -38,8 +30,6 @@ export function AddCustomerForm() {
     setName("");
     setPhone("");
     setAddress("");
-    setDailyQuantity("1");
-    setPrice("");
     setOpen(false);
     router.refresh();
   }
@@ -48,7 +38,7 @@ export function AddCustomerForm() {
     return (
       <button
         onClick={() => setOpen(true)}
-        className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700"
+        className="rounded-lg bg-[#9D6638] px-4 py-2 text-sm font-medium text-white hover:bg-[#4E220F]"
       >
         + Add daily customer
       </button>
@@ -56,7 +46,7 @@ export function AddCustomerForm() {
   }
 
   return (
-    <form onSubmit={onSubmit} className="space-y-3 rounded-xl bg-white p-4 border border-slate-200">
+    <form onSubmit={onSubmit} className="space-y-3 rounded-xl bg-[#FBF3D1] p-4 border border-[#E0CB9E]">
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
         <label className="block">
           <span className="mb-1 block text-xs font-semibold text-slate-700">Name</span>
@@ -64,7 +54,7 @@ export function AddCustomerForm() {
             required
             value={name}
             onChange={(e) => setName(e.target.value)}
-            className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900"
+            className="w-full rounded-lg border border-[#D6BE8C] bg-[#FBF3D1] px-3 py-2 text-sm text-[#4E220F]"
           />
         </label>
         <label className="block">
@@ -74,7 +64,7 @@ export function AddCustomerForm() {
           <input
             value={phone}
             onChange={(e) => setPhone(e.target.value)}
-            className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900"
+            className="w-full rounded-lg border border-[#D6BE8C] bg-[#FBF3D1] px-3 py-2 text-sm text-[#4E220F]"
           />
         </label>
         <label className="block sm:col-span-2">
@@ -84,32 +74,7 @@ export function AddCustomerForm() {
           <input
             value={address}
             onChange={(e) => setAddress(e.target.value)}
-            className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900"
-          />
-        </label>
-        <label className="block">
-          <span className="mb-1 block text-xs font-semibold text-slate-700">Daily liters</span>
-          <input
-            type="number"
-            inputMode="decimal"
-            step="0.1"
-            min={0}
-            required
-            value={dailyQuantity}
-            onChange={(e) => setDailyQuantity(e.target.value)}
-            className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900"
-          />
-        </label>
-        <label className="block">
-          <span className="mb-1 block text-xs font-semibold text-slate-700">
-            Price per liter <span className="font-normal text-slate-400">(optional, overrides default)</span>
-          </span>
-          <input
-            type="number"
-            step="0.01"
-            value={price}
-            onChange={(e) => setPrice(e.target.value)}
-            className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900"
+            className="w-full rounded-lg border border-[#D6BE8C] bg-[#FBF3D1] px-3 py-2 text-sm text-[#4E220F]"
           />
         </label>
       </div>
@@ -118,7 +83,7 @@ export function AddCustomerForm() {
         <button
           type="submit"
           disabled={loading}
-          className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-60"
+          className="rounded-lg bg-[#9D6638] px-4 py-2 text-sm font-medium text-white hover:bg-[#4E220F] disabled:opacity-60"
         >
           {loading ? "Saving..." : "Save"}
         </button>

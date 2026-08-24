@@ -53,7 +53,7 @@ export function Calendar({
   ];
 
   return (
-    <div className="rounded-xl border border-slate-200 bg-white p-4">
+    <div className="rounded-xl border border-[#E0CB9E] bg-[#FBF3D1] p-4">
       <div className="mb-3 flex items-center justify-between">
         <Link
           href={href(iso(prev.getFullYear(), prev.getMonth(), 1))}
@@ -62,7 +62,7 @@ export function Calendar({
         >
           ‹
         </Link>
-        <p className="text-sm font-semibold text-slate-900">
+        <p className="text-sm font-semibold text-[#4E220F]">
           {MONTHS[month0]} {year}
         </p>
         <Link
@@ -96,9 +96,9 @@ export function Calendar({
               href={href(dateStr)}
               className={`relative flex aspect-square flex-col items-center justify-center rounded-lg text-sm transition ${
                 isSelected
-                  ? "bg-blue-600 font-semibold text-white"
+                  ? "bg-[#9D6638] font-semibold text-white"
                   : isToday
-                  ? "border border-blue-600 font-semibold text-blue-700 hover:bg-blue-50"
+                  ? "border border-[#9D6638] font-semibold text-[#9D6638] hover:bg-[#9D6638]/10"
                   : "text-slate-700 hover:bg-slate-100"
               }`}
             >
@@ -106,7 +106,7 @@ export function Calendar({
               {hasActivity && (
                 <span
                   className={`absolute bottom-1 h-1 w-1 rounded-full ${
-                    isSelected ? "bg-white" : "bg-blue-500"
+                    isSelected ? "bg-[#FBF3D1]" : "bg-[#9D6638]/100"
                   }`}
                 />
               )}

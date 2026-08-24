@@ -50,7 +50,7 @@ export function StarredProductsPicker({
       {options.length === 0 ? (
         <p className="text-sm text-slate-500">No items yet.</p>
       ) : (
-        <ul className="divide-y divide-slate-100 rounded-lg border border-slate-200">
+        <ul className="divide-y divide-slate-100 rounded-lg border border-[#E0CB9E]">
           {options.map((o) => {
             const on = starred.includes(o.name);
             return (
@@ -68,7 +68,7 @@ export function StarredProductsPicker({
                   {on ? "★" : "☆"}
                 </button>
                 <div className="min-w-0 flex-1">
-                  <p className="truncate text-sm font-medium text-slate-900">{o.name}</p>
+                  <p className="truncate text-sm font-medium text-[#4E220F]">{o.name}</p>
                   <p className="text-xs text-slate-500">
                     per {o.unit}
                     {o.builtin ? "" : " · your item"}

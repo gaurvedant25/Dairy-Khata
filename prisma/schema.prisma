@@ -76,6 +76,8 @@ model DeliveryEntry {
   customerId   String
   customer     Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
   date         DateTime
+  product      String   @default("Milk")
+  unit         String   @default("L")
   quantity     Float
   pricePerUnit Float
   costPerUnit  Float

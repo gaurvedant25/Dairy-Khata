@@ -2,7 +2,6 @@ import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { oneTimeOrderSchema } from "@/lib/validation";
-import { getOrCreateSetting } from "@/lib/business";
 
 type ResolvedLine = {
   productLabel: string;
@@ -11,6 +10,7 @@ type ResolvedLine = {
   pricePerUnit: number;
   amount: number;
   isMilk: boolean;
+  costPerUnit: number;
 };
 
 export async function POST(req: Request) {
@@ -24,7 +24,6 @@ export async function POST(req: Request) {
   }
 
   const { existingCustomerId, customerName, phone, items, paid, date } = parsed.data;
-  const setting = await getOrCreateSetting(session.user.id);
   const orderDate = date ? new Date(date) : new Date();
 
   let existingCustomer = null as null | Awaited<ReturnType<typeof prisma.customer.findFirst>>;
@@ -36,8 +35,6 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Customer not found" }, { status: 404 });
     }
   }
-
-  const milkPrice = existingCustomer?.defaultPricePerUnit ?? setting.defaultPricePerUnit;
 
   const userProductIds = items
     .filter((i) => i.product === "UserProduct" && i.userProductId)
@@ -57,59 +54,19 @@ export async function POST(req: Request) {
   }
 
   const resolved: ResolvedLine[] = items.map((item) => {
-    if (item.product === "Milk") {
-      return {
-        productLabel: "Milk",
-        unit: "L",
-        quantity: item.quantity!,
-        pricePerUnit: milkPrice,
-        amount: Math.round(item.quantity! * milkPrice * 100) / 100,
-        isMilk: true,
-      };
-    }
-    if (item.product === "Chai") {
-      return {
-        productLabel: "Chai",
-        unit: "cup",
-        quantity: item.quantity!,
-        pricePerUnit: setting.defaultChaiPricePerCup,
-        amount: Math.round(item.quantity! * setting.defaultChaiPricePerCup * 100) / 100,
-        isMilk: false,
-      };
-    }
-    if (item.product === "Dahi") {
-      return {
-        productLabel: "Dahi",
-        unit: "cup",
-        quantity: item.quantity!,
-        pricePerUnit: setting.defaultDahiPricePerCup,
-        amount: Math.round(item.quantity! * setting.defaultDahiPricePerCup * 100) / 100,
-        isMilk: false,
-      };
-    }
-    if (item.product === "Paneer") {
-      return {
-        productLabel: "Paneer",
-        unit: "piece",
-        quantity: item.quantity!,
-        pricePerUnit: setting.defaultPaneerPricePerPiece,
-        amount: Math.round(item.quantity! * setting.defaultPaneerPricePerPiece * 100) / 100,
-        isMilk: false,
-      };
-    }
     if (item.product === "UserProduct") {
-      const up = userProductById.get(item.userProductId!);
-      if (!up) throw new Error("Custom product not found");
+      const up = userProductById.get(item.userProductId!)!;
       return {
         productLabel: up.name,
         unit: up.unit,
         quantity: item.quantity!,
         pricePerUnit: up.pricePerUnit,
         amount: Math.round(item.quantity! * up.pricePerUnit * 100) / 100,
-        isMilk: false,
+        isMilk: up.name === "Milk",
+        costPerUnit: 0,
       };
     }
-    // Custom
+    // One-off custom item
     const amt = item.customAmount!;
     return {
       productLabel: (item.customProductName ?? "Item").trim(),
@@ -118,6 +75,7 @@ export async function POST(req: Request) {
       pricePerUnit: amt,
       amount: amt,
       isMilk: false,
+      costPerUnit: 0,
     };
   });
 
@@ -125,16 +83,17 @@ export async function POST(req: Request) {
 
   for (const line of resolved) {
     // Milk sold on credit to a daily customer folds into their milk ledger
-    // as a real delivery so dues + trust math keep working through the
-    // existing DeliveryEntry-based pipeline.
+    // as a real delivery so dues keep working through the DeliveryEntry pipeline.
     if (existingCustomer && !paid && line.isMilk) {
       const delivery = await prisma.deliveryEntry.create({
         data: {
           customerId: existingCustomer.id,
           date: orderDate,
+          product: "Milk",
+          unit: line.unit || "L",
           quantity: line.quantity,
           pricePerUnit: line.pricePerUnit,
-          costPerUnit: setting.defaultCostPerUnit,
+          costPerUnit: line.costPerUnit,
         },
       });
       created.push({ kind: "delivery", delivery });

@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { deliveryBatchSchema } from "@/lib/validation";
-import { getOrCreateSetting } from "@/lib/business";
+import { getDeliverySheet } from "@/lib/business";
 
 export async function GET(req: Request) {
   const session = await auth();
@@ -10,22 +10,12 @@ export async function GET(req: Request) {
 
   const url = new URL(req.url);
   const dateParam = url.searchParams.get("date");
-  if (!dateParam) return NextResponse.json({ error: "Missing date" }, { status: 400 });
+  if (!dateParam || !/^\d{4}-\d{2}-\d{2}$/.test(dateParam)) {
+    return NextResponse.json({ error: "Missing or invalid date" }, { status: 400 });
+  }
 
-  const day = new Date(dateParam);
-  if (Number.isNaN(day.getTime())) return NextResponse.json({ error: "Invalid date" }, { status: 400 });
-  const dayStart = new Date(day.getFullYear(), day.getMonth(), day.getDate());
-  const dayEnd = new Date(dayStart);
-  dayEnd.setDate(dayEnd.getDate() + 1);
-
-  const entries = await prisma.deliveryEntry.findMany({
-    where: {
-      customer: { userId: session.user.id },
-      date: { gte: dayStart, lt: dayEnd },
-    },
-    select: { customerId: true, quantity: true },
-  });
-  return NextResponse.json({ entries });
+  const customers = await getDeliverySheet(session.user.id, dateParam);
+  return NextResponse.json({ customers });
 }
 
 export async function POST(req: Request) {
@@ -38,42 +28,39 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: parsed.error.issues[0]?.message ?? "Invalid input" }, { status: 400 });
   }
 
-  const { date, entries } = parsed.data;
-  const day = new Date(date);
-  if (Number.isNaN(day.getTime())) {
-    return NextResponse.json({ error: "Invalid date" }, { status: 400 });
-  }
-  const dayStart = new Date(day.getFullYear(), day.getMonth(), day.getDate());
+  const { date, customers } = parsed.data;
+  const [y, m, d] = date.split("-").map(Number);
+  const dayStart = new Date(y, m - 1, d);
   const dayEnd = new Date(dayStart);
   dayEnd.setDate(dayEnd.getDate() + 1);
 
-  const setting = await getOrCreateSetting(session.user.id);
-  const customerIds = entries.map((e) => e.customerId);
-  const customers = await prisma.customer.findMany({
+  const customerIds = customers.map((c) => c.customerId);
+  const owned = await prisma.customer.findMany({
     where: { id: { in: customerIds }, userId: session.user.id },
+    select: { id: true },
   });
-  const byId = new Map(customers.map((c) => [c.id, c]));
+  const ownedIds = new Set(owned.map((c) => c.id));
 
   // Wipe existing entries for this date so re-saving overwrites cleanly.
   await prisma.deliveryEntry.deleteMany({
-    where: {
-      customerId: { in: customerIds },
-      date: { gte: dayStart, lt: dayEnd },
-    },
+    where: { customerId: { in: [...ownedIds] }, date: { gte: dayStart, lt: dayEnd } },
   });
 
-  const toCreate = entries
-    .filter((e) => byId.has(e.customerId) && e.quantity > 0)
-    .map((e) => {
-      const c = byId.get(e.customerId)!;
-      return {
-        customerId: e.customerId,
-        date: dayStart,
-        quantity: e.quantity,
-        pricePerUnit: c.defaultPricePerUnit ?? setting.defaultPricePerUnit,
-        costPerUnit: setting.defaultCostPerUnit,
-      };
-    });
+  const toCreate = customers
+    .filter((c) => ownedIds.has(c.customerId))
+    .flatMap((c) =>
+      c.lines
+        .filter((l) => l.quantity > 0)
+        .map((l) => ({
+          customerId: c.customerId,
+          date: dayStart,
+          product: l.product,
+          unit: l.unit,
+          quantity: l.quantity,
+          pricePerUnit: l.pricePerUnit,
+          costPerUnit: l.costPerUnit,
+        }))
+    );
 
   if (toCreate.length > 0) {
     await prisma.deliveryEntry.createMany({ data: toCreate });

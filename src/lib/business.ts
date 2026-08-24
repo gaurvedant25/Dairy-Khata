@@ -140,7 +140,9 @@ export async function getStats(userId: string, period: Period) {
 
   const sales = deliverySales + oneTimeSales;
   const profit = deliverySales - deliveryCost + oneTimeSales; // one-time has no tracked cost
-  const litersDelivered = deliveries.reduce((s, d) => s + d.quantity, 0);
+  const litersDelivered = deliveries
+    .filter((d) => d.product === "Milk")
+    .reduce((s, d) => s + d.quantity, 0);
 
   const customerOutstanding = allWithStats.reduce((s, c) => s + Math.max(0, c.duesInfo.dues), 0);
   const oneTimeOutstanding = unpaidWalkInOnly.reduce((s, o) => s + o.amount, 0);
@@ -172,12 +174,13 @@ export async function getSalesBreakdown(userId: string, period: Period) {
     }),
   ]);
 
-  // Roll up milk deliveries per customer so the list is short and readable.
+  // Roll up deliveries per customer so the list is short and readable.
+  // `liters` counts only milk; `amount` is the customer's full delivery value.
   const byCustomer = new Map<string, { customerId: string; name: string; liters: number; amount: number }>();
   for (const d of deliveries) {
     const key = d.customer.id;
     const cur = byCustomer.get(key) ?? { customerId: key, name: d.customer.name, liters: 0, amount: 0 };
-    cur.liters += d.quantity;
+    if (d.product === "Milk") cur.liters += d.quantity;
     cur.amount += d.quantity * d.pricePerUnit;
     byCustomer.set(key, cur);
   }
@@ -243,17 +246,23 @@ export async function getOutstandingBreakdown(userId: string) {
   };
 }
 
-export const BUILTIN_UNITS: Record<string, string> = {
-  Milk: "L",
-  Chai: "cup",
-  Dahi: "cup",
-  Paneer: "piece",
-};
+/**
+ * Ensure the account has at least the default "Milk" item. Seeds new
+ * accounts and backfills existing ones on first read.
+ */
+export async function ensureDefaultProducts(userId: string) {
+  const milk = await prisma.customProduct.findFirst({ where: { userId, name: "Milk" } });
+  if (!milk) {
+    const setting = await getOrCreateSetting(userId);
+    await prisma.customProduct.create({
+      data: { userId, name: "Milk", unit: "L", pricePerUnit: setting.defaultPricePerUnit || 60 },
+    });
+  }
+}
 
 /**
- * Per-product totals for the products the owner starred. Milk is special:
- * it also accrues through DeliveryEntry (the daily round), so both sources
- * are summed for it.
+ * Per-product totals for the products the owner starred, combining walk-in
+ * sales and the daily delivery round.
  */
 export async function getStarredProductStats(userId: string, period: Period) {
   const start = periodStart(period);
@@ -261,7 +270,7 @@ export async function getStarredProductStats(userId: string, period: Period) {
   const starred = setting.starredProducts;
   if (starred.length === 0) return [];
 
-  const [orders, customProducts, milkDeliveries] = await Promise.all([
+  const [orders, customProducts, deliveriesByProduct] = await Promise.all([
     prisma.oneTimeOrder.findMany({
       where: { userId, date: { gte: start }, product: { in: starred } },
       select: { product: true, unit: true, quantity: true, amount: true },
@@ -270,15 +279,13 @@ export async function getStarredProductStats(userId: string, period: Period) {
       where: { userId, name: { in: starred } },
       select: { name: true, unit: true },
     }),
-    starred.includes("Milk")
-      ? prisma.deliveryEntry.findMany({
-          where: { customer: { userId }, date: { gte: start } },
-          select: { quantity: true, pricePerUnit: true },
-        })
-      : Promise.resolve([]),
+    prisma.deliveryEntry.findMany({
+      where: { customer: { userId }, date: { gte: start }, product: { in: starred } },
+      select: { product: true, unit: true, quantity: true, pricePerUnit: true },
+    }),
   ]);
 
-  const unitByName = new Map<string, string>(Object.entries(BUILTIN_UNITS));
+  const unitByName = new Map<string, string>();
   for (const cp of customProducts) unitByName.set(cp.name, cp.unit);
 
   const totals = new Map<string, { quantity: number; revenue: number; unit: string }>();
@@ -294,12 +301,12 @@ export async function getStarredProductStats(userId: string, period: Period) {
     if (!t.unit && o.unit) t.unit = o.unit;
   }
 
-  const milk = totals.get("Milk");
-  if (milk) {
-    for (const d of milkDeliveries) {
-      milk.quantity += d.quantity;
-      milk.revenue += d.quantity * d.pricePerUnit;
-    }
+  for (const d of deliveriesByProduct) {
+    const t = totals.get(d.product);
+    if (!t) continue;
+    t.quantity += d.quantity;
+    t.revenue += d.quantity * d.pricePerUnit;
+    if (!t.unit && d.unit) t.unit = d.unit;
   }
 
   return starred.map((name) => {
@@ -334,6 +341,8 @@ export async function getDaySummary(userId: string, dateStr: string) {
     id: d.id,
     customerId: d.customer.id,
     customerName: d.customer.name,
+    product: d.product,
+    unit: d.unit,
     quantity: d.quantity,
     pricePerUnit: d.pricePerUnit,
     amount: round2(d.quantity * d.pricePerUnit),
@@ -350,7 +359,9 @@ export async function getDaySummary(userId: string, dateStr: string) {
   }));
 
   const deliveryTotal = round2(deliveryRows.reduce((s, r) => s + r.amount, 0));
-  const deliveryLiters = round2(deliveryRows.reduce((s, r) => s + r.quantity, 0));
+  const deliveryLiters = round2(
+    deliveryRows.filter((r) => r.product === "Milk").reduce((s, r) => s + r.quantity, 0)
+  );
   const walkInTotal = round2(walkInRows.reduce((s, r) => s + r.amount, 0));
   const walkInUnpaid = round2(walkInRows.filter((r) => !r.paid).reduce((s, r) => s + r.amount, 0));
 
@@ -462,4 +473,125 @@ export async function getOrCreateSetting(userId: string) {
   const existing = await prisma.setting.findUnique({ where: { userId } });
   if (existing) return existing;
   return prisma.setting.create({ data: { userId } });
+}
+
+export type SheetLine = {
+  product: string;
+  unit: string;
+  quantity: number;
+  pricePerUnit: number;
+  costPerUnit: number;
+  isMilk: boolean;
+};
+
+export type SheetCustomer = {
+  customerId: string;
+  name: string;
+  saved: boolean; // true if this date already has saved entries
+  lines: SheetLine[];
+};
+
+/**
+ * The editable delivery sheet for one date. For each active customer we
+ * return the saved lines if the date already has entries; otherwise we carry
+ * forward the items from their most recent previous delivery day. Brand-new
+ * customers (no history) start with a Milk line from the Milk item.
+ */
+export async function getDeliverySheet(userId: string, dateStr: string): Promise<SheetCustomer[]> {
+  await ensureDefaultProducts(userId);
+
+  const [y, m, d] = dateStr.split("-").map(Number);
+  const dayStart = new Date(y, m - 1, d);
+  const dayEnd = new Date(dayStart);
+  dayEnd.setDate(dayEnd.getDate() + 1);
+
+  const [customers, todays, milkProduct] = await Promise.all([
+    prisma.customer.findMany({
+      where: { userId, active: true },
+      orderBy: { name: "asc" },
+      select: { id: true, name: true, dailyQuantity: true },
+    }),
+    prisma.deliveryEntry.findMany({
+      where: { customer: { userId }, date: { gte: dayStart, lt: dayEnd } },
+    }),
+    prisma.customProduct.findFirst({ where: { userId, name: "Milk" } }),
+  ]);
+
+  const todaysByCustomer = new Map<string, typeof todays>();
+  for (const e of todays) {
+    const arr = todaysByCustomer.get(e.customerId) ?? [];
+    arr.push(e);
+    todaysByCustomer.set(e.customerId, arr);
+  }
+
+  // For customers with no entries today, carry forward all items from their
+  // most recent prior delivery day so recurring orders keep showing up.
+  const needSeed = customers.filter((c) => !todaysByCustomer.has(c.id)).map((c) => c.id);
+  const carryByCustomer = new Map<string, { product: string; unit: string; pricePerUnit: number; costPerUnit: number; quantity: number }[]>();
+  if (needSeed.length > 0) {
+    const lookback = new Date(dayStart);
+    lookback.setDate(lookback.getDate() - 60);
+    const prior = await prisma.deliveryEntry.findMany({
+      where: { customerId: { in: needSeed }, date: { gte: lookback, lt: dayStart } },
+      orderBy: { date: "desc" },
+    });
+    const latestDateKey = new Map<string, number>();
+    for (const e of prior) {
+      if (!latestDateKey.has(e.customerId)) latestDateKey.set(e.customerId, e.date.getTime());
+    }
+    for (const e of prior) {
+      if (latestDateKey.get(e.customerId) !== e.date.getTime()) continue;
+      const arr = carryByCustomer.get(e.customerId) ?? [];
+      arr.push({
+        product: e.product,
+        unit: e.unit,
+        pricePerUnit: e.pricePerUnit,
+        costPerUnit: e.costPerUnit,
+        quantity: e.quantity,
+      });
+      carryByCustomer.set(e.customerId, arr);
+    }
+  }
+
+  return customers.map((c) => {
+    const saved = todaysByCustomer.get(c.id);
+    if (saved && saved.length > 0) {
+      const lines: SheetLine[] = saved
+        .sort((a, b) => (a.product === "Milk" ? -1 : b.product === "Milk" ? 1 : 0))
+        .map((e) => ({
+          product: e.product,
+          unit: e.unit,
+          quantity: e.quantity,
+          pricePerUnit: e.pricePerUnit,
+          costPerUnit: e.costPerUnit,
+          isMilk: e.product === "Milk",
+        }));
+      return { customerId: c.id, name: c.name, saved: true, lines };
+    }
+
+    const carried = carryByCustomer.get(c.id);
+    if (carried && carried.length > 0) {
+      return {
+        customerId: c.id,
+        name: c.name,
+        saved: false,
+        lines: carried.map((e) => ({ ...e, isMilk: e.product === "Milk" })),
+      };
+    }
+
+    // Brand-new customer: start with a Milk line if a Milk item exists.
+    const lines: SheetLine[] = milkProduct
+      ? [
+          {
+            product: milkProduct.name,
+            unit: milkProduct.unit,
+            quantity: c.dailyQuantity || 1,
+            pricePerUnit: milkProduct.pricePerUnit,
+            costPerUnit: 0,
+            isMilk: true,
+          },
+        ]
+      : [];
+    return { customerId: c.id, name: c.name, saved: false, lines };
+  });
 }

@@ -24,6 +24,8 @@ export async function POST(req: Request) {
       email,
       passwordHash,
       setting: { create: {} },
+      // Seed the one default item; the owner edits/removes it in Settings.
+      customProducts: { create: { name: "Milk", unit: "L", pricePerUnit: 60 } },
     },
   });
 

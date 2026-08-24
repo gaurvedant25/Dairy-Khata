@@ -1,12 +1,20 @@
+type BillItem = { product: string; unit: string; quantity: number; amount: number };
+
 type BillInput = {
   customerName: string;
   businessName: string;
-  milkLiters: number;
-  milkAmount: number;
-  extraItems: { product: string; unit: string; quantity: number; amount: number }[];
+  deliveryItems: BillItem[];
+  extraItems: BillItem[];
   totalPaid: number;
   dues: number;
 };
+
+function itemLine(it: BillItem): string {
+  const qty = it.unit
+    ? `${it.quantity.toFixed(it.unit === "piece" ? 0 : 1)} ${it.unit}`
+    : "";
+  return `${it.product}${qty ? ` ${qty}` : ""} — ₹${it.amount.toFixed(2)}`;
+}
 
 /**
  * Turn an Indian-style phone number into the digits wa.me expects.
@@ -30,13 +38,8 @@ export function buildBillMessage(b: BillInput): string {
   lines.push(`*${b.businessName}* — Bill`);
   lines.push("");
 
-  if (b.milkLiters > 0) {
-    lines.push(`Milk: ${b.milkLiters.toFixed(1)} L — ₹${b.milkAmount.toFixed(2)}`);
-  }
-  for (const it of b.extraItems) {
-    const qty = it.unit ? `${it.quantity.toFixed(it.unit === "piece" ? 0 : 1)} ${it.unit}` : "";
-    lines.push(`${it.product}${qty ? ` ${qty}` : ""} — ₹${it.amount.toFixed(2)}`);
-  }
+  for (const it of b.deliveryItems) lines.push(itemLine(it));
+  for (const it of b.extraItems) lines.push(itemLine(it));
   if (b.totalPaid > 0) {
     lines.push(`Paid: ₹${b.totalPaid.toFixed(2)}`);
   }

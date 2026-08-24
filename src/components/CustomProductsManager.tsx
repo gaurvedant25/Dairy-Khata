@@ -85,7 +85,7 @@ export function CustomProductsManager({ products }: { products: CustomProduct[] 
         {!open && (
           <button
             onClick={() => setOpen(true)}
-            className="shrink-0 rounded-lg bg-blue-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-blue-700"
+            className="shrink-0 rounded-lg bg-[#9D6638] px-3 py-1.5 text-xs font-medium text-white hover:bg-[#4E220F]"
           >
             + Add item
           </button>
@@ -93,7 +93,7 @@ export function CustomProductsManager({ products }: { products: CustomProduct[] 
       </div>
 
       {open && (
-        <form onSubmit={add} className="space-y-3 rounded-lg bg-slate-50 p-3">
+        <form onSubmit={add} className="space-y-3 rounded-lg bg-[#F3E7C7] p-3">
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
             <label className="block">
               <span className="mb-1 block text-xs font-semibold text-slate-700">Item name</span>
@@ -102,7 +102,7 @@ export function CustomProductsManager({ products }: { products: CustomProduct[] 
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 placeholder="e.g. Ghee"
-                className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 placeholder:text-slate-400"
+                className="w-full rounded-lg border border-[#D6BE8C] bg-[#FBF3D1] px-3 py-2 text-sm text-[#4E220F] placeholder:text-slate-400"
               />
             </label>
             <label className="block">
@@ -110,7 +110,7 @@ export function CustomProductsManager({ products }: { products: CustomProduct[] 
               <select
                 value={unit}
                 onChange={(e) => setUnit(e.target.value)}
-                className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900"
+                className="w-full rounded-lg border border-[#D6BE8C] bg-[#FBF3D1] px-3 py-2 text-sm text-[#4E220F]"
               >
                 {COMMON_UNITS.map((u) => (
                   <option key={u} value={u}>
@@ -130,7 +130,7 @@ export function CustomProductsManager({ products }: { products: CustomProduct[] 
                 required
                 value={price}
                 onChange={(e) => setPrice(e.target.value)}
-                className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900"
+                className="w-full rounded-lg border border-[#D6BE8C] bg-[#FBF3D1] px-3 py-2 text-sm text-[#4E220F]"
               />
             </label>
             {unit === "__custom__" && (
@@ -141,7 +141,7 @@ export function CustomProductsManager({ products }: { products: CustomProduct[] 
                   value={customUnit}
                   onChange={(e) => setCustomUnit(e.target.value)}
                   placeholder="e.g. tin, bottle, box"
-                  className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 placeholder:text-slate-400"
+                  className="w-full rounded-lg border border-[#D6BE8C] bg-[#FBF3D1] px-3 py-2 text-sm text-[#4E220F] placeholder:text-slate-400"
                 />
               </label>
             )}
@@ -151,7 +151,7 @@ export function CustomProductsManager({ products }: { products: CustomProduct[] 
             <button
               type="submit"
               disabled={saving}
-              className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-60"
+              className="rounded-lg bg-[#9D6638] px-4 py-2 text-sm font-medium text-white hover:bg-[#4E220F] disabled:opacity-60"
             >
               {saving ? "Saving..." : "Save item"}
             </button>
@@ -172,11 +172,11 @@ export function CustomProductsManager({ products }: { products: CustomProduct[] 
       {products.length === 0 ? (
         <p className="text-sm text-slate-500">No custom items yet.</p>
       ) : (
-        <ul className="divide-y divide-slate-100 rounded-lg border border-slate-200">
+        <ul className="divide-y divide-slate-100 rounded-lg border border-[#E0CB9E]">
           {products.map((p) => (
             <li key={p.id} className="flex items-center gap-3 px-3 py-2.5">
               <div className="min-w-0 flex-1">
-                <p className="truncate text-sm font-medium text-slate-900">{p.name}</p>
+                <p className="truncate text-sm font-medium text-[#4E220F]">{p.name}</p>
                 <p className="text-xs text-slate-500">per {p.unit}</p>
               </div>
               <div className="flex items-center gap-1 text-sm text-slate-500">
@@ -188,7 +188,7 @@ export function CustomProductsManager({ products }: { products: CustomProduct[] 
                   defaultValue={p.pricePerUnit}
                   onBlur={(e) => updatePrice(p, e.target.value)}
                   disabled={busyId === p.id}
-                  className="w-20 rounded-lg border border-slate-300 px-2 py-1 text-right text-sm text-slate-900 disabled:opacity-60"
+                  className="w-20 rounded-lg border border-[#D6BE8C] px-2 py-1 text-right text-sm text-[#4E220F] disabled:opacity-60"
                 />
               </div>
               <button

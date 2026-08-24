@@ -89,10 +89,10 @@ export function NavLinks({ orientation }: { orientation: "horizontal" | "vertica
             className={
               orientation === "vertical"
                 ? `flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition ${
-                    active ? "bg-blue-50 text-blue-700" : "text-slate-600 hover:bg-slate-50 hover:text-slate-900"
+                    active ? "bg-[#9D6638]/10 text-[#9D6638]" : "text-slate-600 hover:bg-[#F3E7C7] hover:text-[#4E220F]"
                   }`
                 : `flex flex-1 flex-col items-center gap-0.5 px-2 py-2 text-[11px] font-medium transition ${
-                    active ? "text-blue-600" : "text-slate-400"
+                    active ? "text-[#9D6638]" : "text-slate-400"
                   }`
             }
           >
