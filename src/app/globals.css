@@ -50,11 +50,11 @@ body {
 }
 
 .page-enter-right {
-  animation: page-enter-right 0.32s cubic-bezier(0.22, 1, 0.36, 1);
+  animation: page-enter-right 0.18s cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 .page-enter-left {
-  animation: page-enter-left 0.32s cubic-bezier(0.22, 1, 0.36, 1);
+  animation: page-enter-left 0.18s cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 @media (prefers-reduced-motion: reduce) {

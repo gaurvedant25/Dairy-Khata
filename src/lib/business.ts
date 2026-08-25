@@ -1,3 +1,4 @@
+import { cache } from "react";
 import { prisma } from "@/lib/prisma";
 
 export type TrustLevel = {
@@ -89,7 +90,9 @@ export async function getCustomerWithStats(customerId: string, userId: string) {
   return { customer, duesInfo, trust };
 }
 
-export async function listCustomersWithStats(userId: string) {
+// Wrapped in React cache() so multiple callers in the same request (e.g. the
+// dashboard's getStats + getOutstandingBreakdown) share one DB query.
+export const listCustomersWithStats = cache(async (userId: string) => {
   const customers = await prisma.customer.findMany({
     where: { userId },
     include: { deliveries: true, payments: true, oneTimeOrders: true },
@@ -104,7 +107,7 @@ export async function listCustomersWithStats(userId: string) {
     const trust = computeTrustLevel(customer.manualTrustRating, duesInfo.daysOverdue);
     return { customer, duesInfo, trust };
   });
-}
+});
 
 export type Period = "today" | "week" | "month";
 
@@ -472,11 +475,11 @@ function round2(n: number) {
   return Math.round(n * 100) / 100;
 }
 
-export async function getOrCreateSetting(userId: string) {
+export const getOrCreateSetting = cache(async (userId: string) => {
   const existing = await prisma.setting.findUnique({ where: { userId } });
   if (existing) return existing;
   return prisma.setting.create({ data: { userId } });
-}
+});
 
 export type SheetLine = {
   product: string;
