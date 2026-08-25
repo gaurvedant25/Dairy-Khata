@@ -2,9 +2,11 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { translate, type Lang } from "@/lib/i18n";
 
-export function AddCustomerForm() {
+export function AddCustomerForm({ lang = "en" }: { lang?: Lang }) {
   const router = useRouter();
+  const t = (k: string) => translate(lang, k);
   const [open, setOpen] = useState(false);
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
@@ -40,7 +42,7 @@ export function AddCustomerForm() {
         onClick={() => setOpen(true)}
         className="rounded-lg bg-[#9D6638] px-4 py-2 text-sm font-medium text-white hover:bg-[#4E220F]"
       >
-        + Add daily customer
+        {t("cust.add")}
       </button>
     );
   }

@@ -1,23 +1,25 @@
 import Link from "next/link";
 import { auth } from "@/lib/auth";
 import { listCustomersWithStats } from "@/lib/business";
+import { getT } from "@/lib/lang";
 import { AddCustomerForm } from "@/components/AddCustomerForm";
 
 export default async function CustomersPage() {
   const session = await auth();
+  const { t, lang } = await getT();
   const customers = await listCustomersWithStats(session!.user.id);
 
   return (
     <div className="space-y-4">
       <div>
-        <h1 className="text-xl font-bold text-[#4E220F]">Daily customers</h1>
-        <p className="text-sm text-slate-500">People you deliver to regularly.</p>
+        <h1 className="text-xl font-bold text-[#4E220F]">{t("cust.title")}</h1>
+        <p className="text-sm text-slate-500">{t("cust.subtitle")}</p>
       </div>
 
-      <AddCustomerForm />
+      <AddCustomerForm lang={lang} />
 
       {customers.length === 0 ? (
-        <p className="text-sm text-slate-500">No daily customers yet. Add your first one above.</p>
+        <p className="text-sm text-slate-500">{t("cust.none")}</p>
       ) : (
         <ul className="divide-y divide-slate-100 rounded-xl bg-[#FBF3D1] border border-[#E0CB9E]">
           {customers.map(({ customer, duesInfo }) => (
@@ -31,7 +33,7 @@ export default async function CustomersPage() {
                   <p className="text-xs text-slate-500">{customer.phone || customer.address || "No contact on file"}</p>
                 </div>
                 <span className={`text-sm font-semibold ${duesInfo.dues > 0 ? "text-red-600" : "text-emerald-600"}`}>
-                  {duesInfo.dues > 0 ? `₹${duesInfo.dues.toFixed(2)} due` : "Paid up"}
+                  {duesInfo.dues > 0 ? t("cust.due", { amt: `₹${duesInfo.dues.toFixed(2)}` }) : t("cust.paidUp")}
                 </span>
               </Link>
             </li>

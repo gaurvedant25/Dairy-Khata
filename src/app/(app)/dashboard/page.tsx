@@ -11,11 +11,12 @@ import {
 } from "@/lib/business";
 import { Calendar } from "@/components/Calendar";
 import { ExpandableStat } from "@/components/ExpandableStat";
+import { getT } from "@/lib/lang";
 
-const PERIODS: { value: Period; label: string }[] = [
-  { value: "today", label: "Today" },
-  { value: "week", label: "This week" },
-  { value: "month", label: "This month" },
+const PERIODS: { value: Period; labelKey: string }[] = [
+  { value: "today", labelKey: "period.today" },
+  { value: "week", labelKey: "period.week" },
+  { value: "month", labelKey: "period.month" },
 ];
 
 function isoLocal(d: Date) {
@@ -39,6 +40,7 @@ export default async function DashboardPage({
 }) {
   const session = await auth();
   const userId = session!.user.id;
+  const { t } = await getT();
 
   const params = await searchParams;
   const period: Period = (["today", "week", "month"] as string[]).includes(params.period ?? "")
@@ -58,14 +60,14 @@ export default async function DashboardPage({
     getOutstandingBreakdown(userId),
   ]);
 
-  const periodLabel = PERIODS.find((p) => p.value === period)!.label.toLowerCase();
+  const periodLabel = t(PERIODS.find((p) => p.value === period)!.labelKey).toLowerCase();
 
   const isToday = selectedDate === todayDate;
 
   return (
     <div className="space-y-6">
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <h1 className="text-2xl font-semibold tracking-tight text-[#4E220F]">Dashboard</h1>
+        <h1 className="text-2xl font-semibold tracking-tight text-[#4E220F]">{t("dash.title")}</h1>
         <div className="inline-flex rounded-lg border border-[#E0CB9E] p-0.5">
           {PERIODS.map((p) => (
             <Link
@@ -75,24 +77,24 @@ export default async function DashboardPage({
                 period === p.value ? "bg-[#9D6638] text-white" : "text-slate-500 hover:text-[#4E220F]"
               }`}
             >
-              {p.label}
+              {t(p.labelKey)}
             </Link>
           ))}
         </div>
       </div>
 
       <div className="space-y-3">
-        <ExpandableStat label="Sales" value={`₹${stats.sales.toFixed(2)}`} accent="text-[#9D6638]">
-          <p className="mb-3 text-xs text-slate-400">Everything sold {periodLabel}.</p>
+        <ExpandableStat label={t("dash.sales")} value={`₹${stats.sales.toFixed(2)}`} accent="text-[#9D6638]">
+          <p className="mb-3 text-xs text-slate-400">{t("dash.salesHint", { period: periodLabel })}</p>
 
           <div className="space-y-4">
             <section>
               <div className="mb-2 flex items-center justify-between">
-                <h4 className="text-xs font-semibold uppercase tracking-wide text-slate-500">Daily deliveries</h4>
+                <h4 className="text-xs font-semibold uppercase tracking-wide text-slate-500">{t("dash.dailyDeliveries")}</h4>
                 <span className="text-sm font-bold text-[#4E220F]">₹{salesBreakdown.deliveryTotal.toFixed(2)}</span>
               </div>
               {salesBreakdown.deliveryRows.length === 0 ? (
-                <p className="text-sm text-slate-400">No deliveries yet.</p>
+                <p className="text-sm text-slate-400">{t("dash.noDeliveries")}</p>
               ) : (
                 <ul className="divide-y divide-slate-100">
                   {salesBreakdown.deliveryRows.map((r) => (
@@ -112,11 +114,11 @@ export default async function DashboardPage({
 
             <section>
               <div className="mb-2 flex items-center justify-between">
-                <h4 className="text-xs font-semibold uppercase tracking-wide text-slate-500">Walk-in customers</h4>
+                <h4 className="text-xs font-semibold uppercase tracking-wide text-slate-500">{t("dash.walkinCustomers")}</h4>
                 <span className="text-sm font-bold text-[#4E220F]">₹{salesBreakdown.walkInTotal.toFixed(2)}</span>
               </div>
               {salesBreakdown.walkInRows.length === 0 ? (
-                <p className="text-sm text-slate-400">No walk-in sales yet.</p>
+                <p className="text-sm text-slate-400">{t("dash.noWalkin")}</p>
               ) : (
                 <ul className="divide-y divide-slate-100">
                   {salesBreakdown.walkInRows.map((r) => (
@@ -138,17 +140,17 @@ export default async function DashboardPage({
           </div>
         </ExpandableStat>
 
-        <ExpandableStat label="To collect" value={`₹${stats.totalOutstanding.toFixed(2)}`} accent="text-red-700">
-          <p className="mb-3 text-xs text-slate-400">Everyone who owes you money right now.</p>
+        <ExpandableStat label={t("dash.toCollect")} value={`₹${stats.totalOutstanding.toFixed(2)}`} accent="text-red-700">
+          <p className="mb-3 text-xs text-slate-400">{t("dash.toCollectHint")}</p>
 
           <div className="space-y-4">
             <section>
               <div className="mb-2 flex items-center justify-between">
-                <h4 className="text-xs font-semibold uppercase tracking-wide text-slate-500">Daily customers</h4>
+                <h4 className="text-xs font-semibold uppercase tracking-wide text-slate-500">{t("dash.dailyCustomers")}</h4>
                 <span className="text-sm font-bold text-[#4E220F]">₹{outstanding.dailyTotal.toFixed(2)}</span>
               </div>
               {outstanding.dailyRows.length === 0 ? (
-                <p className="text-sm text-slate-400">Nobody owes from the daily round.</p>
+                <p className="text-sm text-slate-400">{t("dash.nobodyDaily")}</p>
               ) : (
                 <ul className="divide-y divide-slate-100">
                   {outstanding.dailyRows.map((r) => (
@@ -157,7 +159,7 @@ export default async function DashboardPage({
                         <Link href={`/customers/${r.customerId}`} className="truncate text-sm font-medium text-[#4E220F] hover:underline">
                           {r.name}
                         </Link>
-                        <p className="text-xs text-slate-500">{r.daysOverdue} days overdue</p>
+                        <p className="text-xs text-slate-500">{t("dash.daysOverdue", { n: r.daysOverdue })}</p>
                       </div>
                       <span className="text-sm font-medium text-red-700">₹{r.dues.toFixed(2)}</span>
                     </li>
@@ -168,7 +170,7 @@ export default async function DashboardPage({
 
             <section>
               <div className="mb-2 flex items-center justify-between">
-                <h4 className="text-xs font-semibold uppercase tracking-wide text-slate-500">Walk-in customers</h4>
+                <h4 className="text-xs font-semibold uppercase tracking-wide text-slate-500">{t("dash.walkinCustomers")}</h4>
                 <span className="text-sm font-bold text-[#4E220F]">₹{outstanding.walkInTotal.toFixed(2)}</span>
               </div>
               {outstanding.walkInRows.length === 0 ? (
@@ -197,7 +199,7 @@ export default async function DashboardPage({
       {starredStats.length > 0 && (
         <div className="rounded-xl bg-[#FBF3D1] p-4 border border-[#E0CB9E]">
           <h2 className="mb-3 text-sm font-semibold text-slate-700">
-            <span className="text-amber-500">★</span> Starred items
+            <span className="text-amber-500">★</span> {t("dash.starredItems")}
           </h2>
           <ul className="grid grid-cols-1 gap-3 sm:grid-cols-2">
             {starredStats.map((s) => (
@@ -205,14 +207,14 @@ export default async function DashboardPage({
                 <p className="text-sm font-medium text-[#4E220F]">{s.name}</p>
                 <div className="mt-2 flex items-end justify-between gap-2">
                   <div>
-                    <p className="text-xs text-slate-500">Sold</p>
+                    <p className="text-xs text-slate-500">{t("dash.sold")}</p>
                     <p className="text-base font-semibold text-slate-800">
                       {s.quantity.toFixed(s.unit === "piece" ? 0 : 1)}
                       {s.unit ? ` ${s.unit}` : ""}
                     </p>
                   </div>
                   <div className="text-right">
-                    <p className="text-xs text-slate-500">Earned</p>
+                    <p className="text-xs text-slate-500">{t("dash.earned")}</p>
                     <p className="text-base font-semibold text-[#9D6638]">₹{s.revenue.toFixed(2)}</p>
                   </div>
                 </div>
@@ -243,7 +245,7 @@ export default async function DashboardPage({
 
         <section className="rounded-xl border border-[#E0CB9E] bg-[#FBF3D1] p-4">
           <div className="mb-3 flex items-center justify-between gap-2">
-            <h3 className="text-sm font-semibold text-slate-700">Daily deliveries</h3>
+            <h3 className="text-sm font-semibold text-slate-700">{t("dash.dailyDeliveries")}</h3>
             <span className="text-xs text-slate-500">
               {day.deliveryLiters.toFixed(1)} L · ₹{day.deliveryTotal.toFixed(2)}
             </span>

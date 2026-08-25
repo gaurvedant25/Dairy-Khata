@@ -288,8 +288,11 @@ export async function getStarredProductStats(userId: string, period: Period) {
   const unitByName = new Map<string, string>();
   for (const cp of customProducts) unitByName.set(cp.name, cp.unit);
 
+  // Only show starred items that still exist as products (drop deleted ones).
+  const activeStarred = starred.filter((name) => unitByName.has(name));
+
   const totals = new Map<string, { quantity: number; revenue: number; unit: string }>();
-  for (const name of starred) {
+  for (const name of activeStarred) {
     totals.set(name, { quantity: 0, revenue: 0, unit: unitByName.get(name) ?? "" });
   }
 
@@ -309,7 +312,7 @@ export async function getStarredProductStats(userId: string, period: Period) {
     if (!t.unit && d.unit) t.unit = d.unit;
   }
 
-  return starred.map((name) => {
+  return activeStarred.map((name) => {
     const t = totals.get(name)!;
     return { name, unit: t.unit, quantity: round2(t.quantity), revenue: round2(t.revenue) };
   });

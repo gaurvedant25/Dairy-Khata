@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
+import { translate, type Lang } from "@/lib/i18n";
 
 type Line = {
   key: string;
@@ -58,12 +59,15 @@ export function DeliveryBatch({
   initialCustomers,
   initialDate,
   availableProducts,
+  lang = "en",
 }: {
   initialCustomers: SheetCustomer[];
   initialDate: string;
   availableProducts: AvailableProduct[];
+  lang?: Lang;
 }) {
   const router = useRouter();
+  const t = (k: string) => translate(lang, k);
   const [date, setDate] = useState(initialDate);
   const [rows, setRows] = useState<CustomerRow[]>(initialCustomers.map(toRow));
   const [loading, startLoading] = useTransition();
@@ -182,7 +186,7 @@ export function DeliveryBatch({
       setMessage(data.error ?? "Failed to save");
       return;
     }
-    setMessage("Saved.");
+    setMessage(t("deliv.saved"));
     router.refresh();
   }
 
@@ -190,7 +194,7 @@ export function DeliveryBatch({
     <div className="space-y-4">
       <div className="flex flex-wrap items-center gap-3">
         <div>
-          <label className="block text-xs font-medium text-slate-500">Delivery date</label>
+          <label className="block text-xs font-medium text-slate-500">{t("deliv.date")}</label>
           <input
             type="date"
             value={date}
@@ -199,7 +203,7 @@ export function DeliveryBatch({
           />
         </div>
         <div className="ml-auto text-right">
-          <p className="text-xs font-medium text-slate-500">Day total</p>
+          <p className="text-xs font-medium text-slate-500">{t("deliv.dayTotal")}</p>
           <p className="text-lg font-bold text-[#4E220F]">₹{total.toFixed(2)}</p>
         </div>
       </div>
@@ -321,13 +325,13 @@ export function DeliveryBatch({
                   }}
                   className="rounded-lg border border-[#E0CB9E] bg-[#F3E7C7] px-2 py-1 text-xs text-slate-600"
                 >
-                  <option value="">+ Add item…</option>
+                  <option value="">{t("deliv.addItem")}</option>
                   {addable.map((a) => (
                     <option key={a.product} value={a.product}>
                       {a.product} (₹{a.pricePerUnit.toFixed(2)}/{a.unit})
                     </option>
                   ))}
-                  <option value="__custom__">Custom item…</option>
+                  <option value="__custom__">{t("deliv.custom")}</option>
                 </select>
               </div>
             </div>
@@ -341,7 +345,7 @@ export function DeliveryBatch({
           disabled={saving}
           className="rounded-lg bg-[#9D6638] px-4 py-2.5 text-sm font-medium text-white hover:bg-[#4E220F] disabled:opacity-60"
         >
-          {saving ? "Saving..." : "Save today's round"}
+          {saving ? t("deliv.saving") : t("deliv.save")}
         </button>
         {message && <p className="text-sm text-slate-600">{message}</p>}
       </div>

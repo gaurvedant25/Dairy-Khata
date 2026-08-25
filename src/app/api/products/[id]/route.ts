@@ -26,5 +26,15 @@ export async function DELETE(_req: Request, { params }: { params: Promise<{ id: 
   const existing = await prisma.customProduct.findFirst({ where: { id, userId: session.user.id } });
   if (!existing) return NextResponse.json({ error: "Not found" }, { status: 404 });
   await prisma.customProduct.delete({ where: { id } });
+
+  // Drop the deleted item from the starred list so it stops showing on the dashboard.
+  const setting = await prisma.setting.findUnique({ where: { userId: session.user.id } });
+  if (setting && setting.starredProducts.includes(existing.name)) {
+    await prisma.setting.update({
+      where: { userId: session.user.id },
+      data: { starredProducts: setting.starredProducts.filter((n) => n !== existing.name) },
+    });
+  }
+
   return NextResponse.json({ ok: true });
 }

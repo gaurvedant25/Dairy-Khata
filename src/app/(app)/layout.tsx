@@ -1,4 +1,5 @@
 import { auth } from "@/lib/auth";
+import { getLang } from "@/lib/lang";
 import { NavLinks } from "@/components/NavLinks";
 import { SignOutButton } from "@/components/SignOutButton";
 import { PageTransition } from "@/components/PageTransition";
@@ -14,6 +15,7 @@ function Wordmark() {
 
 export default async function AppLayout({ children }: { children: React.ReactNode }) {
   const session = await auth();
+  const lang = await getLang();
 
   return (
     <div className="flex min-h-screen flex-col md:flex-row">
@@ -22,7 +24,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
           <Wordmark />
           <p className="mt-1 truncate text-xs text-slate-500">{session?.user?.name}</p>
         </div>
-        <NavLinks orientation="vertical" />
+        <NavLinks orientation="vertical" lang={lang} />
         <div className="mt-auto px-2 pt-4">
           <SignOutButton />
         </div>
@@ -40,7 +42,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
       </main>
 
       <nav className="fixed inset-x-0 bottom-0 border-t border-[#E0CB9E] bg-[#FBF3D1] md:hidden">
-        <NavLinks orientation="horizontal" />
+        <NavLinks orientation="horizontal" lang={lang} />
       </nav>
     </div>
   );

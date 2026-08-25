@@ -1,11 +1,13 @@
 import { auth } from "@/lib/auth";
 import { listOneTimeOrders, ensureDefaultProducts } from "@/lib/business";
+import { getT } from "@/lib/lang";
 import { prisma } from "@/lib/prisma";
 import { OneTimeOrders } from "@/components/OneTimeOrders";
 
 export default async function WalkInPage() {
   const session = await auth();
   const userId = session!.user.id;
+  const { t } = await getT();
   await ensureDefaultProducts(userId);
   const [orders, dailyCustomers, userProducts] = await Promise.all([
     listOneTimeOrders(userId, 100),
@@ -27,10 +29,8 @@ export default async function WalkInPage() {
   return (
     <div className="space-y-4">
       <div>
-        <h1 className="text-xl font-bold text-[#4E220F]">Walk-in orders</h1>
-        <p className="text-sm text-slate-500">
-          One-time or casual sales that aren&apos;t tied to a regular customer.
-        </p>
+        <h1 className="text-xl font-bold text-[#4E220F]">{t("walk.title")}</h1>
+        <p className="text-sm text-slate-500">{t("walk.subtitle")}</p>
       </div>
 
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">

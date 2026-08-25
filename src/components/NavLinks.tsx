@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { translate, type Lang } from "@/lib/i18n";
 
 type IconName = "home" | "truck" | "users" | "walk" | "settings";
 
@@ -61,15 +62,15 @@ function Icon({ name, className }: { name: IconName; className?: string }) {
   }
 }
 
-const LINKS: { href: string; label: string; shortLabel: string; icon: IconName }[] = [
-  { href: "/dashboard", label: "Dashboard", shortLabel: "Home", icon: "home" },
-  { href: "/deliveries", label: "Deliveries", shortLabel: "Deliver", icon: "truck" },
-  { href: "/customers", label: "Daily customers", shortLabel: "Daily", icon: "users" },
-  { href: "/walk-in", label: "Walk-in", shortLabel: "Walk-in", icon: "walk" },
-  { href: "/settings", label: "Settings", shortLabel: "Settings", icon: "settings" },
+const LINKS: { href: string; key: string; shortKey: string; icon: IconName }[] = [
+  { href: "/dashboard", key: "nav.dashboard", shortKey: "nav.short.dashboard", icon: "home" },
+  { href: "/deliveries", key: "nav.deliveries", shortKey: "nav.short.deliveries", icon: "truck" },
+  { href: "/customers", key: "nav.customers", shortKey: "nav.short.customers", icon: "users" },
+  { href: "/walk-in", key: "nav.walkin", shortKey: "nav.short.walkin", icon: "walk" },
+  { href: "/settings", key: "nav.settings", shortKey: "nav.short.settings", icon: "settings" },
 ];
 
-export function NavLinks({ orientation }: { orientation: "horizontal" | "vertical" }) {
+export function NavLinks({ orientation, lang = "en" }: { orientation: "horizontal" | "vertical"; lang?: Lang }) {
   const pathname = usePathname();
 
   return (
@@ -97,7 +98,7 @@ export function NavLinks({ orientation }: { orientation: "horizontal" | "vertica
             }
           >
             <Icon name={link.icon} className={orientation === "horizontal" ? "h-6 w-6" : "h-5 w-5"} />
-            <span>{orientation === "horizontal" ? link.shortLabel : link.label}</span>
+            <span>{translate(lang, orientation === "horizontal" ? link.shortKey : link.key)}</span>
           </Link>
         );
       })}

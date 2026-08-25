@@ -1,6 +1,7 @@
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { getDeliverySheet } from "@/lib/business";
+import { getT } from "@/lib/lang";
 import { DeliveryBatch } from "@/components/DeliveryBatch";
 import Link from "next/link";
 
@@ -11,6 +12,7 @@ function isoLocal(d: Date) {
 export default async function DeliveriesPage() {
   const session = await auth();
   const userId = session!.user.id;
+  const { t, lang } = await getT();
   const today = isoLocal(new Date());
 
   const [sheet, userProducts, customerCount] = await Promise.all([
@@ -34,24 +36,22 @@ export default async function DeliveriesPage() {
   return (
     <div className="space-y-4">
       <div>
-        <h1 className="text-xl font-bold text-[#4E220F]">Log deliveries</h1>
-        <p className="text-sm text-slate-500">
-          Enter what each customer got today, then save. Add extra items with “+ Add item”.
-        </p>
+        <h1 className="text-xl font-bold text-[#4E220F]">{t("deliv.title")}</h1>
+        <p className="text-sm text-slate-500">{t("deliv.subtitle")}</p>
       </div>
 
       {customerCount === 0 ? (
         <div className="rounded-xl bg-[#FBF3D1] p-6 text-center border border-[#E0CB9E]">
-          <p className="text-sm text-slate-500">Add customers first to start logging deliveries.</p>
+          <p className="text-sm text-slate-500">{t("deliv.needCustomers")}</p>
           <Link
             href="/customers"
             className="mt-3 inline-block rounded-lg bg-[#9D6638] px-4 py-2 text-sm font-medium text-white hover:bg-[#4E220F]"
           >
-            Go to customers
+            {t("deliv.goCustomers")}
           </Link>
         </div>
       ) : (
-        <DeliveryBatch initialCustomers={sheet} initialDate={today} availableProducts={availableProducts} />
+        <DeliveryBatch initialCustomers={sheet} initialDate={today} availableProducts={availableProducts} lang={lang} />
       )}
     </div>
   );
