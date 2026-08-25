@@ -27,5 +27,9 @@ export default auth((req) => {
 });
 
 export const config = {
-  matcher: ["/((?!api/auth|_next/static|_next/image|favicon.ico).*)"],
+  // Skip auth for Next internals, API auth, and public static files
+  // (icons, manifest, service worker, images) so the PWA/logo can load.
+  matcher: [
+    "/((?!api/auth|_next/static|_next/image|favicon.ico|manifest.webmanifest|sw.js|.*\\.(?:png|jpg|jpeg|svg|ico|webmanifest|js)$).*)",
+  ],
 };
