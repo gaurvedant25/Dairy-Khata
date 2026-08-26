@@ -52,11 +52,11 @@ export default async function DashboardPage({
   const [sy, sm] = selectedDate.split("-").map(Number);
 
   const [stats, starredStats, day, activity, salesBreakdown, outstanding] = await Promise.all([
-    getStats(userId, period),
-    getStarredProductStats(userId, period),
+    getStats(userId, period, selectedDate),
+    getStarredProductStats(userId, period, selectedDate),
     getDaySummary(userId, selectedDate),
     getMonthActivity(userId, sy, sm - 1),
-    getSalesBreakdown(userId, period),
+    getSalesBreakdown(userId, period, selectedDate),
     getOutstandingBreakdown(userId),
   ]);
 

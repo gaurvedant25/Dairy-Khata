@@ -1,5 +1,8 @@
+import { redirect } from "next/navigation";
+import Link from "next/link";
 import { auth } from "@/lib/auth";
 import { getLang } from "@/lib/lang";
+import { getSubscription } from "@/lib/subscription";
 import { NavLinks } from "@/components/NavLinks";
 import { SignOutButton } from "@/components/SignOutButton";
 import { PageTransition } from "@/components/PageTransition";
@@ -16,6 +19,10 @@ function Wordmark() {
 export default async function AppLayout({ children }: { children: React.ReactNode }) {
   const session = await auth();
   const lang = await getLang();
+
+  // Gate the app behind the trial / subscription.
+  const sub = await getSubscription(session!.user.id);
+  if (!sub.hasAccess) redirect("/billing");
 
   return (
     <div className="flex min-h-screen flex-col md:flex-row">
@@ -36,6 +43,14 @@ export default async function AppLayout({ children }: { children: React.ReactNod
       </header>
 
       <main className="flex-1 pb-24 md:pb-0">
+        {sub.status === "trialing" && (
+          <Link
+            href="/billing"
+            className="block bg-[#9D6638] px-4 py-2 text-center text-xs font-medium text-white hover:bg-[#4E220F]"
+          >
+            {sub.daysLeft} {sub.daysLeft === 1 ? "day" : "days"} left in your free trial · Subscribe →
+          </Link>
+        )}
         <div className="mx-auto max-w-5xl px-4 py-6 md:py-8">
           <PageTransition>{children}</PageTransition>
         </div>

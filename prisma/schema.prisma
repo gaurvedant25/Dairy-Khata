@@ -17,6 +17,9 @@ model User {
   passwordHash String
   createdAt    DateTime @default(now())
 
+  trialEndsAt  DateTime?
+  paidUntil    DateTime?
+
   setting        Setting?
   customers      Customer[]
   oneTimeOrders  OneTimeOrder[]

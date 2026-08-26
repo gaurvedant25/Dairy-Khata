@@ -7,6 +7,7 @@ import { CustomProductsManager } from "@/components/CustomProductsManager";
 import { StarredProductsPicker } from "@/components/StarredProductsPicker";
 import { LanguageSwitcher } from "@/components/LanguageSwitcher";
 import { InstallAppBox } from "@/components/InstallAppBox";
+import Link from "next/link";
 
 export default async function SettingsPage() {
   const session = await auth();
@@ -66,6 +67,17 @@ export default async function SettingsPage() {
           button={t("set.installBtn")}
         />
       </div>
+
+      <Link
+        href="/subscription"
+        className="flex items-center justify-between gap-3 rounded-xl bg-[#9D6638] p-6 hover:bg-[#4E220F]"
+      >
+        <div>
+          <h2 className="text-base font-semibold text-[#FFEED6]">{t("set.subscription")}</h2>
+          <p className="text-xs text-[#E8D7B0]">{t("set.subManage")}</p>
+        </div>
+        <span className="text-lg text-[#FFEED6]">›</span>
+      </Link>
     </div>
   );
 }

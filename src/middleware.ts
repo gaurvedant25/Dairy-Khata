@@ -4,11 +4,23 @@ import { authConfig } from "@/lib/auth.config";
 
 const { auth } = NextAuth(authConfig);
 
-const PUBLIC_PATHS = ["/login", "/signup", "/api/signup"];
+// Public marketing / legal pages + auth pages (reachable without login).
+const PUBLIC_PREFIXES = [
+  "/login",
+  "/signup",
+  "/api/signup",
+  "/terms",
+  "/privacy",
+  "/refund",
+  "/contact",
+  "/pricing",
+];
+// Auth pages we bounce logged-in users away from.
+const AUTH_ONLY = ["/login", "/signup"];
 
 export default auth((req) => {
   const { pathname } = req.nextUrl;
-  const isPublic = PUBLIC_PATHS.some((p) => pathname.startsWith(p));
+  const isPublic = pathname === "/" || PUBLIC_PREFIXES.some((p) => pathname.startsWith(p));
 
   if (!req.auth && !isPublic) {
     if (pathname.startsWith("/api")) {
@@ -19,7 +31,8 @@ export default auth((req) => {
     return NextResponse.redirect(loginUrl);
   }
 
-  if (req.auth && isPublic && !pathname.startsWith("/api")) {
+  // Signed-in users skip the login/signup screens.
+  if (req.auth && AUTH_ONLY.some((p) => pathname.startsWith(p))) {
     return NextResponse.redirect(new URL("/dashboard", req.nextUrl.origin));
   }
 

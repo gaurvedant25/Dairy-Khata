@@ -111,25 +111,33 @@ export const listCustomersWithStats = cache(async (userId: string) => {
 
 export type Period = "today" | "week" | "month";
 
-function periodStart(period: Period): Date {
-  const now = new Date();
+/**
+ * The date window for a period, anchored to the date the user is viewing on
+ * the dashboard (not just "now"), with a proper upper bound so navigating to
+ * a past month shows that month's figures.
+ */
+export function periodRange(period: Period, dateStr: string): { start: Date; end: Date } {
+  const [y, m, d] = dateStr.split("-").map(Number);
   if (period === "today") {
-    return new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    const start = new Date(y, m - 1, d);
+    const end = new Date(y, m - 1, d + 1);
+    return { start, end };
   }
   if (period === "week") {
-    const d = new Date(now);
-    d.setDate(d.getDate() - 6);
-    return new Date(d.getFullYear(), d.getMonth(), d.getDate());
+    const end = new Date(y, m - 1, d + 1); // exclusive, day after the viewed day
+    const start = new Date(y, m - 1, d - 6); // 7-day window ending on the viewed day
+    return { start, end };
   }
-  return new Date(now.getFullYear(), now.getMonth(), 1);
+  // month containing the viewed date
+  return { start: new Date(y, m - 1, 1), end: new Date(y, m, 1) };
 }
 
-export async function getStats(userId: string, period: Period) {
-  const start = periodStart(period);
+export async function getStats(userId: string, period: Period, dateStr: string) {
+  const { start, end } = periodRange(period, dateStr);
 
   const [deliveries, oneTimeInPeriod, unpaidWalkInOnly, allWithStats] = await Promise.all([
-    prisma.deliveryEntry.findMany({ where: { customer: { userId }, date: { gte: start } } }),
-    prisma.oneTimeOrder.findMany({ where: { userId, date: { gte: start } } }),
+    prisma.deliveryEntry.findMany({ where: { customer: { userId }, date: { gte: start, lt: end } } }),
+    prisma.oneTimeOrder.findMany({ where: { userId, date: { gte: start, lt: end } } }),
     // Only untagged walk-ins here — tagged ones already show up under
     // their customer's dues via listCustomersWithStats, so counting them
     // in both places would double the "To collect" total.
@@ -163,16 +171,16 @@ export async function getStats(userId: string, period: Period) {
  * Line-by-line breakdown of what makes up the "Sales" figure for the period:
  * the milk round (per customer) plus every walk-in / one-time order.
  */
-export async function getSalesBreakdown(userId: string, period: Period) {
-  const start = periodStart(period);
+export async function getSalesBreakdown(userId: string, period: Period, dateStr: string) {
+  const { start, end } = periodRange(period, dateStr);
 
   const [deliveries, orders] = await Promise.all([
     prisma.deliveryEntry.findMany({
-      where: { customer: { userId }, date: { gte: start } },
+      where: { customer: { userId }, date: { gte: start, lt: end } },
       include: { customer: { select: { id: true, name: true } } },
     }),
     prisma.oneTimeOrder.findMany({
-      where: { userId, date: { gte: start } },
+      where: { userId, date: { gte: start, lt: end } },
       orderBy: { date: "desc" },
     }),
   ]);
@@ -267,15 +275,15 @@ export async function ensureDefaultProducts(userId: string) {
  * Per-product totals for the products the owner starred, combining walk-in
  * sales and the daily delivery round.
  */
-export async function getStarredProductStats(userId: string, period: Period) {
-  const start = periodStart(period);
+export async function getStarredProductStats(userId: string, period: Period, dateStr: string) {
+  const { start, end } = periodRange(period, dateStr);
   const setting = await getOrCreateSetting(userId);
   const starred = setting.starredProducts;
   if (starred.length === 0) return [];
 
   const [orders, customProducts, deliveriesByProduct] = await Promise.all([
     prisma.oneTimeOrder.findMany({
-      where: { userId, date: { gte: start }, product: { in: starred } },
+      where: { userId, date: { gte: start, lt: end }, product: { in: starred } },
       select: { product: true, unit: true, quantity: true, amount: true },
     }),
     prisma.customProduct.findMany({
@@ -283,7 +291,7 @@ export async function getStarredProductStats(userId: string, period: Period) {
       select: { name: true, unit: true },
     }),
     prisma.deliveryEntry.findMany({
-      where: { customer: { userId }, date: { gte: start }, product: { in: starred } },
+      where: { customer: { userId }, date: { gte: start, lt: end }, product: { in: starred } },
       select: { product: true, unit: true, quantity: true, pricePerUnit: true },
     }),
   ]);
