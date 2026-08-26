@@ -55,7 +55,7 @@ export function SubscribeButton() {
             body: JSON.stringify(resp),
           }).then((r) => r.json());
           if (v.ok) {
-            router.push("/dashboard");
+            router.push("/subscription/success");
             router.refresh();
           } else {
             setError(v.error ?? "Payment verification failed. If money was deducted, contact us.");
