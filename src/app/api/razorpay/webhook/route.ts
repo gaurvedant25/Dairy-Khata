@@ -1,10 +1,11 @@
 import { NextResponse } from "next/server";
 import crypto from "crypto";
 import { prisma } from "@/lib/prisma";
+import { grantCycle } from "@/lib/subscription";
 
-// Razorpay calls this directly when a payment is captured, so access is
-// granted reliably even if the payer closed the tab before the client
-// verify step ran.
+// Razorpay calls this directly. For autopay it fires `subscription.charged`
+// every month, so access is granted reliably even if the payer closed the tab
+// before the client verify step ran, and every renewal is picked up here.
 export async function POST(req: Request) {
   const secret = process.env.RAZORPAY_WEBHOOK_SECRET;
   if (!secret) return NextResponse.json({ error: "not configured" }, { status: 500 });
@@ -23,17 +24,47 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "bad payload" }, { status: 400 });
   }
 
-  if (event?.event === "payment.captured") {
+  const type: string = event?.event ?? "";
+
+  // Monthly autopay charge (and the first one) → grant a 30-day cycle.
+  if (type === "subscription.charged") {
+    const sub = event?.payload?.subscription?.entity;
+    const payment = event?.payload?.payment?.entity;
+    const userId: string | undefined = sub?.notes?.userId;
+    const paymentId: string | undefined = payment?.id;
+    if (userId && paymentId) {
+      await grantCycle(userId, paymentId); // idempotent across retries
+    }
+  }
+
+  // Mandate lifecycle → keep our status in sync. Access still runs out
+  // naturally when paidUntil lapses, so we don't touch paidUntil here.
+  else if (
+    type === "subscription.cancelled" ||
+    type === "subscription.halted" ||
+    type === "subscription.completed" ||
+    type === "subscription.activated"
+  ) {
+    const sub = event?.payload?.subscription?.entity;
+    const userId: string | undefined = sub?.notes?.userId;
+    const status = type.split(".")[1]; // cancelled | halted | completed | activated
+    if (userId) {
+      await prisma.user.updateMany({
+        where: { id: userId },
+        data: { subscriptionStatus: status },
+      });
+    }
+  }
+
+  // Legacy one-time payments (kept for backward compatibility).
+  else if (type === "payment.captured") {
     const payment = event?.payload?.payment?.entity;
     const userId: string | undefined = payment?.notes?.userId;
-    if (userId) {
-      const user = await prisma.user.findUnique({ where: { id: userId }, select: { paidUntil: true } });
-      if (user) {
-        const now = new Date();
-        const base = user.paidUntil && user.paidUntil > now ? user.paidUntil : now;
-        const paidUntil = new Date(base.getTime() + 30 * 24 * 60 * 60 * 1000);
-        await prisma.user.update({ where: { id: userId }, data: { paidUntil } });
-      }
+    const paymentId: string | undefined = payment?.id;
+    // Only handle standalone order payments here; subscription charges arrive
+    // via subscription.charged above (and carry no userId in payment.notes).
+    if (userId && paymentId) {
+      await grantCycle(userId, paymentId);
     }
   }
 

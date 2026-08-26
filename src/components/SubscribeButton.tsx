@@ -25,9 +25,9 @@ export function SubscribeButton() {
     setError(null);
     setLoading(true);
     try {
-      const order = await fetch("/api/razorpay/order", { method: "POST" }).then((r) => r.json());
-      if (!order.orderId) {
-        setError(order.error ?? "Could not start payment");
+      const sub = await fetch("/api/razorpay/subscription", { method: "POST" }).then((r) => r.json());
+      if (!sub.subscriptionId) {
+        setError(sub.error ?? "Could not start autopay");
         setLoading(false);
         return;
       }
@@ -40,16 +40,13 @@ export function SubscribeButton() {
       }
 
       const rzp = new (window as any).Razorpay({
-        key: order.keyId,
-        amount: order.amount,
-        currency: "INR",
-        order_id: order.orderId,
+        key: sub.keyId,
+        subscription_id: sub.subscriptionId,
         name: "Dairy Ledger",
-        description: "Monthly subscription — ₹249",
-        notes: { userId: order.userId },
+        description: "Autopay — ₹249/month",
         theme: { color: "#9D6638" },
         handler: async (resp: any) => {
-          const v = await fetch("/api/razorpay/verify", {
+          const v = await fetch("/api/razorpay/verify-subscription", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify(resp),
@@ -77,7 +74,7 @@ export function SubscribeButton() {
         disabled={loading}
         className="w-full rounded-lg bg-[#9D6638] px-4 py-3 text-sm font-semibold text-white hover:bg-[#4E220F] disabled:opacity-60"
       >
-        {loading ? "Opening payment…" : "Subscribe ₹249/month"}
+        {loading ? "Opening payment…" : "Set up autopay — ₹249/month"}
       </button>
       {error && <p className="mt-3 text-center text-xs text-red-600">{error}</p>}
     </div>

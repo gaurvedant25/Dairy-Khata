@@ -20,6 +20,10 @@ model User {
   trialEndsAt  DateTime?
   paidUntil    DateTime?
 
+  // Razorpay autopay (UPI mandate) subscription
+  razorpaySubscriptionId String?
+  subscriptionStatus     String? // created | authenticated | active | cancelled | halted | completed
+
   setting        Setting?
   customers      Customer[]
   oneTimeOrders  OneTimeOrder[]
@@ -99,6 +103,14 @@ model Payment {
   createdAt  DateTime @default(now())
 
   @@index([customerId, date])
+}
+
+// One row per Razorpay payment we've already granted access for, so a charge
+// is never counted twice (webhook retries, or verify + webhook both firing).
+model ProcessedPayment {
+  paymentId String   @id
+  userId    String
+  createdAt DateTime @default(now())
 }
 
 model OneTimeOrder {
