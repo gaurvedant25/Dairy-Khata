@@ -46,6 +46,7 @@ export function SubscribeButton() {
         order_id: order.orderId,
         name: "Dairy Ledger",
         description: "Monthly subscription — ₹249",
+        notes: { userId: order.userId },
         theme: { color: "#9D6638" },
         handler: async (resp: any) => {
           const v = await fetch("/api/razorpay/verify", {

@@ -31,5 +31,5 @@ export async function POST() {
     return NextResponse.json({ error: order?.error?.description ?? "Could not start payment" }, { status: 400 });
   }
 
-  return NextResponse.json({ orderId: order.id, amount: order.amount, keyId });
+  return NextResponse.json({ orderId: order.id, amount: order.amount, keyId, userId: session.user.id });
 }

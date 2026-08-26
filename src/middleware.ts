@@ -9,6 +9,7 @@ const PUBLIC_PREFIXES = [
   "/login",
   "/signup",
   "/api/signup",
+  "/api/razorpay/webhook",
   "/terms",
   "/privacy",
   "/refund",
