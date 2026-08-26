@@ -13,7 +13,7 @@ datasource db {
 model User {
   id           String   @id @default(cuid())
   name         String
-  email        String   @unique
+  username     String   @unique
   passwordHash String
   createdAt    DateTime @default(now())
 
@@ -70,6 +70,7 @@ model Customer {
   lastReminderSentAt  DateTime?
   createdAt           DateTime  @default(now())
   active              Boolean   @default(true)
+  sample              Boolean   @default(false) // seeded demo data, safe to bulk-remove
 
   deliveries    DeliveryEntry[]
   payments      Payment[]

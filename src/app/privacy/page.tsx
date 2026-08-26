@@ -12,7 +12,7 @@ export default function PrivacyPage() {
 
       <h2>Information we collect</h2>
       <p>
-        Account details you provide (name, email) and the business data you enter (your customers, deliveries,
+        Account details you provide (name, username) and the business data you enter (your customers, deliveries,
         payments, and items). We do not sell your data.
       </p>
 

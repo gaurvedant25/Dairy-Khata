@@ -8,7 +8,7 @@ import Link from "next/link";
 function LoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const [email, setEmail] = useState("");
+  const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
@@ -18,13 +18,13 @@ function LoginForm() {
     setError(null);
     setLoading(true);
     const result = await signIn("credentials", {
-      email,
+      username,
       password,
       redirect: false,
     });
     setLoading(false);
     if (result?.error) {
-      setError("Invalid email or password");
+      setError("Invalid username or password");
       return;
     }
     const callbackUrl = searchParams.get("callbackUrl") || "/dashboard";
@@ -41,14 +41,16 @@ function LoginForm() {
         </div>
         <form onSubmit={onSubmit} className="space-y-4 rounded-xl bg-[#FBF3D1] p-6 border border-[#E0CB9E]">
           <div>
-            <label className="block text-sm font-medium text-slate-700">Email</label>
+            <label className="block text-sm font-medium text-slate-700">Username</label>
             <input
-              type="email"
+              type="text"
               required
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
+              autoCapitalize="none"
+              spellCheck={false}
+              value={username}
+              onChange={(e) => setUsername(e.target.value)}
               className="mt-1 w-full rounded-lg border border-[#D6BE8C] px-3 py-2 text-base focus:border-[#9D6638] focus:outline-none focus:ring-1 focus:ring-[#9D6638]"
-              autoComplete="email"
+              autoComplete="username"
             />
           </div>
           <div>

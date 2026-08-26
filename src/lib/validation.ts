@@ -2,7 +2,13 @@ import { z } from "zod";
 
 export const signupSchema = z.object({
   name: z.string().trim().min(1, "Name is required").max(100),
-  email: z.string().trim().toLowerCase().email("Enter a valid email"),
+  username: z
+    .string()
+    .trim()
+    .toLowerCase()
+    .min(3, "Username must be at least 3 characters")
+    .max(30, "Username is too long")
+    .regex(/^[a-z0-9._-]+$/, "Use only letters, numbers, and . _ -"),
   password: z.string().min(6, "Password must be at least 6 characters").max(100),
 });
 

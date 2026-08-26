@@ -22,6 +22,19 @@ export async function POST() {
     );
   }
 
+  // Guard against creating a second mandate for someone who already has one
+  // active — otherwise they'd be charged twice a month.
+  const existing = await prisma.user.findUnique({
+    where: { id: session.user.id },
+    select: { subscriptionStatus: true },
+  });
+  if (existing?.subscriptionStatus === "active" || existing?.subscriptionStatus === "authenticated") {
+    return NextResponse.json(
+      { error: "Autopay is already active on your account." },
+      { status: 409 },
+    );
+  }
+
   const res = await fetch("https://api.razorpay.com/v1/subscriptions", {
     method: "POST",
     headers: {

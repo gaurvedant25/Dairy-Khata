@@ -1,5 +1,7 @@
 import Link from "next/link";
 import { auth } from "@/lib/auth";
+import { prisma } from "@/lib/prisma";
+import { Onboarding } from "@/components/Onboarding";
 import {
   getStats,
   getStarredProductStats,
@@ -40,7 +42,15 @@ export default async function DashboardPage({
 }) {
   const session = await auth();
   const userId = session!.user.id;
-  const { t } = await getT();
+  const { t, lang } = await getT();
+
+  const [realCustomerCount, sampleCustomerCount, realDeliveryCount] = await Promise.all([
+    prisma.customer.count({ where: { userId, sample: false } }),
+    prisma.customer.count({ where: { userId, sample: true } }),
+    prisma.deliveryEntry.count({ where: { customer: { userId, sample: false } } }),
+  ]);
+  const hasSample = sampleCustomerCount > 0;
+  const showOnboarding = realCustomerCount === 0 || hasSample;
 
   const params = await searchParams;
   const period: Period = (["today", "week", "month"] as string[]).includes(params.period ?? "")
@@ -66,6 +76,15 @@ export default async function DashboardPage({
 
   return (
     <div className="space-y-6">
+      {showOnboarding && (
+        <Onboarding
+          hasCustomers={realCustomerCount > 0}
+          hasDeliveries={realDeliveryCount > 0}
+          hasSample={hasSample}
+          lang={lang}
+        />
+      )}
+
       <div className="flex flex-wrap items-center justify-between gap-3">
         <h1 className="text-2xl font-semibold tracking-tight text-[#4E220F]">{t("dash.title")}</h1>
         <div className="inline-flex rounded-lg border border-[#E0CB9E] p-0.5">

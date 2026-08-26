@@ -10,11 +10,11 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: parsed.error.issues[0]?.message ?? "Invalid input" }, { status: 400 });
   }
 
-  const { name, email, password } = parsed.data;
+  const { name, username, password } = parsed.data;
 
-  const existing = await prisma.user.findUnique({ where: { email } });
+  const existing = await prisma.user.findUnique({ where: { username } });
   if (existing) {
-    return NextResponse.json({ error: "An account with that email already exists" }, { status: 409 });
+    return NextResponse.json({ error: "That username is already taken" }, { status: 409 });
   }
 
   const passwordHash = await bcrypt.hash(password, 10);
@@ -22,7 +22,7 @@ export async function POST(req: Request) {
   const user = await prisma.user.create({
     data: {
       name,
-      email,
+      username,
       passwordHash,
       trialEndsAt,
       setting: { create: {} },
@@ -31,5 +31,5 @@ export async function POST(req: Request) {
     },
   });
 
-  return NextResponse.json({ id: user.id, email: user.email });
+  return NextResponse.json({ id: user.id, username: user.username });
 }

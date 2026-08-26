@@ -8,7 +8,7 @@ import Link from "next/link";
 export default function SignupPage() {
   const router = useRouter();
   const [name, setName] = useState("");
-  const [email, setEmail] = useState("");
+  const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
@@ -21,7 +21,7 @@ export default function SignupPage() {
     const res = await fetch("/api/signup", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ name, email, password }),
+      body: JSON.stringify({ name, username, password }),
     });
 
     if (!res.ok) {
@@ -31,7 +31,7 @@ export default function SignupPage() {
       return;
     }
 
-    const result = await signIn("credentials", { email, password, redirect: false });
+    const result = await signIn("credentials", { username, password, redirect: false });
     setLoading(false);
     if (result?.error) {
       setError("Account created — please sign in");
@@ -61,15 +61,19 @@ export default function SignupPage() {
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-slate-700">Email</label>
+            <label className="block text-sm font-medium text-slate-700">Username</label>
             <input
-              type="email"
+              type="text"
               required
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
+              minLength={3}
+              autoCapitalize="none"
+              spellCheck={false}
+              value={username}
+              onChange={(e) => setUsername(e.target.value)}
               className="mt-1 w-full rounded-lg border border-[#D6BE8C] px-3 py-2 text-base focus:border-[#9D6638] focus:outline-none focus:ring-1 focus:ring-[#9D6638]"
-              autoComplete="email"
+              autoComplete="username"
             />
+            <p className="mt-1 text-xs text-slate-400">Letters, numbers, and . _ - — no spaces.</p>
           </div>
           <div>
             <label className="block text-sm font-medium text-slate-700">Password</label>

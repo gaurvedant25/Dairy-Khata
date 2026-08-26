@@ -72,8 +72,8 @@ export default async function SubscriptionPage() {
       </div>
 
       <p className="mt-6 text-xs text-slate-400">
-        Payments are processed securely. Online payment setup is in progress; contact us to activate or change
-        your plan.
+        Payments are processed securely by Razorpay via UPI Autopay. You can cancel anytime — you&apos;ll
+        keep access until your current paid month ends.
       </p>
     </div>
   );
