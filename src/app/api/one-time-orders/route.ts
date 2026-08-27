@@ -104,7 +104,7 @@ export async function POST(req: Request) {
       data: {
         userId: session.user.id,
         customerId: existingCustomer?.id ?? null,
-        customerName: existingCustomer?.name ?? (customerName ?? "").trim(),
+        customerName: existingCustomer?.name ?? ((customerName ?? "").trim() || "Walk-in customer"),
         phone: existingCustomer?.phone ?? (phone || null),
         product: line.productLabel,
         unit: line.unit,

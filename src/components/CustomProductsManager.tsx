@@ -22,13 +22,15 @@ export function CustomProductsManager({ products }: { products: CustomProduct[] 
   const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const [busyId, setBusyId] = useState<string | null>(null);
+  const [confirmingId, setConfirmingId] = useState<string | null>(null);
 
-  const effectiveUnit = unit === "__custom__" ? customUnit.trim() : unit;
+  const noUnit = unit === "__none__";
+  const effectiveUnit = noUnit ? "" : unit === "__custom__" ? customUnit.trim() : unit;
 
   async function add(e: React.FormEvent) {
     e.preventDefault();
     setError(null);
-    if (!effectiveUnit) {
+    if (!noUnit && !effectiveUnit) {
       setError("Enter a unit");
       return;
     }
@@ -53,10 +55,10 @@ export function CustomProductsManager({ products }: { products: CustomProduct[] 
   }
 
   async function remove(p: CustomProduct) {
-    if (!confirm(`Delete "${p.name}"? Past orders that used it are not affected.`)) return;
     setBusyId(p.id);
     await fetch(`/api/products/${p.id}`, { method: "DELETE" });
     setBusyId(null);
+    setConfirmingId(null);
     router.refresh();
   }
 
@@ -117,20 +119,30 @@ export function CustomProductsManager({ products }: { products: CustomProduct[] 
                     {u}
                   </option>
                 ))}
+                <option value="__none__">No unit (just a price)</option>
                 <option value="__custom__">Custom unit…</option>
               </select>
             </label>
             <label className="block">
-              <span className="mb-1 block text-xs font-semibold text-slate-700">Price per {effectiveUnit || "unit"} (₹)</span>
+              <span className="mb-1 block text-xs font-semibold text-slate-700">
+                {noUnit ? (
+                  <>
+                    Price (₹) <span className="font-normal text-slate-400">(optional — ask at order time)</span>
+                  </>
+                ) : (
+                  `Price per ${effectiveUnit || "unit"} (₹)`
+                )}
+              </span>
               <input
                 type="number"
                 inputMode="decimal"
                 step="0.01"
                 min={0}
-                required
+                required={!noUnit}
+                placeholder={noUnit ? "Leave blank to enter each time" : undefined}
                 value={price}
                 onChange={(e) => setPrice(e.target.value)}
-                className="w-full rounded-lg border border-[#D6BE8C] bg-[#FBF3D1] px-3 py-2 text-sm text-[#4E220F]"
+                className="w-full rounded-lg border border-[#D6BE8C] bg-[#FBF3D1] px-3 py-2 text-sm text-[#4E220F] placeholder:text-slate-400"
               />
             </label>
             {unit === "__custom__" && (
@@ -177,7 +189,7 @@ export function CustomProductsManager({ products }: { products: CustomProduct[] 
             <li key={p.id} className="flex items-center gap-3 px-3 py-2.5">
               <div className="min-w-0 flex-1">
                 <p className="truncate text-sm font-medium text-[#4E220F]">{p.name}</p>
-                <p className="text-xs text-slate-500">per {p.unit}</p>
+                <p className="text-xs text-slate-500">{p.unit ? `per ${p.unit}` : "no unit · just a price"}</p>
               </div>
               <div className="flex items-center gap-1 text-sm text-slate-500">
                 <span>₹</span>
@@ -191,14 +203,31 @@ export function CustomProductsManager({ products }: { products: CustomProduct[] 
                   className="w-20 rounded-lg border border-[#D6BE8C] px-2 py-1 text-right text-sm text-[#4E220F] disabled:opacity-60"
                 />
               </div>
-              <button
-                onClick={() => remove(p)}
-                disabled={busyId === p.id}
-                className="rounded-full px-2 py-1 text-xs text-slate-400 hover:bg-slate-100 hover:text-red-600 disabled:opacity-60"
-                aria-label={`Delete ${p.name}`}
-              >
-                ✕
-              </button>
+              {confirmingId === p.id ? (
+                <div className="flex items-center gap-1">
+                  <button
+                    onClick={() => remove(p)}
+                    disabled={busyId === p.id}
+                    className="rounded-lg bg-red-600 px-2.5 py-1 text-xs font-medium text-white hover:bg-red-700 disabled:opacity-60"
+                  >
+                    {busyId === p.id ? "…" : "Delete"}
+                  </button>
+                  <button
+                    onClick={() => setConfirmingId(null)}
+                    className="rounded-lg px-2 py-1 text-xs text-slate-500 hover:bg-slate-100"
+                  >
+                    Cancel
+                  </button>
+                </div>
+              ) : (
+                <button
+                  onClick={() => setConfirmingId(p.id)}
+                  className="rounded-full px-2 py-1 text-xs text-slate-400 hover:bg-slate-100 hover:text-red-600"
+                  aria-label={`Delete ${p.name}`}
+                >
+                  ✕
+                </button>
+              )}
             </li>
           ))}
         </ul>

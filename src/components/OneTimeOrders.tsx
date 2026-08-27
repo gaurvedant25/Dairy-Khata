@@ -29,14 +29,17 @@ type ItemDraft = {
   customAmount: string;
 };
 
-function makeItem(defaultUserProductId: string): ItemDraft {
+function makeItem(products: UserProduct[]): ItemDraft {
+  const first = products[0];
+  const noUnit = !!first && first.unit === "";
   return {
     key: Math.random().toString(36).slice(2, 9),
-    product: defaultUserProductId ? "UserProduct" : "Custom",
-    userProductId: defaultUserProductId,
+    product: first ? "UserProduct" : "Custom",
+    userProductId: first?.id ?? "",
     quantity: "",
     customProductName: "",
-    customAmount: "",
+    // For a no-unit item we ask for a price; prefill its default.
+    customAmount: noUnit ? String(first.pricePerUnit || "") : "",
   };
 }
 
@@ -50,20 +53,31 @@ export function OneTimeOrders({
   userProducts?: UserProduct[];
 }) {
   const router = useRouter();
-  const firstProductId = userProducts[0]?.id ?? "";
-  const newItem = () => makeItem(firstProductId);
+  const newItem = () => makeItem(userProducts);
 
   const [showForm, setShowForm] = useState(false);
   const [existingCustomerId, setExistingCustomerId] = useState<string>("");
   const [name, setName] = useState("");
-  const [phone, setPhone] = useState("");
-  const [items, setItems] = useState<ItemDraft[]>([makeItem(firstProductId)]);
-  const [paid, setPaid] = useState(false);
+  const [items, setItems] = useState<ItemDraft[]>(() => [makeItem(userProducts)]);
+  // Walk-in sales are usually paid immediately, so default to paid.
+  const [paid, setPaid] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [busyId, setBusyId] = useState<string | null>(null);
+  const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
 
   const selectedCustomer = dailyCustomers.find((c) => c.id === existingCustomerId) ?? null;
+
+  function productById(id: string) {
+    return userProducts.find((u) => u.id === id) ?? null;
+  }
+
+  // A saved item with an empty unit is priced per-order: we just ask a price.
+  function isNoUnit(it: ItemDraft) {
+    if (it.product !== "UserProduct") return false;
+    const up = productById(it.userProductId);
+    return !!up && up.unit === "";
+  }
 
   function unitFor(it: ItemDraft) {
     if (it.product === "UserProduct") {
@@ -81,7 +95,7 @@ export function OneTimeOrders({
   }
 
   function lineAmount(it: ItemDraft) {
-    if (it.product === "Custom") {
+    if (it.product === "Custom" || isNoUnit(it)) {
       const a = Number(it.customAmount);
       return Number.isFinite(a) && a > 0 ? Math.round(a * 100) / 100 : 0;
     }
@@ -95,9 +109,8 @@ export function OneTimeOrders({
   function resetForm() {
     setExistingCustomerId("");
     setName("");
-    setPhone("");
     setItems([newItem()]);
-    setPaid(false);
+    setPaid(true);
     setError(null);
   }
 
@@ -122,6 +135,11 @@ export function OneTimeOrders({
         };
       }
       if (it.product === "UserProduct") {
+        const up = productById(it.userProductId);
+        // No-unit items go through as a named one-off line at the price entered.
+        if (up && up.unit === "") {
+          return { product: "Custom", customProductName: up.name, customAmount: it.customAmount };
+        }
         return { product: "UserProduct", userProductId: it.userProductId, quantity: it.quantity };
       }
       return { product: it.product, quantity: it.quantity };
@@ -132,7 +150,6 @@ export function OneTimeOrders({
       body: JSON.stringify({
         existingCustomerId: existingCustomerId || undefined,
         customerName: existingCustomerId ? undefined : name,
-        phone: existingCustomerId ? undefined : phone,
         items: payloadItems,
         paid,
       }),
@@ -160,10 +177,10 @@ export function OneTimeOrders({
   }
 
   async function remove(order: Order) {
-    if (!confirm(`Delete this order for ${order.customerName}?`)) return;
     setBusyId(order.id);
     await fetch(`/api/one-time-orders/${order.id}`, { method: "DELETE" });
     setBusyId(null);
+    setConfirmDeleteId(null);
     router.refresh();
   }
 
@@ -207,27 +224,17 @@ export function OneTimeOrders({
               </select>
             </label>
             {!existingCustomerId && (
-              <>
-                <label className="block">
-                  <span className="mb-1 block text-xs font-semibold text-slate-700">Customer name</span>
-                  <input
-                    required={!existingCustomerId}
-                    value={name}
-                    onChange={(e) => setName(e.target.value)}
-                    className="w-full rounded-lg border border-[#D6BE8C] bg-[#FBF3D1] px-3 py-2 text-sm text-[#4E220F]"
-                  />
-                </label>
-                <label className="block">
-                  <span className="mb-1 block text-xs font-semibold text-slate-700">
-                    Phone <span className="font-normal text-slate-400">(optional)</span>
-                  </span>
-                  <input
-                    value={phone}
-                    onChange={(e) => setPhone(e.target.value)}
-                    className="w-full rounded-lg border border-[#D6BE8C] bg-[#FBF3D1] px-3 py-2 text-sm text-[#4E220F]"
-                  />
-                </label>
-              </>
+              <label className="block sm:col-span-2">
+                <span className="mb-1 block text-xs font-semibold text-slate-700">
+                  Customer name <span className="font-normal text-slate-400">(optional)</span>
+                </span>
+                <input
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  placeholder="Leave blank for a walk-in"
+                  className="w-full rounded-lg border border-[#D6BE8C] bg-[#FBF3D1] px-3 py-2 text-sm text-[#4E220F] placeholder:text-slate-400"
+                />
+              </label>
             )}
           </div>
 
@@ -272,7 +279,14 @@ export function OneTimeOrders({
                       onChange={(e) => {
                         const v = e.target.value;
                         if (v.startsWith("up:")) {
-                          updateItem(it.key, { product: "UserProduct", userProductId: v.slice(3) });
+                          const id = v.slice(3);
+                          const up = productById(id);
+                          updateItem(it.key, {
+                            product: "UserProduct",
+                            userProductId: id,
+                            quantity: "",
+                            customAmount: up && up.unit === "" ? String(up.pricePerUnit || "") : "",
+                          });
                         } else {
                           updateItem(it.key, { product: v as ProductKind, userProductId: "" });
                         }
@@ -288,7 +302,21 @@ export function OneTimeOrders({
                     </select>
                   </label>
 
-                  {it.product !== "Custom" ? (
+                  {it.product === "UserProduct" && isNoUnit(it) ? (
+                    <label className="block">
+                      <span className="mb-1 block text-xs font-medium text-slate-600">Price (₹)</span>
+                      <input
+                        type="number"
+                        inputMode="decimal"
+                        step="0.01"
+                        min={0}
+                        required
+                        value={it.customAmount}
+                        onChange={(e) => updateItem(it.key, { customAmount: e.target.value })}
+                        className="w-full rounded-lg border border-[#D6BE8C] bg-[#FBF3D1] px-3 py-2 text-sm text-[#4E220F]"
+                      />
+                    </label>
+                  ) : it.product !== "Custom" ? (
                     <label className="block">
                       <span className="mb-1 block text-xs font-medium text-slate-600">
                         How many {unit}? <span className="font-normal text-slate-400">(at {per})</span>
@@ -418,14 +446,31 @@ export function OneTimeOrders({
                 >
                   {order.paid ? "Paid" : "Unpaid"}
                 </button>
-                <button
-                  onClick={() => remove(order)}
-                  disabled={busy}
-                  className="rounded-full px-2 py-1 text-xs text-slate-400 hover:bg-slate-100 hover:text-red-600 disabled:opacity-60"
-                  aria-label="Delete order"
-                >
-                  ✕
-                </button>
+                {confirmDeleteId === order.id ? (
+                  <>
+                    <button
+                      onClick={() => remove(order)}
+                      disabled={busy}
+                      className="rounded-lg bg-red-600 px-2.5 py-1 text-xs font-medium text-white hover:bg-red-700 disabled:opacity-60"
+                    >
+                      {busy ? "…" : "Delete"}
+                    </button>
+                    <button
+                      onClick={() => setConfirmDeleteId(null)}
+                      className="rounded-lg px-2 py-1 text-xs text-slate-500 hover:bg-slate-100"
+                    >
+                      Cancel
+                    </button>
+                  </>
+                ) : (
+                  <button
+                    onClick={() => setConfirmDeleteId(order.id)}
+                    className="rounded-full px-2 py-1 text-xs text-slate-400 hover:bg-slate-100 hover:text-red-600"
+                    aria-label="Delete order"
+                  >
+                    ✕
+                  </button>
+                )}
               </li>
             );
           })}

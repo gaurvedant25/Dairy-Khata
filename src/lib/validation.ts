@@ -76,23 +76,20 @@ const orderItemSchema = z
 
 export const customProductSchema = z.object({
   name: z.string().trim().min(1, "Name is required").max(100),
-  unit: z.string().trim().min(1, "Unit is required").max(20),
+  // Empty unit = a "no unit" item; ordering it just asks for a price.
+  unit: z.string().trim().max(20).optional().default(""),
   pricePerUnit: z.coerce.number().nonnegative(),
 });
 
-export const oneTimeOrderSchema = z
-  .object({
-    existingCustomerId: z.string().min(1).optional().or(z.literal("")),
-    customerName: z.string().trim().max(100).optional().or(z.literal("")),
-    phone: z.string().trim().max(30).optional().or(z.literal("")),
-    items: z.array(orderItemSchema).min(1, "Add at least one item"),
-    paid: z.coerce.boolean().optional(),
-    date: z.string().optional(),
-  })
-  .refine(
-    (v) => (v.existingCustomerId && v.existingCustomerId !== "") || (v.customerName && v.customerName.trim() !== ""),
-    { message: "Pick a customer or enter a walk-in name", path: ["customerName"] }
-  );
+export const oneTimeOrderSchema = z.object({
+  existingCustomerId: z.string().min(1).optional().or(z.literal("")),
+  // Name is optional for walk-ins — blank ones are saved as a generic walk-in.
+  customerName: z.string().trim().max(100).optional().or(z.literal("")),
+  phone: z.string().trim().max(30).optional().or(z.literal("")),
+  items: z.array(orderItemSchema).min(1, "Add at least one item"),
+  paid: z.coerce.boolean().optional(),
+  date: z.string().optional(),
+});
 
 export const oneTimeOrderUpdateSchema = z.object({
   paid: z.coerce.boolean().optional(),
