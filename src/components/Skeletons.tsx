@@ -70,6 +70,43 @@ export function DashboardSkeleton() {
   );
 }
 
+/** The dashboard's data area only (stat cards + calendar + day summary),
+ *  without the title/period toggle — used when changing period or date. */
+export function DashboardBodySkeleton() {
+  return (
+    <div className="space-y-6">
+      <div className="space-y-3">
+        <Card>
+          <Bar w="30%" h={12} />
+          <div className="mt-3">
+            <Bar w="45%" h={28} />
+          </div>
+        </Card>
+        <Card>
+          <Bar w="30%" h={12} />
+          <div className="mt-3">
+            <Bar w="45%" h={28} />
+          </div>
+        </Card>
+      </div>
+      <Card>
+        <Bar w="40%" h={16} />
+        <div className="mt-4 grid grid-cols-7 gap-2">
+          {Array.from({ length: 28 }).map((_, i) => (
+            <Bar key={i} h={28} />
+          ))}
+        </div>
+      </Card>
+      <Card>
+        <Bar w="35%" h={14} />
+        <div className="mt-3">
+          <Rows n={3} />
+        </div>
+      </Card>
+    </div>
+  );
+}
+
 export function ListSkeleton() {
   return (
     <div className="space-y-4">

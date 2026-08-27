@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { Suspense } from "react";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { Onboarding } from "@/components/Onboarding";
@@ -13,7 +14,10 @@ import {
 } from "@/lib/business";
 import { Calendar } from "@/components/Calendar";
 import { ExpandableStat } from "@/components/ExpandableStat";
+import { DashboardBodySkeleton } from "@/components/Skeletons";
 import { getT } from "@/lib/lang";
+
+type T = (key: string, vars?: Record<string, string | number>) => string;
 
 const PERIODS: { value: Period; labelKey: string }[] = [
   { value: "today", labelKey: "period.today" },
@@ -59,20 +63,6 @@ export default async function DashboardPage({
 
   const todayDate = isoLocal(new Date());
   const selectedDate = /^\d{4}-\d{2}-\d{2}$/.test(params.date ?? "") ? params.date! : todayDate;
-  const [sy, sm] = selectedDate.split("-").map(Number);
-
-  const [stats, starredStats, day, activity, salesBreakdown, outstanding] = await Promise.all([
-    getStats(userId, period, selectedDate),
-    getStarredProductStats(userId, period, selectedDate),
-    getDaySummary(userId, selectedDate),
-    getMonthActivity(userId, sy, sm - 1),
-    getSalesBreakdown(userId, period, selectedDate),
-    getOutstandingBreakdown(userId),
-  ]);
-
-  const periodLabel = t(PERIODS.find((p) => p.value === period)!.labelKey).toLowerCase();
-
-  const isToday = selectedDate === todayDate;
 
   return (
     <div className="space-y-6">
@@ -102,6 +92,44 @@ export default async function DashboardPage({
         </div>
       </div>
 
+      {/* Keyed so changing the period or date re-suspends and shows the
+          skeleton while the new figures load. */}
+      <Suspense key={`${period}|${selectedDate}`} fallback={<DashboardBodySkeleton />}>
+        <DashboardBody userId={userId} period={period} selectedDate={selectedDate} todayDate={todayDate} t={t} />
+      </Suspense>
+    </div>
+  );
+}
+
+async function DashboardBody({
+  userId,
+  period,
+  selectedDate,
+  todayDate,
+  t,
+}: {
+  userId: string;
+  period: Period;
+  selectedDate: string;
+  todayDate: string;
+  t: T;
+}) {
+  const [sy, sm] = selectedDate.split("-").map(Number);
+
+  const [stats, starredStats, day, activity, salesBreakdown, outstanding] = await Promise.all([
+    getStats(userId, period, selectedDate),
+    getStarredProductStats(userId, period, selectedDate),
+    getDaySummary(userId, selectedDate),
+    getMonthActivity(userId, sy, sm - 1),
+    getSalesBreakdown(userId, period, selectedDate),
+    getOutstandingBreakdown(userId),
+  ]);
+
+  const periodLabel = t(PERIODS.find((p) => p.value === period)!.labelKey).toLowerCase();
+  const isToday = selectedDate === todayDate;
+
+  return (
+    <>
       <div className="space-y-3">
         <ExpandableStat label={t("dash.sales")} value={`₹${stats.sales.toFixed(2)}`} accent="text-[#9D6638]">
           <p className="mb-3 text-xs text-slate-400">{t("dash.salesHint", { period: periodLabel })}</p>
@@ -331,6 +359,6 @@ export default async function DashboardPage({
           )}
         </section>
       </div>
-    </div>
+    </>
   );
 }
