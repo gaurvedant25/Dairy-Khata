@@ -21,29 +21,56 @@ export default async function CustomerDetailPage({ params }: { params: Promise<{
 
   const { customer, duesInfo } = result;
 
-  // Build the WhatsApp bill from the customer's activity, grouping the daily
-  // round by product (Milk, Dahi, …) plus any unpaid one-time items.
-  const deliveryGroups = new Map<string, { product: string; unit: string; quantity: number; amount: number }>();
+  // Build the WhatsApp bill as a day-by-day list of this month's purchases,
+  // then the month total and the amount still due.
+  const now = new Date();
+  const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+  const monthEnd = new Date(now.getFullYear(), now.getMonth() + 1, 1);
+  const monthLabel = now.toLocaleDateString(undefined, { month: "long", year: "numeric" });
+
+  type DayItem = { product: string; unit: string; quantity: number; amount: number };
+  const byDay = new Map<string, { date: Date; items: DayItem[]; dayTotal: number }>();
+  const addToDay = (date: Date, item: DayItem) => {
+    const key = `${date.getFullYear()}-${date.getMonth()}-${date.getDate()}`;
+    const entry = byDay.get(key) ?? { date, items: [], dayTotal: 0 };
+    entry.items.push(item);
+    entry.dayTotal += item.amount;
+    byDay.set(key, entry);
+  };
+
   for (const d of customer.deliveries) {
-    const g = deliveryGroups.get(d.product) ?? { product: d.product, unit: d.unit, quantity: 0, amount: 0 };
-    g.quantity += d.quantity;
-    g.amount += d.quantity * d.pricePerUnit;
-    deliveryGroups.set(d.product, g);
+    if (d.date >= monthStart && d.date < monthEnd) {
+      addToDay(d.date, {
+        product: d.product,
+        unit: d.unit,
+        quantity: d.quantity,
+        amount: Math.round(d.quantity * d.pricePerUnit * 100) / 100,
+      });
+    }
   }
-  const deliveryItems = Array.from(deliveryGroups.values()).map((g) => ({
-    ...g,
-    amount: Math.round(g.amount * 100) / 100,
-  }));
-  const extraItems = customer.oneTimeOrders
-    .filter((o) => !o.paid)
-    .map((o) => ({ product: o.product, unit: o.unit, quantity: o.quantity, amount: o.amount }));
+  // Unpaid one-time items tied to this customer (e.g. ghee bought on credit).
+  for (const o of customer.oneTimeOrders) {
+    if (!o.paid && o.date >= monthStart && o.date < monthEnd) {
+      addToDay(o.date, { product: o.product, unit: o.unit, quantity: o.quantity, amount: o.amount });
+    }
+  }
+
+  const days = Array.from(byDay.values())
+    .sort((a, b) => a.date.getTime() - b.date.getTime())
+    .map((d) => ({
+      dateLabel: d.date.toLocaleDateString(undefined, { day: "numeric", month: "short" }),
+      items: d.items,
+      dayTotal: Math.round(d.dayTotal * 100) / 100,
+    }));
+  const monthTotal = Math.round(days.reduce((s, d) => s + d.dayTotal, 0) * 100) / 100;
 
   const waNumber = toWhatsAppNumber(customer.phone);
   const billMessage = buildBillMessage({
     customerName: customer.name,
     businessName: setting.businessName,
-    deliveryItems,
-    extraItems,
+    monthLabel,
+    days,
+    monthTotal,
     totalPaid: duesInfo.totalPaid,
     dues: duesInfo.dues,
   });
