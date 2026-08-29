@@ -1,11 +1,50 @@
 @import "tailwindcss";
 
 :root {
-  --background: #e8d7b0; /* deeper sand page so cream cards pop */
-  --foreground: #4e220f; /* dark brown text */
-  --brand: #9d6638; /* warm brown accent */
-  --brand-dark: #4e220f;
-  --sage: #b0ba99;
+  --background: #f5ead8; /* page ground (design --color-bg) */
+  --foreground: #402310; /* dark brown text */
+  --brand: #C67139; /* warm brown accent */
+  --brand-dark: #402310;
+  --sage: #7a8a5e;
+
+  /* Organic design-system tokens (Dairy Ledger mobile redesign) */
+  --color-bg: #f5ead8;
+  --color-surface: #ebddc5;
+  --color-accent: #c67139;
+  --color-accent-2: #7a8a5e;
+  --color-divider: color-mix(in srgb, #201e1d 16%, transparent);
+  /* Card surfaces warmed to the app's cream/beige family (no white). */
+  --color-neutral-100: #fbf3d1;
+  --color-neutral-200: #f3e7c7;
+  --color-neutral-300: #e0cb9e;
+  --color-neutral-500: #a19786;
+  --color-neutral-600: #82796a;
+  --color-neutral-700: #645c50;
+  --color-neutral-400: #c0b6a5;
+  --color-neutral-900: #2e2b25;
+  --color-accent-500: #d67f48;
+  --shadow-sm: 0 1px 2px rgba(46, 43, 37, 0.14);
+  --shadow-md: 0 3px 10px rgba(46, 43, 37, 0.16);
+  --color-accent-100: #fdeedd;
+  --color-accent-200: #ffe1d0;
+  --color-accent-300: #ffc6a5;
+  --color-accent-400: #f6a06b;
+  --color-accent-600: #b2622d;
+  --color-accent-700: #8c491a;
+  --color-accent-800: #643312;
+  --color-accent-900: #402310;
+  --color-accent-2-200: #e1eecc;
+  --color-accent-2-300: #ccdbb2;
+  --color-accent-2-600: #728157;
+  --color-accent-2-700: #56633f;
+  --color-accent-2-800: #3d472b;
+  --cream-on-accent: #fdf0da;
+}
+
+/* Caprasimo for figures & titles, matching the prototype */
+.font-heading {
+  font-family: var(--font-heading), Georgia, serif;
+  font-weight: 400;
 }
 
 @theme inline {
@@ -24,6 +63,54 @@ body {
 :where(input, select, textarea, button):focus-visible {
   outline: 2px solid var(--brand);
   outline-offset: 2px;
+}
+
+/* Bottom sheet + backdrop */
+@keyframes dl-fade {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+@keyframes dl-sheet {
+  from { transform: translateY(102%); }
+  to { transform: none; }
+}
+@keyframes dl-toast {
+  from { opacity: 0; transform: translate(-50%, 10px); }
+  to { opacity: 1; transform: translate(-50%, 0); }
+}
+
+.dl-fade { animation: dl-fade 0.2s ease; }
+.dl-sheet { animation: dl-sheet 0.28s cubic-bezier(0.22, 1, 0.36, 1); }
+.dl-toast { animation: dl-toast 0.25s ease; }
+
+@media (prefers-reduced-motion: reduce) {
+  .dl-fade,
+  .dl-sheet,
+  .dl-toast {
+    animation: none;
+  }
+}
+
+/* Figure swap on the sales card */
+@keyframes dl-pop {
+  from {
+    opacity: 0;
+    transform: translateY(4px) scale(0.985);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.dl-pop {
+  animation: dl-pop 0.22s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .dl-pop {
+    animation: none;
+  }
 }
 
 /* Page swipe transitions between nav tabs */

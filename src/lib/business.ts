@@ -501,6 +501,7 @@ export type SheetLine = {
 export type SheetCustomer = {
   customerId: string;
   name: string;
+  address: string | null;
   saved: boolean; // true if this date already has saved entries
   lines: SheetLine[];
 };
@@ -523,7 +524,7 @@ export async function getDeliverySheet(userId: string, dateStr: string): Promise
     prisma.customer.findMany({
       where: { userId, active: true },
       orderBy: { name: "asc" },
-      select: { id: true, name: true, dailyQuantity: true },
+      select: { id: true, name: true, address: true, dailyQuantity: true },
     }),
     prisma.deliveryEntry.findMany({
       where: { customer: { userId }, date: { gte: dayStart, lt: dayEnd } },
@@ -580,7 +581,7 @@ export async function getDeliverySheet(userId: string, dateStr: string): Promise
           costPerUnit: e.costPerUnit,
           isMilk: e.product === "Milk",
         }));
-      return { customerId: c.id, name: c.name, saved: true, lines };
+      return { customerId: c.id, name: c.name, address: c.address, saved: true, lines };
     }
 
     const carried = carryByCustomer.get(c.id);
@@ -588,6 +589,7 @@ export async function getDeliverySheet(userId: string, dateStr: string): Promise
       return {
         customerId: c.id,
         name: c.name,
+        address: c.address,
         saved: false,
         lines: carried.map((e) => ({ ...e, isMilk: e.product === "Milk" })),
       };
@@ -606,6 +608,6 @@ export async function getDeliverySheet(userId: string, dateStr: string): Promise
           },
         ]
       : [];
-    return { customerId: c.id, name: c.name, saved: false, lines };
+    return { customerId: c.id, name: c.name, address: c.address, saved: false, lines };
   });
 }

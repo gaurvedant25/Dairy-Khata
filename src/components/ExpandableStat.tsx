@@ -2,44 +2,68 @@
 
 import { useState } from "react";
 
+/**
+ * A tappable stat card that expands to reveal its breakdown.
+ * Sage panel from the mobile design system, with a circular chevron.
+ */
 export function ExpandableStat({
   label,
   value,
-  accent,
   children,
 }: {
   label: string;
   value: string;
-  accent: string;
   children: React.ReactNode;
 }) {
   const [open, setOpen] = useState(false);
 
   return (
-    <div className="rounded-xl border border-[#E0CB9E] bg-[#FBF3D1]">
+    <section
+      className="overflow-hidden rounded-[28px]"
+      style={{ background: "var(--color-accent-2-200)" }}
+    >
       <button
         type="button"
         onClick={() => setOpen((o) => !o)}
         aria-expanded={open}
-        className="flex w-full items-center justify-between gap-2 p-4 text-left"
+        className="flex w-full items-center gap-3.5 px-[22px] py-[18px] text-left"
       >
-        <div>
-          <p className="text-xs font-medium uppercase tracking-wide text-slate-500">{label}</p>
-          <p className={`mt-2 text-2xl font-semibold tracking-tight ${accent}`}>{value}</p>
-        </div>
-        <svg
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth={2}
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          className={`h-5 w-5 shrink-0 text-slate-400 transition-transform duration-300 ${
-            open ? "rotate-180" : ""
-          }`}
+        <span className="flex-1">
+          <span
+            className="block text-[13px] font-semibold uppercase tracking-[.06em]"
+            style={{ color: "var(--color-accent-2-700)" }}
+          >
+            {label}
+          </span>
+          <span
+            className="font-heading mt-1 block text-[32px] leading-[1.15]"
+            style={{ color: "var(--color-accent-2-800)" }}
+          >
+            {value}
+          </span>
+        </span>
+        <span
+          className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full transition-transform duration-200"
+          style={{
+            background: "rgba(255,255,255,.55)",
+            color: "var(--color-accent-2-800)",
+            transform: open ? "rotate(180deg)" : "none",
+          }}
         >
-          <path d="m6 9 6 6 6-6" />
-        </svg>
+          <svg
+            width="18"
+            height="18"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2.75"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            aria-hidden
+          >
+            <path d="m6 9 6 6 6-6" />
+          </svg>
+        </span>
       </button>
 
       <div
@@ -47,9 +71,9 @@ export function ExpandableStat({
         style={{ gridTemplateRows: open ? "1fr" : "0fr" }}
       >
         <div className="overflow-hidden">
-          <div className="border-t border-slate-100 p-4">{children}</div>
+          <div className="px-[22px] pb-[18px]">{children}</div>
         </div>
       </div>
-    </div>
+    </section>
   );
 }

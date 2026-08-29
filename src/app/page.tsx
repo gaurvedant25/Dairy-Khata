@@ -10,16 +10,16 @@ export default async function Home() {
     <div className="min-h-screen">
       <header className="mx-auto flex max-w-5xl items-center justify-between px-4 py-5">
         <div className="flex items-center gap-2">
-          <span className="inline-block h-2.5 w-2.5 rounded-full bg-[#9D6638]" aria-hidden />
-          <span className="text-lg font-semibold tracking-tight text-[#4E220F]">Dairy Ledger</span>
+          <span className="inline-block h-2.5 w-2.5 rounded-full bg-[#C67139]" aria-hidden />
+          <span className="text-lg font-semibold tracking-tight text-[#402310]">Dairy Ledger</span>
         </div>
         <div className="flex items-center gap-3 text-sm">
-          <Link href="/login" className="font-medium text-[#9D6638] hover:underline">
+          <Link href="/login" className="font-medium text-[#C67139] hover:underline">
             Sign in
           </Link>
           <Link
             href="/signup"
-            className="rounded-lg bg-[#9D6638] px-3 py-1.5 font-medium text-white hover:bg-[#4E220F]"
+            className="rounded-lg bg-[#C67139] px-3 py-1.5 font-medium text-white hover:bg-[#402310]"
           >
             Start free
           </Link>
@@ -28,7 +28,7 @@ export default async function Home() {
 
       <main className="mx-auto max-w-5xl px-4">
         <section className="py-12 text-center sm:py-20">
-          <h1 className="mx-auto max-w-2xl text-3xl font-bold tracking-tight text-[#4E220F] sm:text-4xl">
+          <h1 className="mx-auto max-w-2xl text-3xl font-bold tracking-tight text-[#402310] sm:text-4xl">
             The simplest ledger for milk delivery businesses
           </h1>
           <p className="mx-auto mt-4 max-w-xl text-slate-600">
@@ -38,13 +38,13 @@ export default async function Home() {
           <div className="mt-8 flex items-center justify-center gap-3">
             <Link
               href="/signup"
-              className="rounded-lg bg-[#9D6638] px-5 py-3 text-sm font-semibold text-white hover:bg-[#4E220F]"
+              className="rounded-lg bg-[#C67139] px-5 py-3 text-sm font-semibold text-white hover:bg-[#402310]"
             >
               Start 14-day free trial
             </Link>
             <Link
               href="/pricing"
-              className="rounded-lg border border-[#D6BE8C] px-5 py-3 text-sm font-semibold text-[#4E220F] hover:bg-[#FBF3D1]"
+              className="rounded-lg border border-[#D6BE8C] px-5 py-3 text-sm font-semibold text-[#402310] hover:bg-[#FBF3D1]"
             >
               See pricing
             </Link>
@@ -59,7 +59,7 @@ export default async function Home() {
             ["Walk-in & reports", "Record one-off sales and see clear daily and monthly summaries."],
           ].map(([title, body]) => (
             <div key={title} className="rounded-xl border border-[#E0CB9E] bg-[#FBF3D1] p-5">
-              <h3 className="text-sm font-semibold text-[#4E220F]">{title}</h3>
+              <h3 className="text-sm font-semibold text-[#402310]">{title}</h3>
               <p className="mt-1 text-sm text-slate-600">{body}</p>
             </div>
           ))}
@@ -70,11 +70,11 @@ export default async function Home() {
         <div className="mx-auto flex max-w-5xl flex-col items-center justify-between gap-3 px-4 py-6 text-sm text-slate-500 sm:flex-row">
           <p>© {new Date().getFullYear()} Dairy Ledger</p>
           <nav className="flex flex-wrap items-center gap-4">
-            <Link href="/pricing" className="hover:text-[#4E220F]">Pricing</Link>
-            <Link href="/contact" className="hover:text-[#4E220F]">Contact</Link>
-            <Link href="/terms" className="hover:text-[#4E220F]">Terms</Link>
-            <Link href="/privacy" className="hover:text-[#4E220F]">Privacy</Link>
-            <Link href="/refund" className="hover:text-[#4E220F]">Refunds</Link>
+            <Link href="/pricing" className="hover:text-[#402310]">Pricing</Link>
+            <Link href="/contact" className="hover:text-[#402310]">Contact</Link>
+            <Link href="/terms" className="hover:text-[#402310]">Terms</Link>
+            <Link href="/privacy" className="hover:text-[#402310]">Privacy</Link>
+            <Link href="/refund" className="hover:text-[#402310]">Refunds</Link>
           </nav>
         </div>
       </footer>

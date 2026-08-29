@@ -14,7 +14,7 @@ export function ThankYou() {
 
     let w = (canvas.width = window.innerWidth);
     let h = (canvas.height = window.innerHeight);
-    const colors = ["#9D6638", "#4E220F", "#B0BA99", "#FFEED6", "#E8D7B0", "#facc15"];
+    const colors = ["#C67139", "#402310", "#CCDBB2", "#FFEED6", "#E8D7B0", "#facc15"];
     const pieces = Array.from({ length: 160 }, () => ({
       x: Math.random() * w,
       y: -20 - Math.random() * h * 0.4,
@@ -66,13 +66,13 @@ export function ThankYou() {
       <canvas ref={canvasRef} className="pointer-events-none fixed inset-0 z-0" aria-hidden />
       <div className="relative z-10 w-full max-w-sm rounded-2xl border border-[#E0CB9E] bg-[#FBF3D1] p-8 text-center">
         <div className="text-5xl">🎉</div>
-        <h1 className="mt-3 text-2xl font-bold text-[#4E220F]">Thank you for purchasing!</h1>
+        <h1 className="mt-3 text-2xl font-bold text-[#402310]">Thank you for purchasing!</h1>
         <p className="mt-2 text-sm text-slate-600">
           Your Dairy Ledger Premium subscription is now active. You&apos;re all set for the next 30 days.
         </p>
         <Link
           href="/dashboard"
-          className="mt-6 inline-block w-full rounded-lg bg-[#9D6638] px-4 py-3 text-sm font-semibold text-white hover:bg-[#4E220F]"
+          className="mt-6 inline-block w-full rounded-lg bg-[#C67139] px-4 py-3 text-sm font-semibold text-white hover:bg-[#402310]"
         >
           Go to app →
         </Link>

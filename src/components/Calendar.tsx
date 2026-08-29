@@ -53,36 +53,46 @@ export function Calendar({
   ];
 
   return (
-    <div className="rounded-xl border border-[#E0CB9E] bg-[#FBF3D1] p-4">
-      <div className="mb-3 flex items-center justify-between">
+    <section
+      className="rounded-[28px] px-4 pb-5 pt-[18px]"
+      style={{ background: "var(--color-neutral-100)", boxShadow: "var(--shadow-sm)" }}
+    >
+      <div className="flex items-center justify-between px-1 pb-3.5">
         <Link
           href={href(iso(prev.getFullYear(), prev.getMonth(), 1))}
           aria-label="Previous month"
-          className="rounded-md px-2 py-1 text-slate-400 hover:bg-slate-100 hover:text-slate-700"
+          className="flex h-[34px] w-[34px] items-center justify-center rounded-full text-[var(--color-neutral-700)]"
         >
-          ‹
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2.75" strokeLinecap="round" strokeLinejoin="round">
+            <path d="m15 18-6-6 6-6" />
+          </svg>
         </Link>
-        <p className="text-sm font-semibold text-[#4E220F]">
+        <p className="font-heading text-[17px] text-[var(--color-accent-900)]">
           {MONTHS[month0]} {year}
         </p>
         <Link
           href={href(iso(next.getFullYear(), next.getMonth(), 1))}
           aria-label="Next month"
-          className="rounded-md px-2 py-1 text-slate-400 hover:bg-slate-100 hover:text-slate-700"
+          className="flex h-[34px] w-[34px] items-center justify-center rounded-full text-[var(--color-neutral-700)]"
         >
-          ›
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2.75" strokeLinecap="round" strokeLinejoin="round">
+            <path d="m9 18 6-6-6-6" />
+          </svg>
         </Link>
       </div>
 
-      <div className="mb-1 grid grid-cols-7 gap-1">
+      <div className="grid grid-cols-7 gap-0.5 pb-1.5">
         {WEEKDAYS.map((w, i) => (
-          <div key={i} className="text-center text-[11px] font-medium text-slate-400">
+          <div
+            key={i}
+            className="text-center text-[11px] font-bold tracking-[.08em] text-[var(--color-neutral-500)]"
+          >
             {w}
           </div>
         ))}
       </div>
 
-      <div className="grid grid-cols-7 gap-1">
+      <div className="grid grid-cols-7 gap-0.5">
         {cells.map((day, i) => {
           if (day === null) return <div key={`e${i}`} />;
           const dateStr = iso(year, month0, day);
@@ -94,26 +104,32 @@ export function Calendar({
             <Link
               key={dateStr}
               href={href(dateStr)}
-              className={`relative flex aspect-square flex-col items-center justify-center rounded-lg text-sm transition ${
-                isSelected
-                  ? "bg-[#9D6638] font-semibold text-white"
+              className="flex aspect-square flex-col items-center justify-center gap-[3px] rounded-full text-sm transition"
+              style={{
+                background: isSelected ? "var(--color-accent-600)" : "transparent",
+                color: isSelected
+                  ? "#fff"
                   : isToday
-                  ? "border border-[#9D6638] font-semibold text-[#9D6638] hover:bg-[#9D6638]/10"
-                  : "text-slate-700 hover:bg-slate-100"
-              }`}
+                  ? "var(--color-accent-700)"
+                  : "var(--color-neutral-700)",
+                fontWeight: isSelected || isToday ? 700 : 500,
+              }}
             >
-              {day}
-              {hasActivity && (
-                <span
-                  className={`absolute bottom-1 h-1 w-1 rounded-full ${
-                    isSelected ? "bg-[#FBF3D1]" : "bg-[#9D6638]/100"
-                  }`}
-                />
-              )}
+              <span>{day}</span>
+              <span
+                className="h-1 w-1 rounded-full"
+                style={{
+                  background: hasActivity
+                    ? isSelected
+                      ? "rgba(255,255,255,.75)"
+                      : "var(--color-accent-2-600)"
+                    : "transparent",
+                }}
+              />
             </Link>
           );
         })}
       </div>
-    </div>
+    </section>
   );
 }

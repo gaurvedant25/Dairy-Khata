@@ -44,7 +44,7 @@ export function SubscribeButton() {
         subscription_id: sub.subscriptionId,
         name: "Dairy Ledger",
         description: "Autopay — ₹249/month",
-        theme: { color: "#9D6638" },
+        theme: { color: "#C67139" },
         handler: async (resp: any) => {
           const v = await fetch("/api/razorpay/verify-subscription", {
             method: "POST",
@@ -72,11 +72,11 @@ export function SubscribeButton() {
       <button
         onClick={subscribe}
         disabled={loading}
-        className="w-full rounded-lg bg-[#9D6638] px-4 py-3 text-sm font-semibold text-white hover:bg-[#4E220F] disabled:opacity-60"
+        className="w-full rounded-lg bg-[#C67139] px-4 py-3 text-sm font-semibold text-white hover:bg-[#402310] disabled:opacity-60"
       >
         {loading ? "Opening payment…" : "Set up autopay — ₹249/month"}
       </button>
-      {error && <p className="mt-3 text-center text-xs text-red-600">{error}</p>}
+      {error && <p className="mt-3 text-center text-xs text-[#8C491A]">{error}</p>}
     </div>
   );
 }

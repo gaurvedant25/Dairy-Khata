@@ -34,19 +34,19 @@ function Step({
     >
       <span
         className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-sm font-bold ${
-          done ? "bg-emerald-600 text-white" : "bg-[#9D6638] text-white"
+          done ? "bg-[#728157] text-white" : "bg-[#C67139] text-white"
         }`}
       >
         {done ? "✓" : n}
       </span>
       <span className="min-w-0 flex-1">
-        <span className="block text-sm font-semibold text-[#4E220F]">{title}</span>
+        <span className="block text-sm font-semibold text-[#402310]">{title}</span>
         <span className="block text-xs text-slate-500">{sub}</span>
       </span>
       {done ? (
-        <span className="shrink-0 text-xs font-medium text-emerald-700">{doneLabel}</span>
+        <span className="shrink-0 text-xs font-medium text-[#56633F]">{doneLabel}</span>
       ) : (
-        <span className="shrink-0 text-[#9D6638]">→</span>
+        <span className="shrink-0 text-[#C67139]">→</span>
       )}
     </Link>
   );
@@ -73,7 +73,7 @@ export function Onboarding({ hasCustomers, hasDeliveries, hasSample, lang = "en"
 
   return (
     <div className="rounded-2xl border border-[#E0CB9E] bg-[#FBF3D1] p-5">
-      <h2 className="text-lg font-bold text-[#4E220F]">{t("onb.welcome")}</h2>
+      <h2 className="text-lg font-bold text-[#402310]">{t("onb.welcome")}</h2>
       <p className="mt-1 text-sm text-slate-600">{t("onb.subtitle")}</p>
 
       <div className="mt-4 space-y-2">
@@ -110,7 +110,7 @@ export function Onboarding({ hasCustomers, hasDeliveries, hasSample, lang = "en"
             <button
               onClick={removeSample}
               disabled={busy}
-              className="rounded-lg border border-red-300 px-3 py-1.5 text-xs font-medium text-red-700 hover:bg-red-50 disabled:opacity-60"
+              className="rounded-lg border border-[#C67139] px-3 py-1.5 text-xs font-medium text-[#8C491A] hover:bg-[#FDEEDD] disabled:opacity-60"
             >
               {busy ? t("onb.removing") : t("onb.removeSample")}
             </button>
@@ -121,7 +121,7 @@ export function Onboarding({ hasCustomers, hasDeliveries, hasSample, lang = "en"
             <button
               onClick={loadSample}
               disabled={busy}
-              className="rounded-lg bg-[#9D6638] px-3 py-1.5 text-xs font-medium text-white hover:bg-[#4E220F] disabled:opacity-60"
+              className="rounded-lg bg-[#C67139] px-3 py-1.5 text-xs font-medium text-white hover:bg-[#402310] disabled:opacity-60"
             >
               {busy ? t("onb.loading") : t("onb.loadSample")}
             </button>

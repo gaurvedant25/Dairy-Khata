@@ -68,7 +68,7 @@ export function StarredProductsPicker({
                   {on ? "★" : "☆"}
                 </button>
                 <div className="min-w-0 flex-1">
-                  <p className="truncate text-sm font-medium text-[#4E220F]">{o.name}</p>
+                  <p className="truncate text-sm font-medium text-[#402310]">{o.name}</p>
                   <p className="text-xs text-slate-500">
                     per {o.unit}
                     {o.builtin ? "" : " · your item"}
@@ -79,7 +79,7 @@ export function StarredProductsPicker({
           })}
         </ul>
       )}
-      {error && <p className="text-sm text-red-600">{error}</p>}
+      {error && <p className="text-sm text-[#8C491A]">{error}</p>}
     </div>
   );
 }

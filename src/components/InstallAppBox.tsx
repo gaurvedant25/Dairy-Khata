@@ -55,13 +55,13 @@ export function InstallAppBox({
     <div>
       <h2 className="mb-1 text-base font-semibold text-[#FFEED6]">{title}</h2>
       {isStandalone ? (
-        <p className="text-sm text-[#B0BA99]">{installed}</p>
+        <p className="text-sm text-[#CCDBB2]">{installed}</p>
       ) : deferred ? (
         <>
           <p className="mb-3 text-xs text-[#E8D7B0]">{bodyAndroid}</p>
           <button
             onClick={install}
-            className="inline-flex items-center gap-2 rounded-lg bg-[#FFEED6] px-4 py-2 text-sm font-semibold text-[#4E220F] hover:bg-[#FBF3D1]"
+            className="inline-flex items-center gap-2 rounded-lg bg-[#FFEED6] px-4 py-2 text-sm font-semibold text-[#402310] hover:bg-[#FBF3D1]"
           >
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4">
               <path d="M12 3v12" />

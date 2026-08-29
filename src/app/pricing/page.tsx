@@ -8,7 +8,7 @@ export default function PricingPage() {
     <LegalPage title="Pricing">
       <p>Dairy Ledger is a subscription service for milk delivery businesses.</p>
       <div className="rounded-xl border border-[#E0CB9E] bg-[#FBF3D1] p-5">
-        <p className="text-2xl font-bold text-[#4E220F]">
+        <p className="text-2xl font-bold text-[#402310]">
           ₹249 <span className="text-sm font-normal text-slate-500">/ month</span>
         </p>
         <p className="mt-1 text-xs text-slate-500">14-day free trial · cancel anytime</p>
@@ -20,7 +20,7 @@ export default function PricingPage() {
         </ul>
         <Link
           href="/signup"
-          className="mt-5 inline-block rounded-lg bg-[#9D6638] px-4 py-2 text-sm font-semibold text-white hover:bg-[#4E220F]"
+          className="mt-5 inline-block rounded-lg bg-[#C67139] px-4 py-2 text-sm font-semibold text-white hover:bg-[#402310]"
         >
           Start free trial
         </Link>

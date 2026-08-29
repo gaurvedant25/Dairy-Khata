@@ -98,16 +98,16 @@ export default async function CustomerDetailPage({ params }: { params: Promise<{
 
       <div className="grid grid-cols-3 gap-3">
         <StatCard label="Billed" value={`₹${duesInfo.totalBilled.toFixed(2)}`} accent="text-slate-800" />
-        <StatCard label="Paid" value={`₹${duesInfo.totalPaid.toFixed(2)}`} accent="text-emerald-700" />
+        <StatCard label="Paid" value={`₹${duesInfo.totalPaid.toFixed(2)}`} accent="text-[#56633F]" />
         <StatCard
           label="Outstanding"
           value={`₹${duesInfo.dues.toFixed(2)}`}
-          accent={duesInfo.dues > 0 ? "text-red-700" : "text-slate-800"}
+          accent={duesInfo.dues > 0 ? "text-[#8C491A]" : "text-[#56633F]"}
         />
       </div>
 
       {/* Money actions grouped on a tinted panel */}
-      <div className="space-y-3 rounded-2xl border border-[#B0BA99] bg-[#B0BA99]/25 p-3">
+      <div className="space-y-3 rounded-2xl border border-[#CCDBB2] bg-[#CCDBB2]/25 p-3">
         {duesInfo.dues > 0 && (
           <section className="rounded-xl border border-[#E0CB9E] bg-[#FBF3D1] p-4">
             <div className="mb-2 flex items-center justify-between gap-2">
@@ -164,7 +164,7 @@ export default async function CustomerDetailPage({ params }: { params: Promise<{
                   <p className="font-medium text-slate-800">{p.date.toLocaleDateString()}</p>
                   {p.note && <p className="text-xs text-slate-500">{p.note}</p>}
                 </div>
-                <span className="font-medium text-emerald-700">₹{p.amount.toFixed(2)}</span>
+                <span className="font-medium text-[#56633F]">₹{p.amount.toFixed(2)}</span>
               </li>
             ))}
           </ul>

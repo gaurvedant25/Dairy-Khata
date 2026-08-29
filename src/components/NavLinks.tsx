@@ -10,7 +10,7 @@ function Icon({ name, className }: { name: IconName; className?: string }) {
   const common = {
     fill: "none",
     stroke: "currentColor",
-    strokeWidth: 1.75,
+    strokeWidth: 2.75,
     strokeLinecap: "round" as const,
     strokeLinejoin: "round" as const,
     viewBox: "0 0 24 24",
@@ -78,27 +78,47 @@ export function NavLinks({ orientation, lang = "en" }: { orientation: "horizonta
       className={
         orientation === "vertical"
           ? "flex flex-col gap-1"
-          : "flex justify-around pb-[env(safe-area-inset-bottom)]"
+          : "grid grid-cols-5 items-end gap-1 px-3 pb-[max(16px,env(safe-area-inset-bottom))] pt-2.5"
       }
     >
       {LINKS.map((link) => {
         const active = pathname.startsWith(link.href);
+
+        if (orientation === "vertical") {
+          return (
+            <Link
+              key={link.href}
+              href={link.href}
+              className={`flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition ${
+                active
+                  ? "bg-[#C67139]/10 text-[#C67139]"
+                  : "text-[var(--color-neutral-700)] hover:bg-[#F3E7C7] hover:text-[#402310]"
+              }`}
+            >
+              <Icon name={link.icon} className="h-5 w-5" />
+              <span>{translate(lang, link.key)}</span>
+            </Link>
+          );
+        }
+
+        // Mobile tab: active icon sits inside a tinted pill.
         return (
           <Link
             key={link.href}
             href={link.href}
-            className={
-              orientation === "vertical"
-                ? `flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition ${
-                    active ? "bg-[#9D6638]/10 text-[#9D6638]" : "text-slate-600 hover:bg-[#F3E7C7] hover:text-[#4E220F]"
-                  }`
-                : `flex flex-1 flex-col items-center gap-0.5 px-2 py-2 text-[11px] font-medium transition ${
-                    active ? "text-[#9D6638]" : "text-slate-400"
-                  }`
-            }
+            className={`flex flex-col items-center gap-[5px] py-1.5 text-[11px] transition ${
+              active
+                ? "font-bold text-[var(--color-accent-700)]"
+                : "font-semibold text-[var(--color-neutral-600)]"
+            }`}
           >
-            <Icon name={link.icon} className={orientation === "horizontal" ? "h-6 w-6" : "h-5 w-5"} />
-            <span>{translate(lang, orientation === "horizontal" ? link.shortKey : link.key)}</span>
+            <span
+              className="flex h-8 items-center justify-center rounded-full transition-colors"
+              style={active ? { width: 44, background: "var(--color-accent-200)" } : undefined}
+            >
+              <Icon name={link.icon} className="h-[19px] w-[19px]" />
+            </span>
+            <span>{translate(lang, link.shortKey)}</span>
           </Link>
         );
       })}

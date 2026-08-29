@@ -52,3 +52,6 @@ next-env.d.ts
 
 .vercel
 .env*
+
+# Design handoff bundles from Claude Design (reference only)
+prototype/

@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Geist, Geist_Mono, Caprasimo, Figtree } from "next/font/google";
 import "./globals.css";
 import { Providers } from "@/components/Providers";
 import { ServiceWorkerRegistrar } from "@/components/ServiceWorkerRegistrar";
@@ -11,6 +11,18 @@ const geistSans = Geist({
 
 const geistMono = Geist_Mono({
   variable: "--font-geist-mono",
+  subsets: ["latin"],
+});
+
+// Design-system fonts: Caprasimo for figures/titles, Figtree for body.
+const caprasimo = Caprasimo({
+  weight: "400",
+  variable: "--font-heading",
+  subsets: ["latin"],
+});
+
+const figtree = Figtree({
+  variable: "--font-body",
   subsets: ["latin"],
 });
 
@@ -29,17 +41,23 @@ export const viewport = {
   // focusing an input.
   maximumScale: 1,
   userScalable: false,
-  themeColor: "#9D6638",
+  themeColor: "#C67139",
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html
       lang="en"
-      className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
+      className={`${geistSans.variable} ${geistMono.variable} ${caprasimo.variable} ${figtree.variable} h-full antialiased`}
       style={{ colorScheme: "light" }}
     >
-      <body className="min-h-full flex flex-col bg-[#E8D7B0] text-[#4E220F]">
+      <body
+        className="min-h-full flex flex-col text-[#402310]"
+        style={{
+          fontFamily: "var(--font-body), system-ui, sans-serif",
+          background: "var(--color-bg)",
+        }}
+      >
         <Providers>{children}</Providers>
         <ServiceWorkerRegistrar />
       </body>

@@ -20,7 +20,7 @@ export function CancelSubscriptionButton() {
     return (
       <button
         onClick={() => setConfirming(true)}
-        className="rounded-lg border border-red-300 px-4 py-2 text-sm font-medium text-red-700 hover:bg-red-50"
+        className="rounded-lg border border-[#C67139] px-4 py-2 text-sm font-medium text-[#8C491A] hover:bg-[#FDEEDD]"
       >
         Cancel autopay
       </button>
@@ -28,8 +28,8 @@ export function CancelSubscriptionButton() {
   }
 
   return (
-    <div className="rounded-lg border border-red-200 bg-red-50 p-3">
-      <p className="mb-3 text-sm text-red-800">
+    <div className="rounded-lg border border-[#E0CB9E] bg-[#FDEEDD] p-3">
+      <p className="mb-3 text-sm text-[#402310]">
         Stop automatic monthly renewals? You&apos;ll keep access until your current paid period ends,
         and won&apos;t be charged again.
       </p>
@@ -37,7 +37,7 @@ export function CancelSubscriptionButton() {
         <button
           onClick={cancel}
           disabled={loading}
-          className="rounded-lg bg-red-600 px-4 py-2 text-sm font-medium text-white hover:bg-red-700 disabled:opacity-60"
+          className="rounded-lg bg-[#402310] px-4 py-2 text-sm font-medium text-white hover:bg-[#2A1608] disabled:opacity-60"
         >
           {loading ? "Cancelling..." : "Yes, stop autopay"}
         </button>

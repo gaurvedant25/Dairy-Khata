@@ -87,7 +87,7 @@ export function CustomProductsManager({ products }: { products: CustomProduct[] 
         {!open && (
           <button
             onClick={() => setOpen(true)}
-            className="shrink-0 rounded-lg bg-[#9D6638] px-3 py-1.5 text-xs font-medium text-white hover:bg-[#4E220F]"
+            className="shrink-0 rounded-lg bg-[#C67139] px-3 py-1.5 text-xs font-medium text-white hover:bg-[#402310]"
           >
             + Add item
           </button>
@@ -104,7 +104,7 @@ export function CustomProductsManager({ products }: { products: CustomProduct[] 
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 placeholder="e.g. Ghee"
-                className="w-full rounded-lg border border-[#D6BE8C] bg-[#FBF3D1] px-3 py-2 text-sm text-[#4E220F] placeholder:text-slate-400"
+                className="w-full rounded-lg border border-[#D6BE8C] bg-[#FBF3D1] px-3 py-2 text-sm text-[#402310] placeholder:text-slate-400"
               />
             </label>
             <label className="block">
@@ -112,7 +112,7 @@ export function CustomProductsManager({ products }: { products: CustomProduct[] 
               <select
                 value={unit}
                 onChange={(e) => setUnit(e.target.value)}
-                className="w-full rounded-lg border border-[#D6BE8C] bg-[#FBF3D1] px-3 py-2 text-sm text-[#4E220F]"
+                className="w-full rounded-lg border border-[#D6BE8C] bg-[#FBF3D1] px-3 py-2 text-sm text-[#402310]"
               >
                 {COMMON_UNITS.map((u) => (
                   <option key={u} value={u}>
@@ -142,7 +142,7 @@ export function CustomProductsManager({ products }: { products: CustomProduct[] 
                 placeholder={noUnit ? "Leave blank to enter each time" : undefined}
                 value={price}
                 onChange={(e) => setPrice(e.target.value)}
-                className="w-full rounded-lg border border-[#D6BE8C] bg-[#FBF3D1] px-3 py-2 text-sm text-[#4E220F] placeholder:text-slate-400"
+                className="w-full rounded-lg border border-[#D6BE8C] bg-[#FBF3D1] px-3 py-2 text-sm text-[#402310] placeholder:text-slate-400"
               />
             </label>
             {unit === "__custom__" && (
@@ -153,17 +153,17 @@ export function CustomProductsManager({ products }: { products: CustomProduct[] 
                   value={customUnit}
                   onChange={(e) => setCustomUnit(e.target.value)}
                   placeholder="e.g. tin, bottle, box"
-                  className="w-full rounded-lg border border-[#D6BE8C] bg-[#FBF3D1] px-3 py-2 text-sm text-[#4E220F] placeholder:text-slate-400"
+                  className="w-full rounded-lg border border-[#D6BE8C] bg-[#FBF3D1] px-3 py-2 text-sm text-[#402310] placeholder:text-slate-400"
                 />
               </label>
             )}
           </div>
-          {error && <p className="text-sm text-red-600">{error}</p>}
+          {error && <p className="text-sm text-[#8C491A]">{error}</p>}
           <div className="flex gap-2">
             <button
               type="submit"
               disabled={saving}
-              className="rounded-lg bg-[#9D6638] px-4 py-2 text-sm font-medium text-white hover:bg-[#4E220F] disabled:opacity-60"
+              className="rounded-lg bg-[#C67139] px-4 py-2 text-sm font-medium text-white hover:bg-[#402310] disabled:opacity-60"
             >
               {saving ? "Saving..." : "Save item"}
             </button>
@@ -188,7 +188,7 @@ export function CustomProductsManager({ products }: { products: CustomProduct[] 
           {products.map((p) => (
             <li key={p.id} className="flex items-center gap-3 px-3 py-2.5">
               <div className="min-w-0 flex-1">
-                <p className="truncate text-sm font-medium text-[#4E220F]">{p.name}</p>
+                <p className="truncate text-sm font-medium text-[#402310]">{p.name}</p>
                 <p className="text-xs text-slate-500">{p.unit ? `per ${p.unit}` : "no unit · just a price"}</p>
               </div>
               <div className="flex items-center gap-1 text-sm text-slate-500">
@@ -200,7 +200,7 @@ export function CustomProductsManager({ products }: { products: CustomProduct[] 
                   defaultValue={p.pricePerUnit}
                   onBlur={(e) => updatePrice(p, e.target.value)}
                   disabled={busyId === p.id}
-                  className="w-20 rounded-lg border border-[#D6BE8C] px-2 py-1 text-right text-sm text-[#4E220F] disabled:opacity-60"
+                  className="w-20 rounded-lg border border-[#D6BE8C] px-2 py-1 text-right text-sm text-[#402310] disabled:opacity-60"
                 />
               </div>
               {confirmingId === p.id ? (
@@ -208,7 +208,7 @@ export function CustomProductsManager({ products }: { products: CustomProduct[] 
                   <button
                     onClick={() => remove(p)}
                     disabled={busyId === p.id}
-                    className="rounded-lg bg-red-600 px-2.5 py-1 text-xs font-medium text-white hover:bg-red-700 disabled:opacity-60"
+                    className="rounded-lg bg-[#402310] px-2.5 py-1 text-xs font-medium text-white hover:bg-[#2A1608] disabled:opacity-60"
                   >
                     {busyId === p.id ? "…" : "Delete"}
                   </button>
@@ -222,7 +222,7 @@ export function CustomProductsManager({ products }: { products: CustomProduct[] 
               ) : (
                 <button
                   onClick={() => setConfirmingId(p.id)}
-                  className="rounded-full px-2 py-1 text-xs text-slate-400 hover:bg-slate-100 hover:text-red-600"
+                  className="rounded-full px-2 py-1 text-xs text-slate-400 hover:bg-slate-100 hover:text-[#8C491A]"
                   aria-label={`Delete ${p.name}`}
                 >
                   ✕

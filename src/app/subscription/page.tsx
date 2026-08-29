@@ -19,7 +19,7 @@ export default async function SubscriptionPage() {
   const statusLabel =
     sub.status === "active" ? "Active" : sub.status === "trialing" ? "Free trial" : "Expired";
   const statusClass =
-    sub.status === "expired" ? "bg-red-100 text-red-800" : "bg-emerald-100 text-emerald-800";
+    sub.status === "expired" ? "bg-[#FFE1D0] text-[#402310]" : "bg-[#E1EECC] text-[#3D472B]";
 
   // The date access currently runs until.
   const accessUntil =
@@ -31,16 +31,16 @@ export default async function SubscriptionPage() {
         ← Back to settings
       </Link>
 
-      <h1 className="mt-3 text-2xl font-bold text-[#4E220F]">Your subscription</h1>
+      <h1 className="mt-3 text-2xl font-bold text-[#402310]">Your subscription</h1>
 
       <div className="mt-4 space-y-3 rounded-2xl border border-[#E0CB9E] bg-[#FBF3D1] p-5">
         <div className="flex items-center justify-between">
           <span className="text-sm font-semibold text-slate-700">Plan</span>
-          <span className="text-sm font-medium text-[#4E220F]">Dairy Ledger Premium</span>
+          <span className="text-sm font-medium text-[#402310]">Dairy Ledger Premium</span>
         </div>
         <div className="flex items-center justify-between">
           <span className="text-sm font-semibold text-slate-700">Price</span>
-          <span className="text-sm font-medium text-[#4E220F]">₹{PRICE_INR} / month</span>
+          <span className="text-sm font-medium text-[#402310]">₹{PRICE_INR} / month</span>
         </div>
         <div className="flex items-center justify-between">
           <span className="text-sm font-semibold text-slate-700">Status</span>
@@ -50,7 +50,7 @@ export default async function SubscriptionPage() {
           <span className="text-sm font-semibold text-slate-700">
             {sub.status === "active" ? "Renews on" : sub.status === "trialing" ? "Trial ends" : "Ended"}
           </span>
-          <span className="text-sm font-medium text-[#4E220F]">{fmt(accessUntil)}</span>
+          <span className="text-sm font-medium text-[#402310]">{fmt(accessUntil)}</span>
         </div>
         {sub.status === "trialing" && (
           <p className="text-xs text-slate-500">

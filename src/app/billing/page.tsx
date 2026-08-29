@@ -16,10 +16,10 @@ export default async function BillingPage() {
     <div className="mx-auto flex min-h-screen max-w-md flex-col justify-center px-4 py-10">
       <div className="mb-6 text-center">
         <div className="mb-2 flex items-center justify-center gap-2">
-          <span className="inline-block h-2.5 w-2.5 rounded-full bg-[#9D6638]" aria-hidden />
-          <span className="text-lg font-semibold tracking-tight text-[#4E220F]">Dairy Ledger</span>
+          <span className="inline-block h-2.5 w-2.5 rounded-full bg-[#C67139]" aria-hidden />
+          <span className="text-lg font-semibold tracking-tight text-[#402310]">Dairy Ledger</span>
         </div>
-        <h1 className="text-2xl font-bold text-[#4E220F]">
+        <h1 className="text-2xl font-bold text-[#402310]">
           {expired ? "Your free trial has ended" : "Dairy Ledger Premium"}
         </h1>
         <p className="mt-1 text-sm text-slate-600">
@@ -33,7 +33,7 @@ export default async function BillingPage() {
 
       <div className="rounded-2xl border border-[#E0CB9E] bg-[#FBF3D1] p-6">
         <div className="flex items-baseline justify-center gap-1">
-          <span className="text-4xl font-bold text-[#4E220F]">₹{PRICE_INR}</span>
+          <span className="text-4xl font-bold text-[#402310]">₹{PRICE_INR}</span>
           <span className="text-sm text-slate-500">/ month</span>
         </div>
         <p className="mt-1 text-center text-xs text-slate-500">{TRIAL_DAYS}-day free trial · cancel anytime</p>
@@ -46,7 +46,7 @@ export default async function BillingPage() {
             "Walk-in orders & daily summaries",
           ].map((f) => (
             <li key={f} className="flex items-start gap-2">
-              <span className="mt-0.5 text-[#9D6638]">✓</span>
+              <span className="mt-0.5 text-[#C67139]">✓</span>
               <span>{f}</span>
             </li>
           ))}
@@ -59,7 +59,7 @@ export default async function BillingPage() {
 
       <div className="mt-6 flex items-center justify-center gap-4 text-sm">
         {sub.hasAccess && (
-          <Link href="/dashboard" className="font-medium text-[#9D6638] hover:underline">
+          <Link href="/dashboard" className="font-medium text-[#C67139] hover:underline">
             ← Back to app
           </Link>
         )}

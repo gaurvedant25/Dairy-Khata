@@ -1,11 +1,12 @@
 import type { TrustLevel } from "@/lib/business";
 
+// Trust reads as one sage → beige → terracotta ramp, on the app palette.
 const STYLES: Record<TrustLevel["label"], string> = {
-  Excellent: "bg-emerald-100 text-emerald-800",
-  Good: "bg-green-100 text-green-800",
-  Fair: "bg-amber-100 text-amber-800",
-  Poor: "bg-orange-100 text-orange-800",
-  "Very Poor": "bg-red-100 text-red-800",
+  Excellent: "bg-[#E1EECC] text-[#3D472B]",
+  Good: "bg-[#F0FAE1] text-[#56633F]",
+  Fair: "bg-[#F3E7C7] text-[#645C50]",
+  Poor: "bg-[#FDEEDD] text-[#8C491A]",
+  "Very Poor": "bg-[#FFE1D0] text-[#402310]",
 };
 
 export function TrustBadge({ trust }: { trust: TrustLevel }) {

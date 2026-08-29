@@ -18,7 +18,7 @@ export function LanguageSwitcher({ current, label }: { current: Lang; label: str
       <select
         value={current}
         onChange={(e) => change(e.target.value)}
-        className="mt-1 w-full rounded-lg border border-[#D6BE8C] bg-[#FBF3D1] px-3 py-2 text-sm text-[#4E220F] sm:w-48"
+        className="mt-1 w-full rounded-lg border border-[#D6BE8C] bg-[#FBF3D1] px-3 py-2 text-sm text-[#402310] sm:w-48"
       >
         {LANGS.map((l) => (
           <option key={l.value} value={l.value}>

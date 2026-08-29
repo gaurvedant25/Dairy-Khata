@@ -69,7 +69,7 @@ export function SettingsForm({
         <button
           type="submit"
           disabled={loading}
-          className="rounded-lg bg-[#9D6638] px-4 py-2 text-sm font-medium text-white hover:bg-[#4E220F] disabled:opacity-60"
+          className="rounded-lg bg-[#C67139] px-4 py-2 text-sm font-medium text-white hover:bg-[#402310] disabled:opacity-60"
         >
           {loading ? t("set.saving") : t("set.save")}
         </button>

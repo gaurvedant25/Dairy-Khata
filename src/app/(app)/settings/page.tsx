@@ -22,7 +22,7 @@ export default async function SettingsPage() {
   return (
     <div className="space-y-4">
       <div>
-        <h1 className="text-xl font-bold text-[#4E220F]">{t("set.title")}</h1>
+        <h1 className="text-xl font-bold text-[#402310]">{t("set.title")}</h1>
         <p className="text-sm text-slate-500">{t("set.subtitle")}</p>
       </div>
 
@@ -58,7 +58,7 @@ export default async function SettingsPage() {
         />
       </div>
 
-      <div className="rounded-xl bg-[#9D6638] p-6">
+      <div className="rounded-xl bg-[#C67139] p-6">
         <InstallAppBox
           title={t("set.installTitle")}
           bodyAndroid={t("set.installAndroid")}
@@ -70,7 +70,7 @@ export default async function SettingsPage() {
 
       <Link
         href="/subscription"
-        className="flex items-center justify-between gap-3 rounded-xl bg-[#9D6638] p-6 hover:bg-[#4E220F]"
+        className="flex items-center justify-between gap-3 rounded-xl bg-[#C67139] p-6 hover:bg-[#402310]"
       >
         <div>
           <h2 className="text-base font-semibold text-[#FFEED6]">{t("set.subscription")}</h2>

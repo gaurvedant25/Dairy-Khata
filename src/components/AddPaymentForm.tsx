@@ -66,11 +66,11 @@ export function AddPaymentForm({ customerId, defaultAmount }: { customerId: stri
       <button
         type="submit"
         disabled={loading}
-        className="rounded-lg bg-emerald-600 px-4 py-2 text-sm font-medium text-white hover:bg-emerald-700 disabled:opacity-60"
+        className="rounded-lg bg-[#728157] px-4 py-2 text-sm font-medium text-white hover:bg-[#56633F] disabled:opacity-60"
       >
         {loading ? "Saving..." : "Record payment"}
       </button>
-      {error && <p className="w-full text-sm text-red-600">{error}</p>}
+      {error && <p className="w-full text-sm text-[#8C491A]">{error}</p>}
     </form>
   );
 }

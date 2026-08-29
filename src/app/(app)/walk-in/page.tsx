@@ -29,14 +29,14 @@ export default async function WalkInPage() {
   return (
     <div className="space-y-4">
       <div>
-        <h1 className="text-xl font-bold text-[#4E220F]">{t("walk.title")}</h1>
+        <h1 className="text-xl font-bold text-[#402310]">{t("walk.title")}</h1>
         <p className="text-sm text-slate-500">{t("walk.subtitle")}</p>
       </div>
 
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
         <StatCard label="Orders" value={orders.length.toString()} accent="text-slate-800" />
-        <StatCard label="Collected" value={`₹${paidTotal.toFixed(2)}`} accent="text-emerald-700" />
-        <StatCard label="To collect" value={`₹${unpaidTotal.toFixed(2)}`} accent={unpaidTotal > 0 ? "text-red-700" : "text-slate-800"} />
+        <StatCard label="Collected" value={`₹${paidTotal.toFixed(2)}`} accent="text-[#56633F]" />
+        <StatCard label="To collect" value={`₹${unpaidTotal.toFixed(2)}`} accent={unpaidTotal > 0 ? "text-[#8C491A]" : "text-[#56633F]"} />
       </div>
 
       <OneTimeOrders

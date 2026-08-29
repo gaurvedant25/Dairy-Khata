@@ -18,7 +18,7 @@ export function CustomerHeader({
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
           <div className="flex items-center gap-2">
-            <h1 className="truncate text-2xl font-bold text-[#4E220F]">{name}</h1>
+            <h1 className="truncate text-2xl font-bold text-[#402310]">{name}</h1>
             <button
               type="button"
               onClick={() => setEditing((v) => !v)}

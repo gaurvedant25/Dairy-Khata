@@ -46,7 +46,7 @@ export default function SignupPage() {
     <div className="flex min-h-screen items-center justify-center px-4">
       <div className="w-full max-w-sm space-y-6">
         <div className="text-center">
-          <h1 className="text-2xl font-bold text-[#4E220F]">Dairy Ledger</h1>
+          <h1 className="text-2xl font-bold text-[#402310]">Dairy Ledger</h1>
           <p className="mt-1 text-sm text-slate-500">Create your account</p>
         </div>
         <form onSubmit={onSubmit} className="space-y-4 rounded-xl bg-[#FBF3D1] p-6 border border-[#E0CB9E]">
@@ -56,7 +56,7 @@ export default function SignupPage() {
               required
               value={name}
               onChange={(e) => setName(e.target.value)}
-              className="mt-1 w-full rounded-lg border border-[#D6BE8C] px-3 py-2 text-base focus:border-[#9D6638] focus:outline-none focus:ring-1 focus:ring-[#9D6638]"
+              className="mt-1 w-full rounded-lg border border-[#D6BE8C] px-3 py-2 text-base focus:border-[#C67139] focus:outline-none focus:ring-1 focus:ring-[#C67139]"
               autoComplete="name"
             />
           </div>
@@ -70,7 +70,7 @@ export default function SignupPage() {
               spellCheck={false}
               value={username}
               onChange={(e) => setUsername(e.target.value)}
-              className="mt-1 w-full rounded-lg border border-[#D6BE8C] px-3 py-2 text-base focus:border-[#9D6638] focus:outline-none focus:ring-1 focus:ring-[#9D6638]"
+              className="mt-1 w-full rounded-lg border border-[#D6BE8C] px-3 py-2 text-base focus:border-[#C67139] focus:outline-none focus:ring-1 focus:ring-[#C67139]"
               autoComplete="username"
             />
             <p className="mt-1 text-xs text-slate-400">Letters, numbers, and . _ - — no spaces.</p>
@@ -83,22 +83,22 @@ export default function SignupPage() {
               minLength={6}
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="mt-1 w-full rounded-lg border border-[#D6BE8C] px-3 py-2 text-base focus:border-[#9D6638] focus:outline-none focus:ring-1 focus:ring-[#9D6638]"
+              className="mt-1 w-full rounded-lg border border-[#D6BE8C] px-3 py-2 text-base focus:border-[#C67139] focus:outline-none focus:ring-1 focus:ring-[#C67139]"
               autoComplete="new-password"
             />
           </div>
-          {error && <p className="text-sm text-red-600">{error}</p>}
+          {error && <p className="text-sm text-[#8C491A]">{error}</p>}
           <button
             type="submit"
             disabled={loading}
-            className="w-full rounded-lg bg-[#9D6638] py-2.5 text-base font-medium text-white hover:bg-[#4E220F] disabled:opacity-60"
+            className="w-full rounded-lg bg-[#C67139] py-2.5 text-base font-medium text-white hover:bg-[#402310] disabled:opacity-60"
           >
             {loading ? "Creating account..." : "Create account"}
           </button>
         </form>
         <p className="text-center text-sm text-slate-500">
           Already have an account?{" "}
-          <Link href="/login" className="font-medium text-[#9D6638] hover:underline">
+          <Link href="/login" className="font-medium text-[#C67139] hover:underline">
             Sign in
           </Link>
         </p>

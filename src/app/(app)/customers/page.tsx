@@ -12,7 +12,7 @@ export default async function CustomersPage() {
   return (
     <div className="space-y-4">
       <div>
-        <h1 className="text-xl font-bold text-[#4E220F]">{t("cust.title")}</h1>
+        <h1 className="text-xl font-bold text-[#402310]">{t("cust.title")}</h1>
         <p className="text-sm text-slate-500">{t("cust.subtitle")}</p>
       </div>
 
@@ -29,10 +29,10 @@ export default async function CustomersPage() {
                 className="flex items-center justify-between gap-3 px-4 py-3 hover:bg-[#F3E7C7]"
               >
                 <div className="min-w-0">
-                  <p className="truncate font-medium text-[#4E220F]">{customer.name}</p>
+                  <p className="truncate font-medium text-[#402310]">{customer.name}</p>
                   <p className="text-xs text-slate-500">{customer.phone || customer.address || "No contact on file"}</p>
                 </div>
-                <span className={`text-sm font-semibold ${duesInfo.dues > 0 ? "text-red-600" : "text-emerald-600"}`}>
+                <span className={`text-sm font-semibold ${duesInfo.dues > 0 ? "text-[#8C491A]" : "text-[#56633F]"}`}>
                   {duesInfo.dues > 0 ? t("cust.due", { amt: `₹${duesInfo.dues.toFixed(2)}` }) : t("cust.paidUp")}
                 </span>
               </Link>

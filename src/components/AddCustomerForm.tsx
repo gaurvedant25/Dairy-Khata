@@ -40,7 +40,7 @@ export function AddCustomerForm({ lang = "en" }: { lang?: Lang }) {
     return (
       <button
         onClick={() => setOpen(true)}
-        className="rounded-lg bg-[#9D6638] px-4 py-2 text-sm font-medium text-white hover:bg-[#4E220F]"
+        className="rounded-lg bg-[#C67139] px-4 py-2 text-sm font-medium text-white hover:bg-[#402310]"
       >
         {t("cust.add")}
       </button>
@@ -56,7 +56,7 @@ export function AddCustomerForm({ lang = "en" }: { lang?: Lang }) {
             required
             value={name}
             onChange={(e) => setName(e.target.value)}
-            className="w-full rounded-lg border border-[#D6BE8C] bg-[#FBF3D1] px-3 py-2 text-sm text-[#4E220F]"
+            className="w-full rounded-lg border border-[#D6BE8C] bg-[#FBF3D1] px-3 py-2 text-sm text-[#402310]"
           />
         </label>
         <label className="block">
@@ -66,7 +66,7 @@ export function AddCustomerForm({ lang = "en" }: { lang?: Lang }) {
           <input
             value={phone}
             onChange={(e) => setPhone(e.target.value)}
-            className="w-full rounded-lg border border-[#D6BE8C] bg-[#FBF3D1] px-3 py-2 text-sm text-[#4E220F]"
+            className="w-full rounded-lg border border-[#D6BE8C] bg-[#FBF3D1] px-3 py-2 text-sm text-[#402310]"
           />
         </label>
         <label className="block sm:col-span-2">
@@ -76,16 +76,16 @@ export function AddCustomerForm({ lang = "en" }: { lang?: Lang }) {
           <input
             value={address}
             onChange={(e) => setAddress(e.target.value)}
-            className="w-full rounded-lg border border-[#D6BE8C] bg-[#FBF3D1] px-3 py-2 text-sm text-[#4E220F]"
+            className="w-full rounded-lg border border-[#D6BE8C] bg-[#FBF3D1] px-3 py-2 text-sm text-[#402310]"
           />
         </label>
       </div>
-      {error && <p className="text-sm text-red-600">{error}</p>}
+      {error && <p className="text-sm text-[#8C491A]">{error}</p>}
       <div className="flex gap-2">
         <button
           type="submit"
           disabled={loading}
-          className="rounded-lg bg-[#9D6638] px-4 py-2 text-sm font-medium text-white hover:bg-[#4E220F] disabled:opacity-60"
+          className="rounded-lg bg-[#C67139] px-4 py-2 text-sm font-medium text-white hover:bg-[#402310] disabled:opacity-60"
         >
           {loading ? "Saving..." : "Save"}
         </button>

@@ -194,7 +194,7 @@ export function OneTimeOrders({
         {!showForm && (
           <button
             onClick={() => setShowForm(true)}
-            className="rounded-lg bg-[#9D6638] px-3 py-1.5 text-xs font-medium text-white hover:bg-[#4E220F]"
+            className="rounded-lg bg-[#C67139] px-3 py-1.5 text-xs font-medium text-white hover:bg-[#402310]"
           >
             + Add order
           </button>
@@ -209,7 +209,7 @@ export function OneTimeOrders({
               <select
                 value={existingCustomerId}
                 onChange={(e) => setExistingCustomerId(e.target.value)}
-                className="w-full rounded-lg border border-[#D6BE8C] bg-[#FBF3D1] px-3 py-2 text-sm text-[#4E220F]"
+                className="w-full rounded-lg border border-[#D6BE8C] bg-[#FBF3D1] px-3 py-2 text-sm text-[#402310]"
               >
                 <option value="">— New walk-in customer —</option>
                 {dailyCustomers.length > 0 && (
@@ -232,7 +232,7 @@ export function OneTimeOrders({
                   value={name}
                   onChange={(e) => setName(e.target.value)}
                   placeholder="Leave blank for a walk-in"
-                  className="w-full rounded-lg border border-[#D6BE8C] bg-[#FBF3D1] px-3 py-2 text-sm text-[#4E220F] placeholder:text-slate-400"
+                  className="w-full rounded-lg border border-[#D6BE8C] bg-[#FBF3D1] px-3 py-2 text-sm text-[#402310] placeholder:text-slate-400"
                 />
               </label>
             )}
@@ -244,7 +244,7 @@ export function OneTimeOrders({
               <button
                 type="button"
                 onClick={() => setItems((prev) => [...prev, newItem()])}
-                className="text-xs font-medium text-[#9D6638] hover:underline"
+                className="text-xs font-medium text-[#C67139] hover:underline"
               >
                 + Add another item
               </button>
@@ -264,7 +264,7 @@ export function OneTimeOrders({
                       <button
                         type="button"
                         onClick={() => removeItem(it.key)}
-                        className="text-xs text-slate-400 hover:text-red-600"
+                        className="text-xs text-slate-400 hover:text-[#8C491A]"
                         aria-label="Remove item"
                       >
                         ✕ Remove
@@ -291,7 +291,7 @@ export function OneTimeOrders({
                           updateItem(it.key, { product: v as ProductKind, userProductId: "" });
                         }
                       }}
-                      className="w-full rounded-lg border border-[#D6BE8C] bg-[#FBF3D1] px-3 py-2 text-sm text-[#4E220F]"
+                      className="w-full rounded-lg border border-[#D6BE8C] bg-[#FBF3D1] px-3 py-2 text-sm text-[#402310]"
                     >
                       {userProducts.map((up) => (
                         <option key={up.id} value={`up:${up.id}`}>
@@ -313,7 +313,7 @@ export function OneTimeOrders({
                         required
                         value={it.customAmount}
                         onChange={(e) => updateItem(it.key, { customAmount: e.target.value })}
-                        className="w-full rounded-lg border border-[#D6BE8C] bg-[#FBF3D1] px-3 py-2 text-sm text-[#4E220F]"
+                        className="w-full rounded-lg border border-[#D6BE8C] bg-[#FBF3D1] px-3 py-2 text-sm text-[#402310]"
                       />
                     </label>
                   ) : it.product !== "Custom" ? (
@@ -329,7 +329,7 @@ export function OneTimeOrders({
                         required
                         value={it.quantity}
                         onChange={(e) => updateItem(it.key, { quantity: e.target.value })}
-                        className="w-full rounded-lg border border-[#D6BE8C] bg-[#FBF3D1] px-3 py-2 text-sm text-[#4E220F]"
+                        className="w-full rounded-lg border border-[#D6BE8C] bg-[#FBF3D1] px-3 py-2 text-sm text-[#402310]"
                       />
                     </label>
                   ) : (
@@ -341,7 +341,7 @@ export function OneTimeOrders({
                           value={it.customProductName}
                           onChange={(e) => updateItem(it.key, { customProductName: e.target.value })}
                           placeholder="e.g. Butter, Ghee"
-                          className="w-full rounded-lg border border-[#D6BE8C] bg-[#FBF3D1] px-3 py-2 text-sm text-[#4E220F] placeholder:text-slate-400"
+                          className="w-full rounded-lg border border-[#D6BE8C] bg-[#FBF3D1] px-3 py-2 text-sm text-[#402310] placeholder:text-slate-400"
                         />
                       </label>
                       <label className="block">
@@ -354,7 +354,7 @@ export function OneTimeOrders({
                           required
                           value={it.customAmount}
                           onChange={(e) => updateItem(it.key, { customAmount: e.target.value })}
-                          className="w-full rounded-lg border border-[#D6BE8C] bg-[#FBF3D1] px-3 py-2 text-sm text-[#4E220F]"
+                          className="w-full rounded-lg border border-[#D6BE8C] bg-[#FBF3D1] px-3 py-2 text-sm text-[#402310]"
                         />
                       </label>
                     </div>
@@ -370,7 +370,7 @@ export function OneTimeOrders({
 
           <div className="rounded-lg bg-[#FBF3D1] px-3 py-2 text-sm border border-[#E0CB9E] flex items-center justify-between">
             <span className="text-slate-500">Order total</span>
-            <span className="font-semibold text-[#4E220F]">₹{total.toFixed(2)}</span>
+            <span className="font-semibold text-[#402310]">₹{total.toFixed(2)}</span>
           </div>
 
           <label className="flex items-center gap-2 text-sm font-medium text-slate-700">
@@ -385,7 +385,7 @@ export function OneTimeOrders({
           {selectedCustomer && (
             <p
               className={`rounded-md px-3 py-2 text-xs ${
-                paid ? "bg-emerald-50 text-emerald-800" : "bg-amber-50 text-amber-800"
+                paid ? "bg-[#F0FAE1] text-[#3D472B]" : "bg-[#FDEEDD] text-[#8C491A]"
               }`}
             >
               {paid
@@ -394,12 +394,12 @@ export function OneTimeOrders({
             </p>
           )}
 
-          {error && <p className="text-sm text-red-600">{error}</p>}
+          {error && <p className="text-sm text-[#8C491A]">{error}</p>}
           <div className="flex gap-2">
             <button
               type="submit"
               disabled={saving}
-              className="rounded-lg bg-[#9D6638] px-4 py-2 text-sm font-medium text-white hover:bg-[#4E220F] disabled:opacity-60"
+              className="rounded-lg bg-[#C67139] px-4 py-2 text-sm font-medium text-white hover:bg-[#402310] disabled:opacity-60"
             >
               {saving ? "Saving..." : "Save order"}
             </button>
@@ -429,7 +429,7 @@ export function OneTimeOrders({
             return (
               <li key={order.id} className="flex items-center gap-3 py-3">
                 <div className="min-w-0 flex-1">
-                  <p className="truncate font-medium text-[#4E220F]">{order.customerName}</p>
+                  <p className="truncate font-medium text-[#402310]">{order.customerName}</p>
                   <p className="text-xs text-slate-500">
                     {order.product}
                     {qtyLabel ? ` · ${qtyLabel}` : ""} · {new Date(order.date).toLocaleDateString()}
@@ -441,7 +441,7 @@ export function OneTimeOrders({
                   onClick={() => togglePaid(order)}
                   disabled={busy}
                   className={`rounded-full px-2.5 py-1 text-xs font-medium ${
-                    order.paid ? "bg-emerald-100 text-emerald-800" : "bg-amber-100 text-amber-800"
+                    order.paid ? "bg-[#E1EECC] text-[#3D472B]" : "bg-[#FFE1D0] text-[#643312]"
                   } disabled:opacity-60`}
                 >
                   {order.paid ? "Paid" : "Unpaid"}
@@ -451,7 +451,7 @@ export function OneTimeOrders({
                     <button
                       onClick={() => remove(order)}
                       disabled={busy}
-                      className="rounded-lg bg-red-600 px-2.5 py-1 text-xs font-medium text-white hover:bg-red-700 disabled:opacity-60"
+                      className="rounded-lg bg-[#402310] px-2.5 py-1 text-xs font-medium text-white hover:bg-[#2A1608] disabled:opacity-60"
                     >
                       {busy ? "…" : "Delete"}
                     </button>
@@ -465,7 +465,7 @@ export function OneTimeOrders({
                 ) : (
                   <button
                     onClick={() => setConfirmDeleteId(order.id)}
-                    className="rounded-full px-2 py-1 text-xs text-slate-400 hover:bg-slate-100 hover:text-red-600"
+                    className="rounded-full px-2 py-1 text-xs text-slate-400 hover:bg-slate-100 hover:text-[#8C491A]"
                     aria-label="Delete order"
                   >
                     ✕
