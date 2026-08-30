@@ -1,20 +1,13 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono, Caprasimo, Figtree } from "next/font/google";
+import { Suspense } from "react";
+import { Caprasimo, Figtree } from "next/font/google";
 import "./globals.css";
 import { Providers } from "@/components/Providers";
 import { ServiceWorkerRegistrar } from "@/components/ServiceWorkerRegistrar";
-
-const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
-});
-
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
-});
+import { AppSplash } from "@/components/AppSplash";
 
 // Design-system fonts: Caprasimo for figures/titles, Figtree for body.
+// (Geist / Geist Mono were removed — the design never rendered them.)
 const caprasimo = Caprasimo({
   weight: "400",
   variable: "--font-heading",
@@ -48,7 +41,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html
       lang="en"
-      className={`${geistSans.variable} ${geistMono.variable} ${caprasimo.variable} ${figtree.variable} h-full antialiased`}
+      className={`${caprasimo.variable} ${figtree.variable} h-full antialiased`}
       style={{ colorScheme: "light" }}
     >
       <body
@@ -58,7 +51,12 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
           background: "var(--color-bg)",
         }}
       >
-        <Providers>{children}</Providers>
+        <Providers>
+          {/* The (app) layout awaits auth + subscription (a DB hit). Suspending
+              here lets the splash stream first on a cold load, so the user sees
+              the animation instead of a blank page while the server wakes. */}
+          <Suspense fallback={<AppSplash />}>{children}</Suspense>
+        </Providers>
         <ServiceWorkerRegistrar />
       </body>
     </html>

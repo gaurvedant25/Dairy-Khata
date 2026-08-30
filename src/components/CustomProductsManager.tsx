@@ -75,105 +75,96 @@ export function CustomProductsManager({ products }: { products: CustomProduct[] 
     router.refresh();
   }
 
+  const inputCls =
+    "h-11 w-full rounded-full px-4 text-[14px] text-[var(--color-accent-900)] outline-none placeholder:text-[var(--color-neutral-500)]";
+  const inputStyle = { background: "var(--color-bg)", border: "1.5px solid var(--color-neutral-300)" } as const;
+
   return (
-    <div className="space-y-3">
+    <div className="flex flex-col gap-3.5">
       <div className="flex items-start justify-between gap-3">
         <div>
-          <h2 className="text-sm font-semibold text-slate-700">Your items</h2>
-          <p className="text-xs text-slate-400">
-            Add your own products with any unit — they appear in the walk-in order form.
+          <h2 className="text-[13px] font-semibold text-[var(--color-accent-900)]">Your items</h2>
+          <p className="mt-0.5 text-[12px] text-[var(--color-neutral-600)]">
+            Custom products, with any unit, for the walk-in form.
           </p>
         </div>
         {!open && (
           <button
             onClick={() => setOpen(true)}
-            className="shrink-0 rounded-lg bg-[#C67139] px-3 py-1.5 text-xs font-medium text-white hover:bg-[#402310]"
+            className="flex min-h-[34px] shrink-0 items-center rounded-full px-3.5 text-[12.5px] font-bold text-white transition active:scale-[0.98]"
+            style={{ background: "var(--color-accent-600)" }}
           >
-            + Add item
+            + Add
           </button>
         )}
       </div>
 
       {open && (
-        <form onSubmit={add} className="space-y-3 rounded-lg bg-[#F3E7C7] p-3">
-          <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
-            <label className="block">
-              <span className="mb-1 block text-xs font-semibold text-slate-700">Item name</span>
-              <input
-                required
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                placeholder="e.g. Ghee"
-                className="w-full rounded-lg border border-[#D6BE8C] bg-[#FBF3D1] px-3 py-2 text-sm text-[#402310] placeholder:text-slate-400"
-              />
-            </label>
-            <label className="block">
-              <span className="mb-1 block text-xs font-semibold text-slate-700">Unit</span>
-              <select
-                value={unit}
-                onChange={(e) => setUnit(e.target.value)}
-                className="w-full rounded-lg border border-[#D6BE8C] bg-[#FBF3D1] px-3 py-2 text-sm text-[#402310]"
-              >
-                {COMMON_UNITS.map((u) => (
-                  <option key={u} value={u}>
-                    {u}
-                  </option>
-                ))}
-                <option value="__none__">No unit (just a price)</option>
-                <option value="__custom__">Custom unit…</option>
-              </select>
-            </label>
-            <label className="block">
-              <span className="mb-1 block text-xs font-semibold text-slate-700">
-                {noUnit ? (
-                  <>
-                    Price (₹) <span className="font-normal text-slate-400">(optional — ask at order time)</span>
-                  </>
-                ) : (
-                  `Price per ${effectiveUnit || "unit"} (₹)`
-                )}
-              </span>
-              <input
-                type="number"
-                inputMode="decimal"
-                step="0.01"
-                min={0}
-                required={!noUnit}
-                placeholder={noUnit ? "Leave blank to enter each time" : undefined}
-                value={price}
-                onChange={(e) => setPrice(e.target.value)}
-                className="w-full rounded-lg border border-[#D6BE8C] bg-[#FBF3D1] px-3 py-2 text-sm text-[#402310] placeholder:text-slate-400"
-              />
-            </label>
-            {unit === "__custom__" && (
-              <label className="block sm:col-span-3">
-                <span className="mb-1 block text-xs font-semibold text-slate-700">Your unit name</span>
-                <input
-                  required
-                  value={customUnit}
-                  onChange={(e) => setCustomUnit(e.target.value)}
-                  placeholder="e.g. tin, bottle, box"
-                  className="w-full rounded-lg border border-[#D6BE8C] bg-[#FBF3D1] px-3 py-2 text-sm text-[#402310] placeholder:text-slate-400"
-                />
-              </label>
-            )}
+        <form
+          onSubmit={add}
+          className="flex flex-col gap-2.5 rounded-2xl p-3.5"
+          style={{ background: "var(--color-accent-100)", border: "1.5px solid var(--color-accent-300)" }}
+        >
+          <input
+            required
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            placeholder="Item name, e.g. Ghee"
+            className={inputCls}
+            style={inputStyle}
+          />
+          <div className="flex gap-2.5">
+            <select
+              value={unit}
+              onChange={(e) => setUnit(e.target.value)}
+              className="h-11 flex-1 rounded-full px-4 text-[14px] text-[var(--color-accent-900)] outline-none"
+              style={inputStyle}
+            >
+              {COMMON_UNITS.map((u) => (
+                <option key={u} value={u}>
+                  {u}
+                </option>
+              ))}
+              <option value="__none__">No unit</option>
+              <option value="__custom__">Custom unit…</option>
+            </select>
+            <input
+              type="number"
+              inputMode="decimal"
+              step="0.01"
+              min={0}
+              required={!noUnit}
+              placeholder="₹ price"
+              value={price}
+              onChange={(e) => setPrice(e.target.value)}
+              className="h-11 w-[104px] rounded-full px-4 text-[14px] text-[var(--color-accent-900)] outline-none placeholder:text-[var(--color-neutral-500)]"
+              style={inputStyle}
+            />
           </div>
+          {unit === "__custom__" && (
+            <input
+              required
+              value={customUnit}
+              onChange={(e) => setCustomUnit(e.target.value)}
+              placeholder="Your unit, e.g. tin, bottle"
+              className={inputCls}
+              style={inputStyle}
+            />
+          )}
           {error && <p className="text-sm text-[#8C491A]">{error}</p>}
-          <div className="flex gap-2">
+          <div className="mt-0.5 flex gap-2.5">
             <button
               type="submit"
               disabled={saving}
-              className="rounded-lg bg-[#C67139] px-4 py-2 text-sm font-medium text-white hover:bg-[#402310] disabled:opacity-60"
+              className="flex min-h-[42px] flex-1 items-center justify-center rounded-full text-[13.5px] font-bold text-white transition active:scale-[0.98] disabled:opacity-60"
+              style={{ background: "var(--color-accent-600)" }}
             >
-              {saving ? "Saving..." : "Save item"}
+              {saving ? "Saving…" : "Save item"}
             </button>
             <button
               type="button"
-              onClick={() => {
-                setOpen(false);
-                setError(null);
-              }}
-              className="rounded-lg px-4 py-2 text-sm font-medium text-slate-500 hover:bg-slate-100"
+              onClick={() => { setOpen(false); setError(null); }}
+              className="flex min-h-[42px] items-center rounded-full px-4 text-[13px] font-semibold text-[var(--color-neutral-700)]"
             >
               Cancel
             </button>
@@ -182,17 +173,28 @@ export function CustomProductsManager({ products }: { products: CustomProduct[] 
       )}
 
       {products.length === 0 ? (
-        <p className="text-sm text-slate-500">No custom items yet.</p>
+        <p
+          className="rounded-2xl border border-dashed py-4 text-center text-[13px] text-[var(--color-neutral-600)]"
+          style={{ borderColor: "var(--color-neutral-300)" }}
+        >
+          No custom items yet.
+        </p>
       ) : (
-        <ul className="divide-y divide-slate-100 rounded-lg border border-[#E0CB9E]">
+        <ul className="flex flex-col gap-2">
           {products.map((p) => (
-            <li key={p.id} className="flex items-center gap-3 px-3 py-2.5">
+            <li
+              key={p.id}
+              className="flex items-center gap-2.5 rounded-2xl px-3.5 py-3"
+              style={{ background: "var(--color-neutral-200)" }}
+            >
               <div className="min-w-0 flex-1">
-                <p className="truncate text-sm font-medium text-[#402310]">{p.name}</p>
-                <p className="text-xs text-slate-500">{p.unit ? `per ${p.unit}` : "no unit · just a price"}</p>
+                <p className="truncate text-[14px] font-semibold text-[var(--color-accent-900)]">{p.name}</p>
+                <p className="text-[12px] text-[var(--color-neutral-600)]">
+                  {p.unit ? `per ${p.unit}` : "no unit"}
+                </p>
               </div>
-              <div className="flex items-center gap-1 text-sm text-slate-500">
-                <span>₹</span>
+              <div className="flex items-center gap-0.5 text-[13px] font-semibold text-[var(--color-neutral-700)]">
+                ₹
                 <input
                   type="number"
                   step="0.01"
@@ -200,7 +202,8 @@ export function CustomProductsManager({ products }: { products: CustomProduct[] 
                   defaultValue={p.pricePerUnit}
                   onBlur={(e) => updatePrice(p, e.target.value)}
                   disabled={busyId === p.id}
-                  className="w-20 rounded-lg border border-[#D6BE8C] px-2 py-1 text-right text-sm text-[#402310] disabled:opacity-60"
+                  className="w-[58px] rounded-lg px-2 py-1.5 text-right text-[13px] text-[var(--color-accent-900)] outline-none disabled:opacity-60"
+                  style={{ background: "var(--color-bg)" }}
                 />
               </div>
               {confirmingId === p.id ? (
@@ -208,13 +211,14 @@ export function CustomProductsManager({ products }: { products: CustomProduct[] 
                   <button
                     onClick={() => remove(p)}
                     disabled={busyId === p.id}
-                    className="rounded-lg bg-[#402310] px-2.5 py-1 text-xs font-medium text-white hover:bg-[#2A1608] disabled:opacity-60"
+                    className="flex min-h-[32px] items-center rounded-full px-3 text-[11.5px] font-bold text-white disabled:opacity-60"
+                    style={{ background: "var(--color-accent-900)" }}
                   >
                     {busyId === p.id ? "…" : "Delete"}
                   </button>
                   <button
                     onClick={() => setConfirmingId(null)}
-                    className="rounded-lg px-2 py-1 text-xs text-slate-500 hover:bg-slate-100"
+                    className="px-1.5 text-[11.5px] font-semibold text-[var(--color-neutral-600)]"
                   >
                     Cancel
                   </button>
@@ -222,7 +226,7 @@ export function CustomProductsManager({ products }: { products: CustomProduct[] 
               ) : (
                 <button
                   onClick={() => setConfirmingId(p.id)}
-                  className="rounded-full px-2 py-1 text-xs text-slate-400 hover:bg-slate-100 hover:text-[#8C491A]"
+                  className="flex h-7 w-7 items-center justify-center rounded-full text-[13px] text-[var(--color-neutral-500)]"
                   aria-label={`Delete ${p.name}`}
                 >
                   ✕

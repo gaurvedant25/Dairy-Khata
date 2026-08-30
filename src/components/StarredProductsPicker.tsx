@@ -39,40 +39,40 @@ export function StarredProductsPicker({
   }
 
   return (
-    <div className="space-y-3">
+    <div className="flex flex-col gap-3">
       <div>
-        <h2 className="text-sm font-semibold text-slate-700">Star items</h2>
-        <p className="text-xs text-slate-400">
-          Starred items get their own card on the dashboard showing how much you sold and earned.
+        <h2 className="text-[13px] font-semibold text-[var(--color-accent-2-900)]">Star items</h2>
+        <p className="mt-0.5 text-[12px] text-[var(--color-accent-2-800)]">
+          Starred items get their own card on the dashboard.
         </p>
       </div>
 
       {options.length === 0 ? (
-        <p className="text-sm text-slate-500">No items yet.</p>
+        <p className="text-sm text-[var(--color-accent-2-800)]">No items yet.</p>
       ) : (
-        <ul className="divide-y divide-slate-100 rounded-lg border border-[#E0CB9E]">
-          {options.map((o) => {
+        <ul>
+          {options.map((o, i) => {
             const on = starred.includes(o.name);
             return (
-              <li key={o.name} className="flex items-center gap-3 px-3 py-2.5">
+              <li
+                key={o.name}
+                className="flex items-center gap-3 py-[11px] px-1"
+                style={i > 0 ? { borderTop: "1.5px solid var(--color-accent-2-200)" } : undefined}
+              >
                 <button
                   type="button"
                   onClick={() => toggle(o.name)}
                   disabled={saving}
                   aria-pressed={on}
                   aria-label={on ? `Unstar ${o.name}` : `Star ${o.name}`}
-                  className={`text-2xl leading-none transition disabled:opacity-50 ${
-                    on ? "text-amber-500" : "text-slate-300 hover:text-slate-400"
-                  }`}
+                  className="text-[21px] leading-none transition disabled:opacity-50"
+                  style={{ color: on ? "var(--color-accent)" : "var(--color-accent-2-400, #aebf92)" }}
                 >
                   {on ? "★" : "☆"}
                 </button>
                 <div className="min-w-0 flex-1">
-                  <p className="truncate text-sm font-medium text-[#402310]">{o.name}</p>
-                  <p className="text-xs text-slate-500">
-                    per {o.unit}
-                    {o.builtin ? "" : " · your item"}
-                  </p>
+                  <p className="truncate text-sm font-semibold text-[var(--color-accent-900)]">{o.name}</p>
+                  <p className="text-[12px] text-[var(--color-accent-2-800)]">per {o.unit}</p>
                 </div>
               </li>
             );

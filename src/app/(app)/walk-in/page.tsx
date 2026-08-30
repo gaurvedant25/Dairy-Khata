@@ -1,15 +1,16 @@
 import { auth } from "@/lib/auth";
-import { listOneTimeOrders, ensureDefaultProducts } from "@/lib/business";
+import { listOneTimeOrders, ensureDefaultProducts, getOrCreateSetting } from "@/lib/business";
 import { getT } from "@/lib/lang";
 import { prisma } from "@/lib/prisma";
-import { OneTimeOrders } from "@/components/OneTimeOrders";
+import { WalkInEntry } from "@/components/WalkInEntry";
+import { WalkInRecent } from "@/components/WalkInRecent";
 
 export default async function WalkInPage() {
   const session = await auth();
   const userId = session!.user.id;
-  const { t } = await getT();
+  const { t, lang } = await getT();
   await ensureDefaultProducts(userId);
-  const [orders, dailyCustomers, userProducts] = await Promise.all([
+  const [orders, dailyCustomers, allProducts, setting] = await Promise.all([
     listOneTimeOrders(userId, 100),
     prisma.customer.findMany({
       where: { userId, active: true },
@@ -21,7 +22,14 @@ export default async function WalkInPage() {
       orderBy: { name: "asc" },
       select: { id: true, name: true, unit: true, pricePerUnit: true },
     }),
+    getOrCreateSetting(userId),
   ]);
+
+  // Only starred items get their own quick chip in the walk-in form; anything
+  // else is reached through "Custom". If nothing is starred yet, fall back to
+  // all items so the form isn't empty.
+  const starred = new Set(setting.starredProducts);
+  const userProducts = allProducts.filter((p) => starred.has(p.name));
 
   // Card shows today's takings, so the label stays honest.
   const startOfDay = new Date();
@@ -74,13 +82,13 @@ export default async function WalkInPage() {
         </div>
       </section>
 
-      <OneTimeOrders
-        dailyCustomers={dailyCustomers}
-        userProducts={userProducts}
-        initialOrders={orders.map((o) => ({
+      <WalkInEntry lang={lang} dailyCustomers={dailyCustomers} userProducts={userProducts} />
+
+      <WalkInRecent
+        lang={lang}
+        orders={orders.map((o) => ({
           id: o.id,
           customerName: o.customerName,
-          phone: o.phone,
           product: o.product,
           unit: o.unit,
           quantity: o.quantity,

@@ -40,6 +40,9 @@
   --color-accent-2-600: #728157;
   --color-accent-2-700: #56633f;
   --color-accent-2-800: #3d472b;
+  --color-accent-2-900: #272e1b;
+  --radius-md: 16px;
+  --radius-lg: 28px;
   --cream-on-accent: #fdf0da;
 }
 
@@ -52,8 +55,8 @@
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --font-sans: var(--font-body);
+  --font-mono: ui-monospace, SFMono-Regular, Menlo, monospace;
 }
 
 body {
@@ -112,6 +115,29 @@ body {
 @media (prefers-reduced-motion: reduce) {
   .dl-pop {
     animation: none;
+  }
+}
+
+/* App splash — shown while the server/DB is waking on a cold load.
+   CSS-only so it paints from the streamed HTML with no JS/hydration. */
+@keyframes dl-splash-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+@keyframes dl-drop {
+  0%, 80%, 100% { transform: scale(0.55); opacity: 0.35; }
+  40% { transform: scale(1); opacity: 1; }
+}
+.dl-splash {
+  animation: dl-splash-in 0.3s ease both;
+}
+.dl-splash-dot {
+  animation: dl-drop 1.2s ease-in-out infinite;
+}
+@media (prefers-reduced-motion: reduce) {
+  .dl-splash-dot {
+    animation: none;
+    opacity: 0.8;
   }
 }
 

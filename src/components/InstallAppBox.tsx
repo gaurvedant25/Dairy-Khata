@@ -53,15 +53,16 @@ export function InstallAppBox({
 
   return (
     <div>
-      <h2 className="mb-1 text-base font-semibold text-[#FFEED6]">{title}</h2>
+      <h2 className="mb-1 text-[15px] font-semibold text-white">{title}</h2>
       {isStandalone ? (
-        <p className="text-sm text-[#CCDBB2]">{installed}</p>
+        <p className="text-[12.5px]" style={{ color: "var(--color-accent-2-300)" }}>{installed}</p>
       ) : deferred ? (
         <>
-          <p className="mb-3 text-xs text-[#E8D7B0]">{bodyAndroid}</p>
+          <p className="mb-3 text-[12.5px]" style={{ color: "var(--color-accent-200)" }}>{bodyAndroid}</p>
           <button
             onClick={install}
-            className="inline-flex items-center gap-2 rounded-lg bg-[#FFEED6] px-4 py-2 text-sm font-semibold text-[#402310] hover:bg-[#FBF3D1]"
+            className="inline-flex min-h-[42px] items-center gap-2 rounded-full px-[18px] text-[13.5px] font-bold transition active:scale-[0.98]"
+            style={{ background: "var(--color-accent-100)", color: "var(--color-accent-900)" }}
           >
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4">
               <path d="M12 3v12" />
@@ -72,7 +73,7 @@ export function InstallAppBox({
           </button>
         </>
       ) : (
-        <p className="text-xs text-[#E8D7B0]">{isIos ? bodyIos : bodyAndroid}</p>
+        <p className="text-[12.5px]" style={{ color: "var(--color-accent-200)" }}>{isIos ? bodyIos : bodyAndroid}</p>
       )}
     </div>
   );

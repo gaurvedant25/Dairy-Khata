@@ -19,18 +19,28 @@ export default async function SettingsPage() {
     prisma.customProduct.findMany({ where: { userId }, orderBy: { name: "asc" } }),
   ]);
 
+  const card = "rounded-[28px] border p-5";
+  const cardStyle = {
+    background: "var(--color-neutral-100)",
+    borderColor: "var(--color-neutral-300)",
+  } as const;
+
   return (
-    <div className="space-y-4">
-      <div>
-        <h1 className="text-xl font-bold text-[#402310]">{t("set.title")}</h1>
-        <p className="text-sm text-slate-500">{t("set.subtitle")}</p>
+    <div className="mx-auto max-w-md space-y-[18px]">
+      <div className="pt-1">
+        <h1 className="font-heading text-[24px] leading-tight text-[var(--color-accent-900)]">
+          {t("set.title")}
+        </h1>
+        <p className="mt-0.5 text-[13px] text-[var(--color-neutral-700)]">{t("set.subtitle")}</p>
       </div>
 
-      <div className="rounded-xl bg-[#FBF3D1] p-6 border border-[#E0CB9E]">
+      {/* Language */}
+      <div className={card} style={cardStyle}>
         <LanguageSwitcher current={lang} label={t("set.language")} />
       </div>
 
-      <div className="rounded-xl bg-[#FBF3D1] p-6 border border-[#E0CB9E]">
+      {/* Business info */}
+      <div className={card} style={cardStyle}>
         <SettingsForm
           lang={lang}
           initial={{
@@ -40,7 +50,8 @@ export default async function SettingsPage() {
         />
       </div>
 
-      <div className="rounded-xl bg-[#FBF3D1] p-6 border border-[#E0CB9E]">
+      {/* Your items */}
+      <div className={card} style={cardStyle}>
         <CustomProductsManager
           products={customProducts.map((p) => ({
             id: p.id,
@@ -51,14 +62,19 @@ export default async function SettingsPage() {
         />
       </div>
 
-      <div className="rounded-xl bg-[#FBF3D1] p-6 border border-[#E0CB9E]">
+      {/* Star items — sage */}
+      <div
+        className={card}
+        style={{ background: "var(--color-accent-2-100, #f0fae1)", borderColor: "var(--color-accent-2-300)" }}
+      >
         <StarredProductsPicker
           initialStarred={setting.starredProducts}
           options={customProducts.map((p) => ({ name: p.name, unit: p.unit, builtin: false }))}
         />
       </div>
 
-      <div className="rounded-xl bg-[#C67139] p-6">
+      {/* Install — dark brown */}
+      <div className="rounded-[28px] p-5" style={{ background: "var(--color-accent-800)" }}>
         <InstallAppBox
           title={t("set.installTitle")}
           bodyAndroid={t("set.installAndroid")}
@@ -68,15 +84,19 @@ export default async function SettingsPage() {
         />
       </div>
 
+      {/* Subscription — brown */}
       <Link
         href="/subscription"
-        className="flex items-center justify-between gap-3 rounded-xl bg-[#C67139] p-6 hover:bg-[#402310]"
+        className="flex items-center justify-between gap-3 rounded-[28px] p-5 text-white transition active:scale-[0.99]"
+        style={{ background: "var(--color-accent)" }}
       >
         <div>
-          <h2 className="text-base font-semibold text-[#FFEED6]">{t("set.subscription")}</h2>
-          <p className="text-xs text-[#E8D7B0]">{t("set.subManage")}</p>
+          <h2 className="text-[14.5px] font-semibold">{t("set.subscription")}</h2>
+          <p className="mt-0.5 text-xs" style={{ color: "var(--color-accent-100)" }}>
+            {t("set.subManage")}
+          </p>
         </div>
-        <span className="text-lg text-[#FFEED6]">›</span>
+        <span className="text-xl">›</span>
       </Link>
     </div>
   );

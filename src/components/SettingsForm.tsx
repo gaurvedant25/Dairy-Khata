@@ -17,21 +17,18 @@ export function SettingsForm({
   const router = useRouter();
   const t = (k: string) => translate(lang, k);
   const [businessName, setBusinessName] = useState(initial.businessName);
-  const [reminderDay, setReminderDay] = useState(initial.reminderDayOfMonth.toString());
   const [message, setMessage] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
-  async function onSubmit(e: React.FormEvent) {
-    e.preventDefault();
+  async function save() {
     setLoading(true);
     setMessage(null);
     const res = await fetch("/api/settings", {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        businessName,
-        reminderDayOfMonth: Number(reminderDay),
-      }),
+      // reminderDayOfMonth kept unchanged — the setting still exists, it's just
+      // not surfaced (monthly reminders were removed from the UI).
+      body: JSON.stringify({ businessName, reminderDayOfMonth: initial.reminderDayOfMonth }),
     });
     setLoading(false);
     if (!res.ok) {
@@ -43,38 +40,35 @@ export function SettingsForm({
     router.refresh();
   }
 
+  const fieldLabel =
+    "text-[11px] font-semibold uppercase tracking-[.08em] text-[var(--color-neutral-600)]";
+
   return (
-    <form onSubmit={onSubmit} className="space-y-4">
-      <div>
-        <label className="block text-xs font-medium text-slate-500">{t("set.businessName")}</label>
+    <div className="flex flex-col gap-3.5">
+      <span className="text-[13px] font-semibold text-[var(--color-accent-900)]">{t("set.businessInfo")}</span>
+
+      <label className="flex flex-col gap-2">
+        <span className={fieldLabel}>{t("set.businessName")}</span>
         <input
           value={businessName}
           onChange={(e) => setBusinessName(e.target.value)}
-          className="mt-1 w-full rounded-lg border border-[#D6BE8C] px-3 py-2 text-sm"
+          className="h-12 w-full rounded-full px-4 text-[15px] text-[var(--color-accent-900)] outline-none"
+          style={{ background: "var(--color-bg)", border: "1.5px solid var(--color-neutral-300)" }}
         />
-      </div>
-      <div>
-        <label className="block text-xs font-medium text-slate-500">{t("set.reminderDay")}</label>
-        <input
-          type="number"
-          min={1}
-          max={28}
-          value={reminderDay}
-          onChange={(e) => setReminderDay(e.target.value)}
-          className="mt-1 w-24 rounded-lg border border-[#D6BE8C] px-3 py-2 text-sm"
-        />
-        <p className="mt-1 text-xs text-slate-400">{t("set.reminderHint")}</p>
-      </div>
+      </label>
+
       <div className="flex items-center gap-3">
         <button
-          type="submit"
+          type="button"
+          onClick={save}
           disabled={loading}
-          className="rounded-lg bg-[#C67139] px-4 py-2 text-sm font-medium text-white hover:bg-[#402310] disabled:opacity-60"
+          className="flex min-h-[44px] items-center rounded-full px-5 text-sm font-bold text-white transition active:scale-[0.98] disabled:opacity-60"
+          style={{ background: "var(--color-accent-600)", boxShadow: "var(--shadow-sm)" }}
         >
           {loading ? t("set.saving") : t("set.save")}
         </button>
-        {message && <p className="text-sm text-slate-600">{message}</p>}
+        {message && <p className="text-sm text-[var(--color-neutral-600)]">{message}</p>}
       </div>
-    </form>
+    </div>
   );
 }

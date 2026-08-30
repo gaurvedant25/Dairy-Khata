@@ -13,19 +13,37 @@ export function LanguageSwitcher({ current, label }: { current: Lang; label: str
   }
 
   return (
-    <div>
-      <label className="block text-xs font-medium text-slate-500">{label}</label>
-      <select
-        value={current}
-        onChange={(e) => change(e.target.value)}
-        className="mt-1 w-full rounded-lg border border-[#D6BE8C] bg-[#FBF3D1] px-3 py-2 text-sm text-[#402310] sm:w-48"
-      >
-        {LANGS.map((l) => (
-          <option key={l.value} value={l.value}>
-            {l.label}
-          </option>
-        ))}
-      </select>
+    <div className="flex flex-col gap-3">
+      <span className="text-[13px] font-semibold text-[var(--color-accent-900)]">{label}</span>
+      <div className="flex gap-2.5">
+        {LANGS.map((l) => {
+          const on = current === l.value;
+          return (
+            <button
+              key={l.value}
+              type="button"
+              onClick={() => change(l.value)}
+              aria-pressed={on}
+              className="flex-1 rounded-full py-3 text-center text-[13.5px] font-semibold transition active:scale-[0.98]"
+              style={
+                on
+                  ? {
+                      background: "var(--color-accent-600)",
+                      color: "#fff",
+                      border: "1.5px solid var(--color-accent-600)",
+                    }
+                  : {
+                      background: "var(--color-bg)",
+                      color: "var(--color-neutral-700)",
+                      border: "1.5px solid var(--color-neutral-300)",
+                    }
+              }
+            >
+              {l.label}
+            </button>
+          );
+        })}
+      </div>
     </div>
   );
 }
