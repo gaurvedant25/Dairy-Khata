@@ -23,6 +23,8 @@
   --color-neutral-400: #c0b6a5;
   --color-neutral-900: #2e2b25;
   --color-accent-500: #d67f48;
+  /* Soft brown wash for active/selected states (brand brown over the page). */
+  --color-accent-tint: color-mix(in srgb, #b2622d 18%, #f5ead8);
   --shadow-sm: 0 1px 2px rgba(46, 43, 37, 0.14);
   --shadow-md: 0 3px 10px rgba(46, 43, 37, 0.16);
   --color-accent-100: #fdeedd;

@@ -64,6 +64,13 @@ const en: Dict = {
   "deliv.confirmTitle": "Mark these houses delivered?",
   "deliv.confirmSubtitle": "{n} house(s) will be saved as delivered.",
   "deliv.confirmSave": "Yes, save round",
+  "deliv.updating": "Saving…",
+  "deliv.customItem": "Custom item",
+  "deliv.itemName": "Item name",
+  "deliv.itemNamePlaceholder": "e.g. Butter, Paneer",
+  "deliv.unitOptional": "Unit (optional)",
+  "deliv.priceLabel": "Price (₹)",
+  "deliv.addBtn": "Add item",
 
   // customers
   "cust.title": "Daily customers",
@@ -73,10 +80,18 @@ const en: Dict = {
   "cust.paidUp": "Paid up",
   "cust.due": "{amt} due",
   "cust.noContact": "No contact on file",
+  "cust.search": "Search customers",
+  "cust.noMatch": "No customers match that search.",
+  "cust.newTitle": "New daily customer",
+  "cust.name": "Name",
+  "cust.phoneOptional": "Phone (optional)",
+  "cust.addressOptional": "Address (optional)",
 
   // walk-in
   "walk.title": "Walk-in orders",
   "walk.subtitle": "One-time or casual sales that aren't tied to a regular customer.",
+  "walk.collectedToday": "Collected today",
+  "walk.salesCount": "sales",
 
   // settings
   "set.title": "Settings",
@@ -192,6 +207,13 @@ const hi: Dict = {
   "deliv.confirmTitle": "क्या ये घर डिलीवर हो गए?",
   "deliv.confirmSubtitle": "{n} घर डिलीवर के रूप में सेव होंगे।",
   "deliv.confirmSave": "हाँ, राउंड सेव करें",
+  "deliv.updating": "सेव हो रहा…",
+  "deliv.customItem": "कस्टम आइटम",
+  "deliv.itemName": "आइटम का नाम",
+  "deliv.itemNamePlaceholder": "जैसे मक्खन, पनीर",
+  "deliv.unitOptional": "यूनिट (वैकल्पिक)",
+  "deliv.priceLabel": "दाम (₹)",
+  "deliv.addBtn": "आइटम जोड़ें",
 
   "cust.title": "रोज़ के ग्राहक",
   "cust.subtitle": "जिन्हें आप नियमित डिलीवरी करते हैं।",
@@ -200,9 +222,17 @@ const hi: Dict = {
   "cust.paidUp": "पूरा चुकता",
   "cust.due": "{amt} बकाया",
   "cust.noContact": "कोई संपर्क नहीं",
+  "cust.search": "ग्राहक खोजें",
+  "cust.noMatch": "इस खोज से कोई ग्राहक नहीं मिला।",
+  "cust.newTitle": "नया रोज़ का ग्राहक",
+  "cust.name": "नाम",
+  "cust.phoneOptional": "फ़ोन (वैकल्पिक)",
+  "cust.addressOptional": "पता (वैकल्पिक)",
 
   "walk.title": "फुटकर ऑर्डर",
   "walk.subtitle": "एक बार की बिक्री जो किसी नियमित ग्राहक से जुड़ी नहीं है।",
+  "walk.collectedToday": "आज वसूल हुआ",
+  "walk.salesCount": "बिक्री",
 
   "set.title": "सेटिंग्स",
   "set.subtitle": "आपके ग्राहकों और डिलीवरी में उपयोग होने वाले डिफ़ॉल्ट।",

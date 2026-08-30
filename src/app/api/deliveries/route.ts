@@ -41,16 +41,15 @@ export async function POST(req: Request) {
   });
   const ownedIds = new Set(owned.map((c) => c.id));
 
-  // Wipe existing entries for this date so re-saving overwrites cleanly.
-  await prisma.deliveryEntry.deleteMany({
-    where: { customerId: { in: [...ownedIds] }, date: { gte: dayStart, lt: dayEnd } },
-  });
-
   const toCreate = customers
     .filter((c) => ownedIds.has(c.customerId))
     .flatMap((c) =>
       c.lines
-        .filter((l) => l.quantity > 0)
+        // Zero quantities are kept on purpose: a 0 row records "delivered
+        // nothing today", which is different from having no row at all (never
+        // visited). Tomorrow's sheet carries the 0 forward instead of
+        // resurrecting an older amount.
+        .filter((l) => l.product.trim() !== "")
         .map((l) => ({
           customerId: c.customerId,
           date: dayStart,
@@ -62,9 +61,18 @@ export async function POST(req: Request) {
         }))
     );
 
-  if (toCreate.length > 0) {
-    await prisma.deliveryEntry.createMany({ data: toCreate });
-  }
+  // Replace this date's entries atomically. Without the transaction two saves
+  // fired close together (a double-tap, or a per-house save racing the bulk
+  // one) can both delete before either creates, leaving duplicate rows that
+  // double-charge the customer.
+  await prisma.$transaction(async (tx) => {
+    await tx.deliveryEntry.deleteMany({
+      where: { customerId: { in: [...ownedIds] }, date: { gte: dayStart, lt: dayEnd } },
+    });
+    if (toCreate.length > 0) {
+      await tx.deliveryEntry.createMany({ data: toCreate });
+    }
+  });
 
   return NextResponse.json({ ok: true, count: toCreate.length });
 }

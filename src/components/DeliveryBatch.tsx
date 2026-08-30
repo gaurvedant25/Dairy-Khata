@@ -86,9 +86,16 @@ export function DeliveryBatch({
   const [busyId, setBusyId] = useState<string | null>(null);
   const [toast, setToast] = useState<string | null>(null);
   const [confirmSave, setConfirmSave] = useState(false);
+  // Customers whose lines changed and need writing back (only ones already
+  // marked delivered — undelivered houses stay drafts until you mark them).
+  const [dirty, setDirty] = useState<string[]>([]);
+  const [autoSaving, setAutoSaving] = useState<string[]>([]);
 
   const [qtySheet, setQtySheet] = useState<{ customerId: string; key: string; input: string } | null>(null);
   const [itemSheet, setItemSheet] = useState<string | null>(null);
+  // One-off item typed inline (not one of the saved products).
+  const [customMode, setCustomMode] = useState(false);
+  const [customDraft, setCustomDraft] = useState({ name: "", unit: "", price: "" });
 
   const total = useMemo(
     () => rows.reduce((s, r) => s + r.lines.reduce((ls, l) => ls + l.quantity * l.pricePerUnit, 0), 0),
@@ -111,7 +118,12 @@ export function DeliveryBatch({
     window.setTimeout(() => setToast(null), 2200);
   }
 
+  function markDirty(customerId: string) {
+    setDirty((prev) => (prev.includes(customerId) ? prev : [...prev, customerId]));
+  }
+
   function patchLine(customerId: string, key: string, patch: Partial<Line>) {
+    markDirty(customerId);
     setRows((prev) =>
       prev.map((r) =>
         r.customerId === customerId
@@ -122,6 +134,7 @@ export function DeliveryBatch({
   }
 
   function bumpQty(customerId: string, key: string, delta: number) {
+    markDirty(customerId);
     setRows((prev) =>
       prev.map((r) =>
         r.customerId === customerId
@@ -136,6 +149,26 @@ export function DeliveryBatch({
           : r,
       ),
     );
+  }
+
+  function closeItemSheet() {
+    setItemSheet(null);
+    setCustomMode(false);
+    setCustomDraft({ name: "", unit: "", price: "" });
+  }
+
+  /** Add a one-off item that isn't in the saved product list. */
+  function addCustomLine(customerId: string) {
+    const name = customDraft.name.trim();
+    if (!name) return;
+    addLine(customerId, {
+      product: name,
+      unit: customDraft.unit.trim(),
+      pricePerUnit: Math.max(0, Number(customDraft.price) || 0),
+      costPerUnit: 0,
+    });
+    setCustomMode(false);
+    setCustomDraft({ name: "", unit: "", price: "" });
   }
 
   function addLine(customerId: string, product: AvailableProduct) {
@@ -160,10 +193,12 @@ export function DeliveryBatch({
         };
       }),
     );
+    markDirty(customerId);
     setItemSheet(null);
   }
 
   function removeLine(customerId: string, key: string) {
+    markDirty(customerId);
     setRows((prev) =>
       prev.map((r) => (r.customerId === customerId ? { ...r, lines: r.lines.filter((l) => l.key !== key) } : r)),
     );
@@ -173,7 +208,7 @@ export function DeliveryBatch({
     return list.map((r) => ({
       customerId: r.customerId,
       lines: r.lines
-        .filter((l) => l.product.trim() !== "" && l.quantity > 0)
+        .filter((l) => l.product.trim() !== "")
         .map((l) => ({
           product: l.product.trim(),
           unit: l.unit.trim(),
@@ -204,12 +239,42 @@ export function DeliveryBatch({
   }
 
   /**
+   * Write edits back for houses already marked delivered. Their delivery is
+   * already recorded, so a quantity change has to update that record — without
+   * this the change would live only in local state and tomorrow's sheet would
+   * carry forward the old amount.
+   */
+  useEffect(() => {
+    if (dirty.length === 0) return;
+    const timer = window.setTimeout(async () => {
+      const targets = rows.filter((r) => dirty.includes(r.customerId) && r.done);
+      setDirty([]);
+      if (targets.length === 0) return;
+      const ids = targets.map((r) => r.customerId);
+      setAutoSaving(ids);
+      const res = await fetch("/api/deliveries", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ date, customers: payloadFor(targets) }),
+      });
+      setAutoSaving([]);
+      if (!res.ok) {
+        showToast(t("deliv.saveFailed"));
+        return;
+      }
+      router.refresh();
+    }, 700);
+    return () => window.clearTimeout(timer);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [dirty, rows, date]);
+
+  /**
    * Houses that would be newly marked delivered by a bulk save. The sheet
    * pre-fills quantities by carrying forward the last round, so saving blindly
    * would record deliveries for houses that were never visited — we confirm
    * these first.
    */
-  const pending = rows.filter((r) => !r.done && r.lines.some((l) => l.quantity > 0));
+  const pending = rows.filter((r) => !r.done && r.lines.length > 0);
 
   async function saveAll() {
     setConfirmSave(false);
@@ -221,7 +286,7 @@ export function DeliveryBatch({
     });
     setSavingAll(false);
     if (!res.ok) return showToast(t("deliv.saveFailed"));
-    setRows((prev) => prev.map((r) => ({ ...r, done: r.lines.some((l) => l.quantity > 0) })));
+    setRows((prev) => prev.map((r) => ({ ...r, done: r.lines.length > 0 })));
     showToast(t("deliv.roundSaved"));
     router.refresh();
   }
@@ -297,8 +362,15 @@ export function DeliveryBatch({
                   <p className="truncate text-base font-bold text-[var(--color-accent-900)]">{r.name}</p>
                   {r.address && <p className="truncate text-xs text-[var(--color-neutral-600)]">{r.address}</p>}
                 </div>
-                <span className="font-heading shrink-0 text-[18px] text-[var(--color-accent-800)]">
-                  ₹{custTotal.toFixed(2)}
+                <span className="flex shrink-0 items-center gap-1.5">
+                  {autoSaving.includes(r.customerId) && (
+                    <span className="text-[11px] font-semibold text-[var(--color-accent-2-700)]">
+                      {t("deliv.updating")}
+                    </span>
+                  )}
+                  <span className="font-heading text-[18px] text-[var(--color-accent-800)]">
+                    ₹{custTotal.toFixed(2)}
+                  </span>
                 </span>
               </div>
 
@@ -443,29 +515,116 @@ export function DeliveryBatch({
         )}
       </BottomSheet>
 
-      {/* Saved-items picker */}
-      <BottomSheet open={!!itemSheet} onClose={() => setItemSheet(null)} title={t("deliv.addItem")}>
-        {addable.length === 0 ? (
-          <p className="py-6 text-center text-sm text-[var(--color-neutral-600)]">{t("deliv.allItemsAdded")}</p>
+      {/* Saved-items picker, with a one-off custom item */}
+      <BottomSheet
+        open={!!itemSheet}
+        onClose={closeItemSheet}
+        title={customMode ? t("deliv.customItem") : t("deliv.addItem")}
+      >
+        {customMode ? (
+          <div className="space-y-3">
+            <label className="block">
+              <span className="mb-1 block text-xs font-semibold text-[var(--color-neutral-700)]">
+                {t("deliv.itemName")}
+              </span>
+              <input
+                autoFocus
+                value={customDraft.name}
+                onChange={(e) => setCustomDraft({ ...customDraft, name: e.target.value })}
+                placeholder={t("deliv.itemNamePlaceholder")}
+                className="h-12 w-full rounded-full px-4 text-[15px] text-[var(--color-accent-900)] outline-none"
+                style={{ background: "var(--color-neutral-100)" }}
+              />
+            </label>
+            <div className="flex gap-3">
+              <label className="block flex-1">
+                <span className="mb-1 block text-xs font-semibold text-[var(--color-neutral-700)]">
+                  {t("deliv.unitOptional")}
+                </span>
+                <input
+                  value={customDraft.unit}
+                  onChange={(e) => setCustomDraft({ ...customDraft, unit: e.target.value })}
+                  placeholder="L, kg…"
+                  className="h-12 w-full rounded-full px-4 text-[15px] text-[var(--color-accent-900)] outline-none"
+                  style={{ background: "var(--color-neutral-100)" }}
+                />
+              </label>
+              <label className="block flex-1">
+                <span className="mb-1 block text-xs font-semibold text-[var(--color-neutral-700)]">
+                  {t("deliv.priceLabel")}
+                </span>
+                <input
+                  type="number"
+                  inputMode="decimal"
+                  min={0}
+                  step="0.01"
+                  value={customDraft.price}
+                  onChange={(e) => setCustomDraft({ ...customDraft, price: e.target.value })}
+                  placeholder="0"
+                  className="h-12 w-full rounded-full px-4 text-[15px] text-[var(--color-accent-900)] outline-none"
+                  style={{ background: "var(--color-neutral-100)" }}
+                />
+              </label>
+            </div>
+            <div className="flex gap-2 pt-1">
+              <button
+                type="button"
+                onClick={() => setCustomMode(false)}
+                className="flex h-[54px] flex-1 items-center justify-center rounded-full text-[15px] font-semibold text-[var(--color-neutral-700)]"
+                style={{ background: "var(--color-neutral-200)" }}
+              >
+                {t("common.cancel")}
+              </button>
+              <button
+                type="button"
+                disabled={!customDraft.name.trim()}
+                onClick={() => itemSheet && addCustomLine(itemSheet)}
+                className="font-heading flex h-[54px] flex-[1.5] items-center justify-center rounded-full text-[15px] text-white transition active:scale-[0.98] disabled:opacity-50"
+                style={{ background: "var(--color-accent-600)" }}
+              >
+                {t("deliv.addBtn")}
+              </button>
+            </div>
+          </div>
         ) : (
-          <ul className="max-h-[50vh] overflow-y-auto">
-            {addable.map((a) => (
-              <li key={a.product}>
-                <button
-                  type="button"
-                  onClick={() => itemSheet && addLine(itemSheet, a)}
-                  className="flex h-14 w-full items-center justify-between gap-3 border-b text-left"
-                  style={{ borderColor: "var(--color-divider)" }}
-                >
-                  <span className="text-[15px] font-semibold text-[var(--color-accent-900)]">{a.product}</span>
-                  <span className="text-[13px] text-[var(--color-neutral-600)]">
-                    ₹{a.pricePerUnit.toFixed(2)}
-                    {a.unit ? `/${a.unit}` : ""}
-                  </span>
-                </button>
-              </li>
-            ))}
-          </ul>
+          <>
+            {addable.length === 0 ? (
+              <p className="py-4 text-center text-sm text-[var(--color-neutral-600)]">
+                {t("deliv.allItemsAdded")}
+              </p>
+            ) : (
+              <ul className="max-h-[40vh] overflow-y-auto">
+                {addable.map((a) => (
+                  <li key={a.product}>
+                    <button
+                      type="button"
+                      onClick={() => itemSheet && addLine(itemSheet, a)}
+                      className="flex h-14 w-full items-center justify-between gap-3 border-b text-left"
+                      style={{ borderColor: "var(--color-divider)" }}
+                    >
+                      <span className="text-[15px] font-semibold text-[var(--color-accent-900)]">{a.product}</span>
+                      <span className="text-[13px] text-[var(--color-neutral-600)]">
+                        ₹{a.pricePerUnit.toFixed(2)}
+                        {a.unit ? `/${a.unit}` : ""}
+                      </span>
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            )}
+            <button
+              type="button"
+              onClick={() => setCustomMode(true)}
+              className="mt-3 flex h-[54px] w-full items-center justify-center gap-2 rounded-full border-[1.5px] border-dashed text-[15px] font-semibold text-[var(--color-accent-700)] transition active:scale-[0.98]"
+              style={{ borderColor: "var(--color-accent-400)" }}
+            >
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.75" strokeLinecap="round" aria-hidden>
+                <path d="M12 5v14" />
+                <path d="M5 12h14" />
+              </svg>
+              {t("deliv.customItem")}
+            </button>
+          </>
         )}
       </BottomSheet>
 
@@ -489,7 +648,6 @@ export function DeliveryBatch({
               <span className="truncate font-semibold text-[var(--color-accent-900)]">{r.name}</span>
               <span className="shrink-0 text-[var(--color-neutral-600)]">
                 {r.lines
-                  .filter((l) => l.quantity > 0)
                   .map((l) => `${fmtQty(l.quantity, l.unit)}${l.unit ? ` ${l.unit}` : ""} ${l.product}`)
                   .join(", ")}
               </span>

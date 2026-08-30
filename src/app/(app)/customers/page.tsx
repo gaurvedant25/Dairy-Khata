@@ -1,45 +1,31 @@
-import Link from "next/link";
 import { auth } from "@/lib/auth";
 import { listCustomersWithStats } from "@/lib/business";
 import { getT } from "@/lib/lang";
-import { AddCustomerForm } from "@/components/AddCustomerForm";
+import { CustomerList } from "@/components/CustomerList";
 
 export default async function CustomersPage() {
   const session = await auth();
   const { t, lang } = await getT();
-  const customers = await listCustomersWithStats(session!.user.id);
+  const withStats = await listCustomersWithStats(session!.user.id);
+
+  const customers = withStats.map(({ customer, duesInfo }) => ({
+    id: customer.id,
+    name: customer.name,
+    phone: customer.phone,
+    address: customer.address,
+    dues: duesInfo.dues,
+  }));
 
   return (
-    <div className="space-y-4">
-      <div>
-        <h1 className="text-xl font-bold text-[#402310]">{t("cust.title")}</h1>
-        <p className="text-sm text-slate-500">{t("cust.subtitle")}</p>
+    <div className="mx-auto max-w-md space-y-4">
+      <div className="pt-1">
+        <h1 className="font-heading text-[24px] leading-tight text-[var(--color-accent-900)]">
+          {t("cust.title")}
+        </h1>
+        <p className="mt-0.5 text-[13px] text-[var(--color-neutral-600)]">{t("cust.subtitle")}</p>
       </div>
 
-      <AddCustomerForm lang={lang} />
-
-      {customers.length === 0 ? (
-        <p className="text-sm text-slate-500">{t("cust.none")}</p>
-      ) : (
-        <ul className="divide-y divide-slate-100 rounded-xl bg-[#FBF3D1] border border-[#E0CB9E]">
-          {customers.map(({ customer, duesInfo }) => (
-            <li key={customer.id}>
-              <Link
-                href={`/customers/${customer.id}`}
-                className="flex items-center justify-between gap-3 px-4 py-3 hover:bg-[#F3E7C7]"
-              >
-                <div className="min-w-0">
-                  <p className="truncate font-medium text-[#402310]">{customer.name}</p>
-                  <p className="text-xs text-slate-500">{customer.phone || customer.address || "No contact on file"}</p>
-                </div>
-                <span className={`text-sm font-semibold ${duesInfo.dues > 0 ? "text-[#8C491A]" : "text-[#56633F]"}`}>
-                  {duesInfo.dues > 0 ? t("cust.due", { amt: `₹${duesInfo.dues.toFixed(2)}` }) : t("cust.paidUp")}
-                </span>
-              </Link>
-            </li>
-          ))}
-        </ul>
-      )}
+      <CustomerList customers={customers} lang={lang} />
     </div>
   );
 }

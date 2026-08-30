@@ -23,21 +23,56 @@ export default async function WalkInPage() {
     }),
   ]);
 
-  const unpaidTotal = orders.filter((o) => !o.paid).reduce((s, o) => s + o.amount, 0);
-  const paidTotal = orders.filter((o) => o.paid).reduce((s, o) => s + o.amount, 0);
+  // Card shows today's takings, so the label stays honest.
+  const startOfDay = new Date();
+  startOfDay.setHours(0, 0, 0, 0);
+  const todays = orders.filter((o) => o.date >= startOfDay);
+  const collected = todays.filter((o) => o.paid).reduce((s, o) => s + o.amount, 0);
+  const toCollect = todays.filter((o) => !o.paid).reduce((s, o) => s + o.amount, 0);
 
   return (
-    <div className="space-y-4">
-      <div>
-        <h1 className="text-xl font-bold text-[#402310]">{t("walk.title")}</h1>
-        <p className="text-sm text-slate-500">{t("walk.subtitle")}</p>
+    <div className="mx-auto max-w-md space-y-4">
+      <div className="pt-1">
+        <h1 className="font-heading text-[24px] leading-tight text-[var(--color-accent-900)]">
+          {t("walk.title")}
+        </h1>
+        <p className="mt-0.5 text-[13px] text-[var(--color-neutral-600)]">{t("walk.subtitle")}</p>
       </div>
 
-      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
-        <StatCard label="Orders" value={orders.length.toString()} accent="text-slate-800" />
-        <StatCard label="Collected" value={`₹${paidTotal.toFixed(2)}`} accent="text-[#56633F]" />
-        <StatCard label="To collect" value={`₹${unpaidTotal.toFixed(2)}`} accent={unpaidTotal > 0 ? "text-[#8C491A]" : "text-[#56633F]"} />
-      </div>
+      <section
+        className="relative overflow-hidden rounded-[28px] px-[22px] pb-4 pt-[18px]"
+        style={{ background: "var(--color-accent-600)", boxShadow: "var(--shadow-md)" }}
+      >
+        <div
+          className="pointer-events-none absolute -right-8 -top-12 h-[150px] w-[150px] rounded-full"
+          style={{ background: "rgba(255,255,255,.07)" }}
+          aria-hidden
+        />
+        <p
+          className="relative text-[12.5px] font-semibold uppercase tracking-[.1em]"
+          style={{ color: "var(--color-accent-200)" }}
+        >
+          {t("walk.collectedToday")}
+        </p>
+        <p className="font-heading relative mt-1 text-[40px] leading-none text-white">
+          ₹{collected.toFixed(2)}
+        </p>
+        <div className="relative mt-3 flex items-center gap-4">
+          <div>
+            <p className="font-heading text-[17px] leading-none text-white">{todays.length}</p>
+            <p className="mt-0.5 text-[12px]" style={{ color: "var(--color-accent-200)" }}>
+              {t("walk.salesCount")}
+            </p>
+          </div>
+          <span className="h-8 w-px" style={{ background: "rgba(255,255,255,.28)" }} aria-hidden />
+          <div>
+            <p className="font-heading text-[17px] leading-none text-white">₹{toCollect.toFixed(2)}</p>
+            <p className="mt-0.5 text-[12px]" style={{ color: "var(--color-accent-200)" }}>
+              {t("dash.toCollect").toLowerCase()}
+            </p>
+          </div>
+        </div>
+      </section>
 
       <OneTimeOrders
         dailyCustomers={dailyCustomers}
@@ -54,15 +89,6 @@ export default async function WalkInPage() {
           date: o.date.toISOString(),
         }))}
       />
-    </div>
-  );
-}
-
-function StatCard({ label, value, accent }: { label: string; value: string; accent: string }) {
-  return (
-    <div className="rounded-xl bg-[#FBF3D1] p-4 border border-[#E0CB9E]">
-      <p className="text-xs font-medium text-slate-500">{label}</p>
-      <p className={`mt-1 text-lg font-bold ${accent}`}>{value}</p>
     </div>
   );
 }

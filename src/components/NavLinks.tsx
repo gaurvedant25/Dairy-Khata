@@ -114,7 +114,7 @@ export function NavLinks({ orientation, lang = "en" }: { orientation: "horizonta
           >
             <span
               className="flex h-8 items-center justify-center rounded-full transition-colors"
-              style={active ? { width: 44, background: "var(--color-accent-200)" } : undefined}
+              style={active ? { width: 44, background: "var(--color-accent-tint)" } : undefined}
             >
               <Icon name={link.icon} className="h-[19px] w-[19px]" />
             </span>
