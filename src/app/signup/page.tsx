@@ -56,7 +56,7 @@ export default function SignupPage() {
               required
               value={name}
               onChange={(e) => setName(e.target.value)}
-              className="mt-1 w-full rounded-lg border border-[#D6BE8C] px-3 py-2 text-base focus:border-[#C67139] focus:outline-none focus:ring-1 focus:ring-[#C67139]"
+              className="mt-1 w-full rounded-lg border border-[#D6BE8C] bg-white px-3 py-2 text-base text-[#402310] [color-scheme:light] focus:border-[#C67139] focus:outline-none focus:ring-1 focus:ring-[#C67139]"
               autoComplete="name"
             />
           </div>
@@ -70,7 +70,7 @@ export default function SignupPage() {
               spellCheck={false}
               value={username}
               onChange={(e) => setUsername(e.target.value)}
-              className="mt-1 w-full rounded-lg border border-[#D6BE8C] px-3 py-2 text-base focus:border-[#C67139] focus:outline-none focus:ring-1 focus:ring-[#C67139]"
+              className="mt-1 w-full rounded-lg border border-[#D6BE8C] bg-white px-3 py-2 text-base text-[#402310] [color-scheme:light] focus:border-[#C67139] focus:outline-none focus:ring-1 focus:ring-[#C67139]"
               autoComplete="username"
             />
             <p className="mt-1 text-xs text-slate-400">Letters, numbers, and . _ - — no spaces.</p>
@@ -83,7 +83,7 @@ export default function SignupPage() {
               minLength={6}
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="mt-1 w-full rounded-lg border border-[#D6BE8C] px-3 py-2 text-base focus:border-[#C67139] focus:outline-none focus:ring-1 focus:ring-[#C67139]"
+              className="mt-1 w-full rounded-lg border border-[#D6BE8C] bg-white px-3 py-2 text-base text-[#402310] [color-scheme:light] focus:border-[#C67139] focus:outline-none focus:ring-1 focus:ring-[#C67139]"
               autoComplete="new-password"
             />
           </div>

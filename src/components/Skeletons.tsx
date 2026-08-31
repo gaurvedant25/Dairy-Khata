@@ -128,22 +128,57 @@ export function ListSkeleton() {
 export function DetailSkeleton() {
   return (
     <div className="space-y-5">
-      <Bar w="30%" h={12} />
-      <Bar w="55%" h={26} />
-      <div className="grid grid-cols-3 gap-3">
-        {Array.from({ length: 3 }).map((_, i) => (
+      <Bar w="40%" h={12} />
+      <Bar w="50%" h={26} />
+
+      {/* This month due + Previous due */}
+      <div className="grid grid-cols-2 gap-3">
+        {Array.from({ length: 2 }).map((_, i) => (
           <Card key={i}>
-            <Bar w="60%" h={10} />
+            <Bar w="70%" h={10} />
             <div className="mt-2">
-              <Bar w="80%" h={20} />
+              <Bar w="55%" h={22} />
             </div>
           </Card>
         ))}
       </div>
+
+      {/* WhatsApp bill + record payment panel */}
       <Card>
-        <Bar w="50%" h={16} />
+        <Bar w="45%" h={14} />
         <div className="mt-3">
-          <Bar w={180} h={40} />
+          <Bar w={170} h={40} />
+        </div>
+        <div className="mt-4">
+          <Bar w="35%" h={12} />
+        </div>
+        <div className="mt-2 flex gap-2">
+          <Bar w={110} h={40} />
+          <Bar w={130} h={40} />
+        </div>
+      </Card>
+
+      {/* Recent deliveries + Payment history rows */}
+      <Card>
+        <Bar w="45%" h={14} />
+      </Card>
+      <Card>
+        <Bar w="45%" h={14} />
+      </Card>
+
+      {/* Rates for this customer */}
+      <Card>
+        <Bar w="40%" h={14} />
+        <div className="mt-3 space-y-3">
+          {Array.from({ length: 3 }).map((_, i) => (
+            <div key={i} className="flex items-center justify-between gap-3">
+              <div className="flex-1 space-y-1.5">
+                <Bar w="45%" h={13} />
+                <Bar w="30%" h={10} />
+              </div>
+              <Bar w={72} h={36} />
+            </div>
+          ))}
         </div>
       </Card>
     </div>

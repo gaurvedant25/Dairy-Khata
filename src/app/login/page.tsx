@@ -49,7 +49,7 @@ function LoginForm() {
               spellCheck={false}
               value={username}
               onChange={(e) => setUsername(e.target.value)}
-              className="mt-1 w-full rounded-lg border border-[#D6BE8C] px-3 py-2 text-base focus:border-[#C67139] focus:outline-none focus:ring-1 focus:ring-[#C67139]"
+              className="mt-1 w-full rounded-lg border border-[#D6BE8C] bg-white px-3 py-2 text-base text-[#402310] [color-scheme:light] focus:border-[#C67139] focus:outline-none focus:ring-1 focus:ring-[#C67139]"
               autoComplete="username"
             />
           </div>
@@ -60,7 +60,7 @@ function LoginForm() {
               required
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="mt-1 w-full rounded-lg border border-[#D6BE8C] px-3 py-2 text-base focus:border-[#C67139] focus:outline-none focus:ring-1 focus:ring-[#C67139]"
+              className="mt-1 w-full rounded-lg border border-[#D6BE8C] bg-white px-3 py-2 text-base text-[#402310] [color-scheme:light] focus:border-[#C67139] focus:outline-none focus:ring-1 focus:ring-[#C67139]"
               autoComplete="current-password"
             />
           </div>

@@ -25,30 +25,33 @@ export default async function CustomerDetailPage({ params }: { params: Promise<{
   ]);
   if (!result) notFound();
 
-  const { customer, duesInfo } = result;
+  const { customer } = result;
 
   // Build the WhatsApp bill as a day-by-day list of this month's purchases,
   // then the month total and the amount still due.
   const now = new Date();
   const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
 
-  // Split the outstanding balance into "this month" vs "previous" (carried in).
-  // Charges = deliveries + unpaid one-time orders. Payments made this month are
-  // applied to the older (previous) balance first, so what's left in each bucket
-  // reads the way a seller thinks: "purana hisaab" vs "is mahine ka".
+  // Split the outstanding balance into "previous" (carried in from before this
+  // month) vs "this month". Charges = deliveries + unpaid one-time orders.
+  // Payments clear the OLDEST charges first (FIFO), using the customer's total
+  // payments regardless of when each was made, so what's left in each bucket
+  // reads the way a seller thinks ("purana hisaab" vs "is mahine ka") and the
+  // two always add up to the outstanding — even when the customer is carrying
+  // an advance (paid more than owed).
   const charges = [
     ...customer.deliveries.map((d) => ({ date: d.date, amt: d.quantity * d.pricePerUnit })),
     ...customer.oneTimeOrders.filter((o) => !o.paid).map((o) => ({ date: o.date, amt: o.amount })),
   ];
   const sum = (arr: number[]) => arr.reduce((s, n) => s + n, 0);
+  const round2 = (n: number) => Math.round(n * 100) / 100;
   const beforeBilled = sum(charges.filter((c) => c.date < monthStart).map((c) => c.amt));
   const monthBilled = sum(charges.filter((c) => c.date >= monthStart).map((c) => c.amt));
-  const beforePaid = sum(customer.payments.filter((p) => p.date < monthStart).map((p) => p.amount));
-  const monthPaid = sum(customer.payments.filter((p) => p.date >= monthStart).map((p) => p.amount));
-  const openingDue = beforeBilled - beforePaid; // balance entering this month
-  const previousDue = Math.max(0, openingDue - monthPaid);
-  const leftoverPaid = Math.max(0, monthPaid - Math.max(0, openingDue));
-  const thisMonthDue = Math.max(0, monthBilled - leftoverPaid);
+  const allPaid = sum(customer.payments.map((p) => p.amount));
+  const previousDue = round2(Math.max(0, beforeBilled - allPaid));
+  const paidLeftForMonth = Math.max(0, allPaid - beforeBilled); // payment beyond the old balance
+  const thisMonthDue = round2(Math.max(0, monthBilled - paidLeftForMonth));
+  const totalDue = round2(previousDue + thisMonthDue);
   const monthEnd = new Date(now.getFullYear(), now.getMonth() + 1, 1);
   const monthLabel = now.toLocaleDateString(undefined, { month: "long", year: "numeric" });
 
@@ -99,7 +102,7 @@ export default async function CustomerDetailPage({ params }: { params: Promise<{
     extras,
     previousDue,
     thisMonthDue,
-    totalDue: duesInfo.dues,
+    totalDue,
   });
   const waLink = waNumber ? buildWhatsAppLink(waNumber, billMessage) : null;
 
@@ -138,7 +141,7 @@ export default async function CustomerDetailPage({ params }: { params: Promise<{
 
       {/* Money actions grouped on a tinted panel */}
       <div className="space-y-3 rounded-2xl border border-[var(--color-accent-2-300)] bg-[var(--color-accent-2-100)] p-3">
-        {duesInfo.dues > 0 && (
+        {totalDue > 0 && (
           <section className="rounded-xl border border-[var(--color-neutral-300)] bg-[var(--color-neutral-100)] p-4">
             <h2 className="mb-2 text-sm font-semibold text-[var(--color-neutral-700)]">Send bill on WhatsApp</h2>
             <WhatsAppBillButton customerId={customer.id} link={waLink} />
@@ -152,7 +155,7 @@ export default async function CustomerDetailPage({ params }: { params: Promise<{
 
         <section className="rounded-xl border border-[var(--color-neutral-300)] bg-[var(--color-neutral-100)] p-4">
           <h2 className="mb-2 text-sm font-semibold text-[var(--color-neutral-700)]">Record payment</h2>
-          <AddPaymentForm customerId={customer.id} defaultAmount={duesInfo.dues > 0 ? duesInfo.dues : undefined} />
+          <AddPaymentForm customerId={customer.id} defaultAmount={totalDue > 0 ? totalDue : undefined} />
         </section>
       </div>
 
