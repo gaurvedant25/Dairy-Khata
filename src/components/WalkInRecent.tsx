@@ -76,7 +76,7 @@ export function WalkInRecent({ orders, lang = "en" }: { orders: Order[]; lang?: 
                   style={
                     o.paid
                       ? { background: "var(--color-accent-2-200)", color: "var(--color-accent-2-800)" }
-                      : { background: "var(--color-accent-200)", color: "var(--color-accent-800)" }
+                      : { background: "var(--color-peach-bg)", color: "var(--color-peach-fg)" }
                   }
                 >
                   {o.paid ? t("walk.paid") : t("walk.onCredit")}

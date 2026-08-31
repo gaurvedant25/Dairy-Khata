@@ -16,16 +16,16 @@ export function Collapsible({
   const [open, setOpen] = useState(defaultOpen);
 
   return (
-    <div className="overflow-hidden rounded-xl border border-[#E0CB9E] bg-[#FBF3D1]">
+    <div className="overflow-hidden rounded-xl border border-[var(--color-neutral-300)] bg-[var(--color-neutral-100)]">
       <button
         type="button"
         onClick={() => setOpen((v) => !v)}
         aria-expanded={open}
         className="flex w-full items-center justify-between gap-3 px-4 py-3 text-left"
       >
-        <span className="text-sm font-semibold text-slate-700">
+        <span className="text-sm font-semibold text-[var(--color-neutral-700)]">
           {title}
-          {subtitle ? <span className="ml-2 font-normal text-slate-400">{subtitle}</span> : null}
+          {subtitle ? <span className="ml-2 font-normal text-[var(--color-neutral-500)]">{subtitle}</span> : null}
         </span>
         <svg
           viewBox="0 0 24 24"
@@ -34,7 +34,7 @@ export function Collapsible({
           strokeWidth={2}
           strokeLinecap="round"
           strokeLinejoin="round"
-          className={`h-4 w-4 shrink-0 text-slate-400 transition-transform duration-300 ${open ? "rotate-180" : ""}`}
+          className={`h-4 w-4 shrink-0 text-[var(--color-neutral-500)] transition-transform duration-300 ${open ? "rotate-180" : ""}`}
         >
           <path d="m6 9 6 6 6-6" />
         </svg>
@@ -45,7 +45,7 @@ export function Collapsible({
         }`}
       >
         <div className="overflow-hidden">
-          <div className="border-t border-slate-100 px-4 py-3">{children}</div>
+          <div className="border-t border-[var(--color-divider)] px-4 py-3">{children}</div>
         </div>
       </div>
     </div>

@@ -444,7 +444,7 @@ export function DeliveryBatch({
                   style={
                     r.done
                       ? { background: "var(--color-accent-2-600)", color: "#f3f7ec" }
-                      : { background: "var(--color-accent-200)", color: "var(--color-accent-800)" }
+                      : { background: "var(--color-peach-bg)", color: "var(--color-peach-fg)" }
                   }
                 >
                   {busyId === r.customerId ? "…" : r.done ? t("deliv.delivered") : t("deliv.markDelivered")}

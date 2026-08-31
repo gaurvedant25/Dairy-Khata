@@ -86,7 +86,7 @@ export function SalesCard({
             style={{
               width: "calc(50% - 2px)",
               height: "calc(100% - 4px)",
-              background: "var(--color-neutral-100)",
+              background: "var(--cream-on-accent)",
               transform: period === "today" ? "translateX(0%)" : "translateX(100%)",
               transition: "transform .32s cubic-bezier(.22,1,.36,1)",
             }}
@@ -101,7 +101,7 @@ export function SalesCard({
                 aria-selected={on}
                 onClick={() => setPeriod(p)}
                 className="relative z-10 w-[54px] rounded-full py-1 text-[11.5px] font-bold transition-colors duration-200"
-                style={{ color: on ? "var(--color-accent-800)" : "rgba(255,255,255,.85)" }}
+                style={{ color: on ? "var(--on-accent-ink)" : "rgba(255,255,255,.85)" }}
               >
                 {p === "today" ? t("home.periodToday") : t("home.periodMonth")}
               </button>
@@ -117,8 +117,8 @@ export function SalesCard({
       <div className="relative mt-5 flex gap-2.5">
         <Link
           href="/deliveries"
-          className="font-heading flex min-h-[48px] flex-1 items-center justify-center rounded-full px-4 text-[15px] text-[var(--color-accent-800)] transition active:scale-[0.97]"
-          style={{ background: "var(--color-neutral-100)" }}
+          className="font-heading flex min-h-[48px] flex-1 items-center justify-center rounded-full px-4 text-[15px] transition active:scale-[0.97]"
+          style={{ background: "var(--cream-on-accent)", color: "var(--on-accent-ink)" }}
         >
           {t("home.startRound")}
         </Link>

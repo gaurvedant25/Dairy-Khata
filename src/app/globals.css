@@ -35,6 +35,7 @@
   --color-accent-700: #8c491a;
   --color-accent-800: #643312;
   --color-accent-900: #402310;
+  --color-accent-2-100: #f0fae1;
   --color-accent-2-200: #e1eecc;
   --color-accent-2-300: #ccdbb2;
   --color-accent-2-600: #728157;
@@ -44,6 +45,75 @@
   --radius-md: 16px;
   --radius-lg: 28px;
   --cream-on-accent: #fdf0da;
+  /* Constant "ink" tokens that stay dark in BOTH themes — for cream/light
+     content sitting on a coloured (accent/sage) surface. */
+  --on-accent-ink: #402310;
+  --on-sage-ink: #272e1b;
+  /* A deliberately dark card that stays dark in BOTH themes (e.g. the Install
+     card) — its light text/buttons read against it in light and dark alike. */
+  --color-invert-surface: #643312;
+  /* Decorative background bloom behind the top of app screens. */
+  --color-bloom: #fdeedd;
+  /* "Peach" chips/banners/avatars — a soft attention surface. Light peach in
+     light mode; a warm dark-terracotta in dark so nothing glares. */
+  --color-peach-bg: #ffe1d0;
+  --color-peach-fg: #402310;
+}
+
+/* ─── Dark mode ─── espresso ground with terracotta + sage, matching the
+   marketing landing page. Overrides the design tokens so every surface built
+   on var(--color-*) flips automatically; the few components that use a token
+   in a "cream-on-colour" role are pointed at --cream-on-accent / --on-*-ink
+   so they stay legible. */
+:root[data-theme="dark"] {
+  --background: #2e2b25;
+  --foreground: #fdf0da;
+  --brand: #e8924f;
+  --brand-dark: #fbeada;
+
+  --color-bg: #2e2b25;
+  --color-surface: #38322a;
+  --color-divider: color-mix(in srgb, #fdf0da 15%, transparent);
+
+  /* Neutrals: 100–400 become dark surfaces, 500–900 become light text. */
+  --color-neutral-100: #38322a;
+  --color-neutral-200: #433c31;
+  --color-neutral-300: #574e40;
+  --color-neutral-400: #6e6555;
+  --color-neutral-500: #9c9182;
+  --color-neutral-600: #b9ae9b;
+  --color-neutral-700: #d9cdb8;
+  --color-neutral-900: #fdf0da;
+
+  /* Terracotta: keep saturated fills; flip the dark-brown "ink" steps (700–900)
+     to light so headings/values read on the dark ground. */
+  --color-accent: #e8924f;
+  --color-accent-500: #e8925a;
+  --color-accent-600: #c86a34;
+  --color-accent-tint: color-mix(in srgb, #f6a06b 20%, #2e2b25);
+  --color-accent-100: #fdeedd;
+  --color-accent-200: #ffe1d0;
+  --color-accent-300: #ffc6a5;
+  --color-accent-400: #f6a06b;
+  --color-accent-700: #ffc6a5;
+  --color-accent-800: #ffd9c0;
+  --color-accent-900: #fbeada;
+
+  /* Sage: dark surfaces (100–300), light text (600–900). */
+  --color-accent-2: #a7b884;
+  --color-accent-2-100: #313a24;
+  --color-accent-2-200: #3d472b;
+  --color-accent-2-300: #4b5836;
+  --color-accent-2-600: #77855a; /* sage FILL (paid toggle, delivered button) — keeps cream text legible */
+  --color-accent-2-700: #cddbb4;
+  --color-accent-2-800: #dde8c8;
+  --color-accent-2-900: #eef5df;
+
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.4);
+  --shadow-md: 0 4px 14px rgba(0, 0, 0, 0.5);
+  --color-bloom: transparent; /* no decorative bloom on the dark theme */
+  --color-peach-bg: color-mix(in srgb, #f6a06b 22%, #2e2b25); /* warm dark tint, no glare */
+  --color-peach-fg: #ffcaa3; /* light terracotta text */
 }
 
 /* Caprasimo for figures & titles, matching the prototype */

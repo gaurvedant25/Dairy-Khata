@@ -34,7 +34,7 @@ export function AddPaymentForm({ customerId, defaultAmount }: { customerId: stri
   return (
     <form onSubmit={onSubmit} className="flex flex-wrap items-end gap-2">
       <div>
-        <label className="block text-xs font-medium text-slate-500">Amount</label>
+        <label className="block text-xs font-medium text-[var(--color-neutral-600)]">Amount</label>
         <input
           type="number"
           inputMode="decimal"
@@ -42,35 +42,36 @@ export function AddPaymentForm({ customerId, defaultAmount }: { customerId: stri
           required
           value={amount}
           onChange={(e) => setAmount(e.target.value)}
-          className="w-28 rounded-lg border border-[#D6BE8C] px-3 py-2 text-sm"
+          className="w-28 rounded-lg border border-[var(--color-neutral-300)] bg-[var(--color-bg)] px-3 py-2 text-sm text-[var(--color-accent-900)]"
         />
       </div>
       <div>
-        <label className="block text-xs font-medium text-slate-500">Date</label>
+        <label className="block text-xs font-medium text-[var(--color-neutral-600)]">Date</label>
         <input
           type="date"
           required
           value={date}
           onChange={(e) => setDate(e.target.value)}
-          className="rounded-lg border border-[#D6BE8C] px-3 py-2 text-sm"
+          className="rounded-lg border border-[var(--color-neutral-300)] bg-[var(--color-bg)] px-3 py-2 text-sm text-[var(--color-accent-900)]"
         />
       </div>
       <div className="flex-1 min-w-[120px]">
-        <label className="block text-xs font-medium text-slate-500">Note (optional)</label>
+        <label className="block text-xs font-medium text-[var(--color-neutral-600)]">Note (optional)</label>
         <input
           value={note}
           onChange={(e) => setNote(e.target.value)}
-          className="w-full rounded-lg border border-[#D6BE8C] px-3 py-2 text-sm"
+          className="w-full rounded-lg border border-[var(--color-neutral-300)] bg-[var(--color-bg)] px-3 py-2 text-sm text-[var(--color-accent-900)]"
         />
       </div>
       <button
         type="submit"
         disabled={loading}
-        className="rounded-lg bg-[#728157] px-4 py-2 text-sm font-medium text-white hover:bg-[#56633F] disabled:opacity-60"
+        className="rounded-lg px-4 py-2 text-sm font-medium text-white disabled:opacity-60"
+        style={{ background: "var(--color-accent-2-600)" }}
       >
         {loading ? "Saving..." : "Record payment"}
       </button>
-      {error && <p className="w-full text-sm text-[#8C491A]">{error}</p>}
+      {error && <p className="w-full text-sm text-[var(--color-accent-700)]">{error}</p>}
     </form>
   );
 }

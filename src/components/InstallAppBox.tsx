@@ -55,14 +55,14 @@ export function InstallAppBox({
     <div>
       <h2 className="mb-1 text-[15px] font-semibold text-white">{title}</h2>
       {isStandalone ? (
-        <p className="text-[12.5px]" style={{ color: "var(--color-accent-2-300)" }}>{installed}</p>
+        <p className="text-[12.5px]" style={{ color: "#ccdbb2" }}>{installed}</p>
       ) : deferred ? (
         <>
           <p className="mb-3 text-[12.5px]" style={{ color: "var(--color-accent-200)" }}>{bodyAndroid}</p>
           <button
             onClick={install}
             className="inline-flex min-h-[42px] items-center gap-2 rounded-full px-[18px] text-[13.5px] font-bold transition active:scale-[0.98]"
-            style={{ background: "var(--color-accent-100)", color: "var(--color-accent-900)" }}
+            style={{ background: "var(--color-accent-100)", color: "var(--on-accent-ink)" }}
           >
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4">
               <path d="M12 3v12" />

@@ -6,7 +6,9 @@ import { SettingsForm } from "@/components/SettingsForm";
 import { CustomProductsManager } from "@/components/CustomProductsManager";
 import { StarredProductsPicker } from "@/components/StarredProductsPicker";
 import { LanguageSwitcher } from "@/components/LanguageSwitcher";
+import { ThemeSwitcher } from "@/components/ThemeSwitcher";
 import { InstallAppBox } from "@/components/InstallAppBox";
+import { getTheme } from "@/lib/theme";
 import Link from "next/link";
 
 export default async function SettingsPage() {
@@ -14,6 +16,7 @@ export default async function SettingsPage() {
   const userId = session!.user.id;
   await ensureDefaultProducts(userId);
   const { lang, t } = await getT();
+  const theme = await getTheme();
   const [setting, customProducts] = await Promise.all([
     getOrCreateSetting(userId),
     prisma.customProduct.findMany({ where: { userId }, orderBy: { name: "asc" } }),
@@ -32,6 +35,16 @@ export default async function SettingsPage() {
           {t("set.title")}
         </h1>
         <p className="mt-0.5 text-[13px] text-[var(--color-neutral-700)]">{t("set.subtitle")}</p>
+      </div>
+
+      {/* Appearance */}
+      <div className={card} style={cardStyle}>
+        <ThemeSwitcher
+          current={theme}
+          label={t("set.appearance")}
+          lightLabel={t("set.themeLight")}
+          darkLabel={t("set.themeDark")}
+        />
       </div>
 
       {/* Language */}
@@ -73,8 +86,8 @@ export default async function SettingsPage() {
         />
       </div>
 
-      {/* Install — dark brown */}
-      <div className="rounded-[28px] p-5" style={{ background: "var(--color-accent-800)" }}>
+      {/* Install — dark brown (stays dark in both themes) */}
+      <div className="rounded-[28px] p-5" style={{ background: "var(--color-invert-surface)" }}>
         <InstallAppBox
           title={t("set.installTitle")}
           bodyAndroid={t("set.installAndroid")}

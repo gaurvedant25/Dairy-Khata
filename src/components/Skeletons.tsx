@@ -4,14 +4,21 @@
 export function Bar({ w = "100%", h = 12, className = "" }: { w?: string | number; h?: number; className?: string }) {
   return (
     <div
-      className={`animate-pulse rounded bg-[#E4D2A6] ${className}`}
+      className={`animate-pulse rounded bg-[var(--color-neutral-300)] ${className}`}
       style={{ width: w, height: h }}
     />
   );
 }
 
 function Card({ children }: { children: React.ReactNode }) {
-  return <div className="rounded-2xl border border-[#E0CB9E] bg-[#FBF3D1] p-4">{children}</div>;
+  return (
+    <div
+      className="rounded-2xl border p-4"
+      style={{ borderColor: "var(--color-neutral-300)", background: "var(--color-neutral-100)" }}
+    >
+      {children}
+    </div>
+  );
 }
 
 function TitleRow() {

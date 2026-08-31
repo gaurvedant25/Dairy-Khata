@@ -18,13 +18,13 @@ export function CustomerHeader({
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
           <div className="flex items-center gap-2">
-            <h1 className="truncate text-2xl font-bold text-[#402310]">{name}</h1>
+            <h1 className="truncate text-2xl font-bold text-[var(--color-accent-900)]">{name}</h1>
             <button
               type="button"
               onClick={() => setEditing((v) => !v)}
               aria-expanded={editing}
               aria-label="Edit customer details"
-              className="shrink-0 rounded-md p-1 text-slate-400 hover:bg-slate-100 hover:text-slate-700"
+              className="shrink-0 rounded-md p-1 text-[var(--color-neutral-500)] hover:bg-[var(--color-neutral-200)] hover:text-[var(--color-neutral-700)]"
             >
               <svg
                 viewBox="0 0 24 24"
@@ -40,7 +40,7 @@ export function CustomerHeader({
               </svg>
             </button>
           </div>
-          {address ? <p className="truncate text-sm text-slate-500">{address}</p> : null}
+          {address ? <p className="truncate text-sm text-[var(--color-neutral-600)]">{address}</p> : null}
         </div>
       </div>
 
@@ -50,8 +50,8 @@ export function CustomerHeader({
         }`}
       >
         <div className="overflow-hidden">
-          <div className="rounded-xl border border-[#E0CB9E] bg-[#FBF3D1] p-4">
-            <h2 className="mb-3 text-sm font-semibold text-slate-700">Customer details</h2>
+          <div className="rounded-xl border border-[var(--color-neutral-300)] bg-[var(--color-neutral-100)] p-4">
+            <h2 className="mb-3 text-sm font-semibold text-[var(--color-neutral-700)]">Customer details</h2>
             {children}
           </div>
         </div>

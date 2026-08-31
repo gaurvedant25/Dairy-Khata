@@ -101,8 +101,8 @@ export function CustomerList({ customers, lang = "en" }: { customers: CustomerRo
                 className="flex min-h-[64px] items-center gap-3 px-3.5 py-2.5 transition active:bg-[var(--color-neutral-200)]"
               >
                 <span
-                  className="font-heading flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-[15px] text-[var(--color-accent-800)]"
-                  style={{ background: "var(--color-accent-200)" }}
+                  className="font-heading flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-[15px] text-[var(--color-peach-fg)]"
+                  style={{ background: "var(--color-peach-bg)" }}
                   aria-hidden
                 >
                   {initial(c.name)}
@@ -119,7 +119,7 @@ export function CustomerList({ customers, lang = "en" }: { customers: CustomerRo
                   className="shrink-0 rounded-full px-2.5 py-1 text-xs font-bold"
                   style={
                     c.dues > 0
-                      ? { background: "var(--color-accent-200)", color: "var(--color-accent-800)" }
+                      ? { background: "var(--color-peach-bg)", color: "var(--color-peach-fg)" }
                       : { background: "var(--color-accent-2-200)", color: "var(--color-accent-2-800)" }
                   }
                 >

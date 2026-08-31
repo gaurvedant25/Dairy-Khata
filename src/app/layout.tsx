@@ -5,6 +5,7 @@ import "./globals.css";
 import { Providers } from "@/components/Providers";
 import { ServiceWorkerRegistrar } from "@/components/ServiceWorkerRegistrar";
 import { AppSplash } from "@/components/AppSplash";
+import { getTheme } from "@/lib/theme";
 
 // Design-system fonts: Caprasimo for figures/titles, Figtree for body.
 // (Geist / Geist Mono were removed — the design never rendered them.)
@@ -37,18 +38,21 @@ export const viewport = {
   themeColor: "#C67139",
 };
 
-export default function RootLayout({ children }: LayoutProps<"/">) {
+export default async function RootLayout({ children }: LayoutProps<"/">) {
+  const theme = await getTheme();
   return (
     <html
       lang="en"
+      data-theme={theme}
       className={`${caprasimo.variable} ${figtree.variable} h-full antialiased`}
-      style={{ colorScheme: "light" }}
+      style={{ colorScheme: theme }}
     >
       <body
-        className="min-h-full flex flex-col text-[#402310]"
+        className="min-h-full flex flex-col"
         style={{
           fontFamily: "var(--font-body), system-ui, sans-serif",
           background: "var(--color-bg)",
+          color: "var(--foreground)",
         }}
       >
         <Providers>

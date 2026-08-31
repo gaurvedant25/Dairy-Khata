@@ -208,26 +208,6 @@ async function HomeBody({
               </p>
             </div>
           ))}
-          <Link
-            href="/settings"
-            className="flex flex-col items-start justify-center gap-2 rounded-[22px] border-[1.5px] border-dashed p-4 text-[13.5px] font-semibold transition"
-            style={{ borderColor: "var(--color-neutral-400)", color: "var(--color-neutral-600)" }}
-          >
-            <svg
-              width="20"
-              height="20"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2.75"
-              strokeLinecap="round"
-              aria-hidden
-            >
-              <path d="M12 5v14" />
-              <path d="M5 12h14" />
-            </svg>
-            {t("home.starItem")}
-          </Link>
         </div>
       </section>
 
@@ -314,7 +294,7 @@ async function HomeBody({
                       style={
                         o.paid
                           ? { background: "var(--color-accent-2-200)", color: "var(--color-accent-2-800)" }
-                          : { background: "var(--color-accent-200)", color: "var(--color-accent-800)" }
+                          : { background: "var(--color-peach-bg)", color: "var(--color-peach-fg)" }
                       }
                     >
                       {o.paid ? "Paid" : "Unpaid"}

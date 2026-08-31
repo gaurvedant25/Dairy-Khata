@@ -79,7 +79,7 @@ export default async function CustomerDetailPage({ params }: { params: Promise<{
   return (
     <div className="space-y-5">
       <div>
-        <Link href="/customers" className="text-sm text-slate-500 hover:underline">
+        <Link href="/customers" className="text-sm text-[var(--color-accent)] hover:underline">
           ← Back to daily customers
         </Link>
         <div className="mt-2">
@@ -97,21 +97,21 @@ export default async function CustomerDetailPage({ params }: { params: Promise<{
       </div>
 
       <div className="grid grid-cols-3 gap-3">
-        <StatCard label="Billed" value={`₹${duesInfo.totalBilled.toFixed(2)}`} accent="text-slate-800" />
-        <StatCard label="Paid" value={`₹${duesInfo.totalPaid.toFixed(2)}`} accent="text-[#56633F]" />
+        <StatCard label="Billed" value={`₹${duesInfo.totalBilled.toFixed(2)}`} accent="text-[var(--color-accent-900)]" />
+        <StatCard label="Paid" value={`₹${duesInfo.totalPaid.toFixed(2)}`} accent="text-[var(--color-accent-2-700)]" />
         <StatCard
           label="Outstanding"
           value={`₹${duesInfo.dues.toFixed(2)}`}
-          accent={duesInfo.dues > 0 ? "text-[#8C491A]" : "text-[#56633F]"}
+          accent={duesInfo.dues > 0 ? "text-[var(--color-accent-700)]" : "text-[var(--color-accent-2-700)]"}
         />
       </div>
 
       {/* Money actions grouped on a tinted panel */}
-      <div className="space-y-3 rounded-2xl border border-[#CCDBB2] bg-[#CCDBB2]/25 p-3">
+      <div className="space-y-3 rounded-2xl border border-[var(--color-accent-2-300)] bg-[var(--color-accent-2-100)] p-3">
         {duesInfo.dues > 0 && (
-          <section className="rounded-xl border border-[#E0CB9E] bg-[#FBF3D1] p-4">
+          <section className="rounded-xl border border-[var(--color-neutral-300)] bg-[var(--color-neutral-100)] p-4">
             <div className="mb-2 flex items-center justify-between gap-2">
-              <h2 className="text-sm font-semibold text-slate-700">Send bill on WhatsApp</h2>
+              <h2 className="text-sm font-semibold text-[var(--color-neutral-700)]">Send bill on WhatsApp</h2>
               <RemindButton
                 customerId={customer.id}
                 lastRemindedAt={customer.lastReminderSentAt ? customer.lastReminderSentAt.toISOString() : null}
@@ -119,34 +119,34 @@ export default async function CustomerDetailPage({ params }: { params: Promise<{
             </div>
             <WhatsAppBillButton customerId={customer.id} link={waLink} />
             {customer.lastReminderSentAt && (
-              <p className="mt-2 text-xs text-slate-400">
+              <p className="mt-2 text-xs text-[var(--color-neutral-500)]">
                 Last reminded: {customer.lastReminderSentAt.toLocaleDateString()}
               </p>
             )}
           </section>
         )}
 
-        <section className="rounded-xl border border-[#E0CB9E] bg-[#FBF3D1] p-4">
-          <h2 className="mb-2 text-sm font-semibold text-slate-700">Record payment</h2>
+        <section className="rounded-xl border border-[var(--color-neutral-300)] bg-[var(--color-neutral-100)] p-4">
+          <h2 className="mb-2 text-sm font-semibold text-[var(--color-neutral-700)]">Record payment</h2>
           <AddPaymentForm customerId={customer.id} defaultAmount={duesInfo.dues > 0 ? duesInfo.dues : undefined} />
         </section>
       </div>
 
       <Collapsible title="Recent deliveries" subtitle={`${customer.deliveries.length}`}>
         {customer.deliveries.length === 0 ? (
-          <p className="text-sm text-slate-500">No deliveries yet.</p>
+          <p className="text-sm text-[var(--color-neutral-600)]">No deliveries yet.</p>
         ) : (
-          <ul className="divide-y divide-slate-100 text-sm">
+          <ul className="divide-y divide-[var(--color-divider)] text-sm">
             {customer.deliveries.slice(0, 40).map((d) => (
               <li key={d.id} className="flex items-center justify-between py-2">
                 <div>
-                  <p className="font-medium text-slate-800">{d.date.toLocaleDateString()}</p>
-                  <p className="text-xs text-slate-500">
+                  <p className="font-medium text-[var(--color-accent-900)]">{d.date.toLocaleDateString()}</p>
+                  <p className="text-xs text-[var(--color-neutral-600)]">
                     {d.product} · {d.quantity.toFixed(d.unit === "piece" ? 0 : 2)}
                     {d.unit ? ` ${d.unit}` : ""} × ₹{d.pricePerUnit.toFixed(2)}
                   </p>
                 </div>
-                <span className="font-medium text-slate-800">₹{(d.quantity * d.pricePerUnit).toFixed(2)}</span>
+                <span className="font-medium text-[var(--color-accent-900)]">₹{(d.quantity * d.pricePerUnit).toFixed(2)}</span>
               </li>
             ))}
           </ul>
@@ -155,16 +155,16 @@ export default async function CustomerDetailPage({ params }: { params: Promise<{
 
       <Collapsible title="Payment history" subtitle={`${customer.payments.length}`}>
         {customer.payments.length === 0 ? (
-          <p className="text-sm text-slate-500">No payments yet.</p>
+          <p className="text-sm text-[var(--color-neutral-600)]">No payments yet.</p>
         ) : (
-          <ul className="divide-y divide-slate-100 text-sm">
+          <ul className="divide-y divide-[var(--color-divider)] text-sm">
             {customer.payments.map((p) => (
               <li key={p.id} className="flex items-center justify-between py-2">
                 <div>
-                  <p className="font-medium text-slate-800">{p.date.toLocaleDateString()}</p>
-                  {p.note && <p className="text-xs text-slate-500">{p.note}</p>}
+                  <p className="font-medium text-[var(--color-accent-900)]">{p.date.toLocaleDateString()}</p>
+                  {p.note && <p className="text-xs text-[var(--color-neutral-600)]">{p.note}</p>}
                 </div>
-                <span className="font-medium text-[#56633F]">₹{p.amount.toFixed(2)}</span>
+                <span className="font-medium text-[var(--color-accent-2-700)]">₹{p.amount.toFixed(2)}</span>
               </li>
             ))}
           </ul>
@@ -176,8 +176,8 @@ export default async function CustomerDetailPage({ params }: { params: Promise<{
 
 function StatCard({ label, value, accent }: { label: string; value: string; accent: string }) {
   return (
-    <div className="rounded-xl bg-[#FBF3D1] p-3 border border-[#E0CB9E]">
-      <p className="text-xs font-medium text-slate-500">{label}</p>
+    <div className="rounded-xl bg-[var(--color-neutral-100)] p-3 border border-[var(--color-neutral-300)]">
+      <p className="text-xs font-medium text-[var(--color-neutral-600)]">{label}</p>
       <p className={`mt-1 text-base font-bold ${accent}`}>{value}</p>
     </div>
   );

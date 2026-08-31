@@ -404,7 +404,7 @@ export function WalkInForm({
                     <button
                       type="button"
                       onClick={() => patch(it.key, { qty: Math.max(0, Math.round((it.qty - 0.5) * 100) / 100) })}
-                      className="font-heading flex h-[46px] w-[46px] flex-none items-center justify-center rounded-full text-[23px] text-[var(--color-text,#402310)]"
+                      className="font-heading flex h-[46px] w-[46px] flex-none items-center justify-center rounded-full text-[23px] text-[var(--color-accent-900)]"
                       style={{ background: "var(--color-neutral-200)", border: "1.5px solid var(--color-neutral-300)" }}
                       aria-label="Less"
                     >
@@ -476,7 +476,7 @@ export function WalkInForm({
         </span>
       </button>
 
-      {error && <p className="text-center text-sm text-[#8C491A]">{error}</p>}
+      {error && <p className="text-center text-sm text-[var(--color-accent-700)]">{error}</p>}
 
       <div className="flex flex-col gap-2.5">
         <button

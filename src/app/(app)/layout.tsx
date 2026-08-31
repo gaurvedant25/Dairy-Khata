@@ -49,7 +49,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
         {/* Soft accent bloom behind the top of the screen */}
         <div
           className="pointer-events-none absolute -right-[90px] -top-[120px] h-[280px] w-[280px] rounded-full md:hidden"
-          style={{ background: "var(--color-accent-100)", opacity: 0.75 }}
+          style={{ background: "var(--color-bloom)", opacity: 0.75 }}
           aria-hidden
         />
 
@@ -64,7 +64,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
           <Link
             href="/billing"
             className="relative mx-4 mt-1.5 flex items-center justify-center gap-2.5 rounded-full px-4 py-2.5 text-[13.5px] font-medium"
-            style={{ background: "var(--color-accent-200)", color: "var(--color-accent-800)" }}
+            style={{ background: "var(--color-peach-bg)", color: "var(--color-peach-fg)" }}
           >
             <span>
               {sub.daysLeft} {sub.daysLeft === 1 ? "day" : "days"} left in your free trial

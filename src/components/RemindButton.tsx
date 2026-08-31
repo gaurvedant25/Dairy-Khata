@@ -18,7 +18,8 @@ export function RemindButton({ customerId, lastRemindedAt }: { customerId: strin
     <button
       onClick={mark}
       disabled={loading}
-      className="rounded-lg bg-[#C67139] px-3 py-1.5 text-xs font-medium text-white hover:bg-[#8C491A] disabled:opacity-60"
+      className="rounded-lg px-3 py-1.5 text-xs font-medium text-white disabled:opacity-60"
+      style={{ background: "var(--color-accent-600)" }}
     >
       {loading ? "..." : lastRemindedAt ? "Remind again" : "Mark reminded"}
     </button>
