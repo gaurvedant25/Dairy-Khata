@@ -75,7 +75,7 @@ const en: Dict = {
   // customers
   "cust.title": "Daily customers",
   "cust.subtitle": "People you deliver to regularly.",
-  "cust.add": "+ Add daily customer",
+  "cust.add": "Add daily customer",
   "cust.none": "No daily customers yet. Add your first one above.",
   "cust.paidUp": "Paid up",
   "cust.due": "{amt} due",
@@ -244,7 +244,7 @@ const hi: Dict = {
 
   "cust.title": "रोज़ के ग्राहक",
   "cust.subtitle": "जिन्हें आप नियमित डिलीवरी करते हैं।",
-  "cust.add": "+ नया ग्राहक जोड़ें",
+  "cust.add": "नया ग्राहक जोड़ें",
   "cust.none": "अभी कोई ग्राहक नहीं। ऊपर से पहला जोड़ें।",
   "cust.paidUp": "पूरा चुकता",
   "cust.due": "{amt} बकाया",

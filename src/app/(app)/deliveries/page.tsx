@@ -3,17 +3,14 @@ import { prisma } from "@/lib/prisma";
 import { getDeliverySheet } from "@/lib/business";
 import { getT } from "@/lib/lang";
 import { DeliveryBatch } from "@/components/DeliveryBatch";
+import { istToday } from "@/lib/date";
 import Link from "next/link";
-
-function isoLocal(d: Date) {
-  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
-}
 
 export default async function DeliveriesPage() {
   const session = await auth();
   const userId = session!.user.id;
   const { t, lang } = await getT();
-  const today = isoLocal(new Date());
+  const today = istToday();
 
   const [sheet, userProducts, customerCount] = await Promise.all([
     getDeliverySheet(userId, today),

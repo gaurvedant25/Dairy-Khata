@@ -2,6 +2,7 @@ import { notFound } from "next/navigation";
 import Link from "next/link";
 import { auth } from "@/lib/auth";
 import { getCustomerWithStats, getOrCreateSetting, parseCustomRates } from "@/lib/business";
+import { istParts } from "@/lib/date";
 import { prisma } from "@/lib/prisma";
 import { CustomerHeader } from "@/components/CustomerHeader";
 import { CustomerRates } from "@/components/CustomerRates";
@@ -28,9 +29,10 @@ export default async function CustomerDetailPage({ params }: { params: Promise<{
   const { customer } = result;
 
   // Build the WhatsApp bill as a day-by-day list of this month's purchases,
-  // then the month total and the amount still due.
-  const now = new Date();
-  const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+  // then the month total and the amount still due. Month boundaries follow the
+  // IST calendar (see @/lib/date) so they don't slip at 05:30 on the host's UTC.
+  const { y: istY, m: istM } = istParts();
+  const monthStart = new Date(istY, istM, 1);
 
   // Split the outstanding balance into "previous" (carried in from before this
   // month) vs "this month". Charges = deliveries + unpaid one-time orders.
@@ -52,8 +54,8 @@ export default async function CustomerDetailPage({ params }: { params: Promise<{
   const paidLeftForMonth = Math.max(0, allPaid - beforeBilled); // payment beyond the old balance
   const thisMonthDue = round2(Math.max(0, monthBilled - paidLeftForMonth));
   const totalDue = round2(previousDue + thisMonthDue);
-  const monthEnd = new Date(now.getFullYear(), now.getMonth() + 1, 1);
-  const monthLabel = now.toLocaleDateString(undefined, { month: "long", year: "numeric" });
+  const monthEnd = new Date(istY, istM + 1, 1);
+  const monthLabel = monthStart.toLocaleDateString(undefined, { month: "long", year: "numeric" });
 
   const inMonth = (d: Date) => d >= monthStart && d < monthEnd;
 

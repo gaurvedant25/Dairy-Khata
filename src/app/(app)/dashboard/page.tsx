@@ -17,12 +17,9 @@ import { ExpandableStat } from "@/components/ExpandableStat";
 import { SalesCard } from "@/components/SalesCard";
 import { DashboardBodySkeleton } from "@/components/Skeletons";
 import { getT } from "@/lib/lang";
+import { istToday } from "@/lib/date";
 
 type T = (key: string, vars?: Record<string, string | number>) => string;
-
-function isoLocal(d: Date) {
-  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
-}
 
 function prettyDate(dateStr: string) {
   const [y, m, d] = dateStr.split("-").map(Number);
@@ -54,7 +51,7 @@ export default async function DashboardPage({
   const showOnboarding = realCustomerCount === 0 || hasSample;
 
   const params = await searchParams;
-  const todayDate = isoLocal(new Date());
+  const todayDate = istToday();
   const selectedDate = /^\d{4}-\d{2}-\d{2}$/.test(params.date ?? "") ? params.date! : todayDate;
 
   const firstName = ownerName.trim().split(/\s+/)[0] || "";
