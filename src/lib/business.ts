@@ -498,6 +498,33 @@ export type SheetLine = {
   isMilk: boolean;
 };
 
+/** A customer's per-product price map, e.g. { "Milk": 55 }. */
+export type CustomRates = Record<string, number>;
+
+/**
+ * Read a per-customer override price for a product from the customer's
+ * `customRates` JSON. Returns undefined when there's no valid override, so the
+ * caller can fall back to the global product price.
+ */
+export function customRate(raw: unknown, product: string): number | undefined {
+  if (raw && typeof raw === "object" && !Array.isArray(raw)) {
+    const v = (raw as Record<string, unknown>)[product];
+    if (typeof v === "number" && Number.isFinite(v) && v >= 0) return v;
+  }
+  return undefined;
+}
+
+/** Normalize an unknown `customRates` value into a clean {product: price} map. */
+export function parseCustomRates(raw: unknown): CustomRates {
+  const out: CustomRates = {};
+  if (raw && typeof raw === "object" && !Array.isArray(raw)) {
+    for (const [k, v] of Object.entries(raw as Record<string, unknown>)) {
+      if (typeof v === "number" && Number.isFinite(v) && v >= 0) out[k] = v;
+    }
+  }
+  return out;
+}
+
 export type SheetCustomer = {
   customerId: string;
   name: string;
@@ -524,7 +551,7 @@ export async function getDeliverySheet(userId: string, dateStr: string): Promise
     prisma.customer.findMany({
       where: { userId, active: true },
       orderBy: { name: "asc" },
-      select: { id: true, name: true, address: true, dailyQuantity: true },
+      select: { id: true, name: true, address: true, dailyQuantity: true, customRates: true },
     }),
     prisma.deliveryEntry.findMany({
       where: { customer: { userId }, date: { gte: dayStart, lt: dayEnd } },
@@ -569,8 +596,11 @@ export async function getDeliverySheet(userId: string, dateStr: string): Promise
   }
 
   return customers.map((c) => {
+    const rateOf = (product: string): number | undefined => customRate(c.customRates, product);
+
     const saved = todaysByCustomer.get(c.id);
     if (saved && saved.length > 0) {
+      // Already saved today — keep exactly what was recorded (a snapshot).
       const lines: SheetLine[] = saved
         .sort((a, b) => (a.product === "Milk" ? -1 : b.product === "Milk" ? 1 : 0))
         .map((e) => ({
@@ -586,12 +616,17 @@ export async function getDeliverySheet(userId: string, dateStr: string): Promise
 
     const carried = carryByCustomer.get(c.id);
     if (carried && carried.length > 0) {
+      // Prefill from the last order, but let a custom rate win over the old snapshot.
       return {
         customerId: c.id,
         name: c.name,
         address: c.address,
         saved: false,
-        lines: carried.map((e) => ({ ...e, isMilk: e.product === "Milk" })),
+        lines: carried.map((e) => ({
+          ...e,
+          pricePerUnit: rateOf(e.product) ?? e.pricePerUnit,
+          isMilk: e.product === "Milk",
+        })),
       };
     }
 
@@ -602,7 +637,7 @@ export async function getDeliverySheet(userId: string, dateStr: string): Promise
             product: milkProduct.name,
             unit: milkProduct.unit,
             quantity: c.dailyQuantity || 1,
-            pricePerUnit: milkProduct.pricePerUnit,
+            pricePerUnit: rateOf(milkProduct.name) ?? milkProduct.pricePerUnit,
             costPerUnit: 0,
             isMilk: true,
           },

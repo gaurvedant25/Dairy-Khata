@@ -65,6 +65,9 @@ model Customer {
   phone               String?
   address             String?
   defaultPricePerUnit Float?
+  // Per-customer price overrides, keyed by product name: { "Milk": 55, ... }.
+  // When set for a product, it wins over the global CustomProduct price.
+  customRates         Json?
   dailyQuantity       Float    @default(1)
   manualTrustRating   Int?
   lastReminderSentAt  DateTime?

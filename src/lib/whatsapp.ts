@@ -1,27 +1,27 @@
-type BillItem = { product: string; unit: string; quantity: number; amount: number };
-
-export type BillDay = {
+export type MilkDay = {
   dateLabel: string; // e.g. "1 Aug"
-  items: BillItem[];
-  dayTotal: number;
+  litres: number;
+  amount: number;
+};
+
+export type BillExtra = {
+  product: string;
+  unit: string;
+  quantity: number;
+  amount: number;
 };
 
 type BillInput = {
-  customerName: string;
   businessName: string;
   monthLabel: string; // e.g. "August 2026"
-  days: BillDay[];
-  monthTotal: number;
-  totalPaid: number;
-  dues: number;
+  milkDays: MilkDay[];
+  totalMilkLitres: number;
+  milkRate: number | null; // latest ₹/L charged this month, or null if no milk
+  extras: BillExtra[]; // non-milk items, summed per product for the month
+  previousDue: number;
+  thisMonthDue: number;
+  totalDue: number;
 };
-
-/** Compact per-item label without the price, e.g. "Milk 2 L". */
-function itemShort(it: BillItem): string {
-  if (!it.unit) return it.product; // no-unit item (priced per order)
-  const qty = it.quantity.toFixed(it.unit === "piece" ? 0 : 1);
-  return `${it.product} ${qty} ${it.unit}`;
-}
 
 /**
  * Turn an Indian-style phone number into the digits wa.me expects.
@@ -37,32 +37,53 @@ export function toWhatsAppNumber(phone: string | null | undefined): string | nul
   return digits;
 }
 
+/** ₹ amount without trailing ".00" (e.g. 120 → "₹120", 89.5 → "₹89.50"). */
+function money(n: number): string {
+  return "₹" + (Number.isInteger(n) ? String(n) : n.toFixed(2));
+}
+
+/** Quantity label, e.g. "2 kg", "3 piece". */
+function qtyLabel(quantity: number, unit: string): string {
+  const q = quantity.toFixed(unit === "piece" ? 0 : 1);
+  return unit ? `${q} ${unit}` : q;
+}
+
 /**
- * Build a WhatsApp bill that lists what the customer bought on each day of the
- * month, then the month total and the amount still due. Asterisks render as
- * bold in WhatsApp.
+ * Build the milk bill: every delivery for the month (date — litres — amount),
+ * the month's total litres and rate, any non-milk extras, then the dues split
+ * (previous / this month / total). Asterisks render as bold in WhatsApp.
  */
 export function buildBillMessage(b: BillInput): string {
   const lines: string[] = [];
-  lines.push(`Namaste ${b.customerName} 🙏`);
+  lines.push("Namaste 🙏");
   lines.push("");
   lines.push(`*${b.businessName}*`);
-  lines.push(`Bill for ${b.monthLabel}`);
+  lines.push(`Milk bill — ${b.monthLabel}`);
   lines.push("");
 
-  if (b.days.length === 0) {
-    lines.push("No purchases this month.");
+  if (b.milkDays.length === 0) {
+    lines.push("No milk deliveries this month.");
   } else {
-    for (const day of b.days) {
-      const summary = day.items.map(itemShort).join(", ");
-      lines.push(`${day.dateLabel} — ${summary} — ₹${day.dayTotal.toFixed(2)}`);
+    for (const d of b.milkDays) {
+      lines.push(`${d.dateLabel} — ${d.litres.toFixed(1)} L — ${money(d.amount)}`);
+    }
+    lines.push("————————");
+    lines.push(`Total milk: ${b.totalMilkLitres.toFixed(1)} L`);
+    if (b.milkRate != null) lines.push(`Rate: ${money(b.milkRate)} / L`);
+  }
+
+  if (b.extras.length > 0) {
+    lines.push("");
+    lines.push("Other items:");
+    for (const e of b.extras) {
+      lines.push(`${e.product} — ${qtyLabel(e.quantity, e.unit)} — ${money(e.amount)}`);
     }
   }
 
-  lines.push("————————");
-  lines.push(`This month: ₹${b.monthTotal.toFixed(2)}`);
-  if (b.totalPaid > 0) lines.push(`Paid: ₹${b.totalPaid.toFixed(2)}`);
-  lines.push(`*Total due: ₹${b.dues.toFixed(2)}*`);
+  lines.push("");
+  lines.push(`Previous due: ${money(b.previousDue)}`);
+  lines.push(`This month: ${money(b.thisMonthDue)}`);
+  lines.push(`*Total due: ${money(b.totalDue)}*`);
   lines.push("");
   lines.push("Please clear your dues. Dhanyavaad 🙏");
 

@@ -1,21 +1,27 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import { auth } from "@/lib/auth";
-import { getCustomerWithStats, getOrCreateSetting } from "@/lib/business";
+import { getCustomerWithStats, getOrCreateSetting, parseCustomRates } from "@/lib/business";
+import { prisma } from "@/lib/prisma";
 import { CustomerHeader } from "@/components/CustomerHeader";
+import { CustomerRates } from "@/components/CustomerRates";
 import { Collapsible } from "@/components/Collapsible";
 import { AddPaymentForm } from "@/components/AddPaymentForm";
 import { EditCustomerForm } from "@/components/EditCustomerForm";
-import { RemindButton } from "@/components/RemindButton";
 import { WhatsAppBillButton } from "@/components/WhatsAppBillButton";
 import { toWhatsAppNumber, buildBillMessage, buildWhatsAppLink } from "@/lib/whatsapp";
 
 export default async function CustomerDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const session = await auth();
   const { id } = await params;
-  const [result, setting] = await Promise.all([
+  const [result, setting, products] = await Promise.all([
     getCustomerWithStats(id, session!.user.id),
     getOrCreateSetting(session!.user.id),
+    prisma.customProduct.findMany({
+      where: { userId: session!.user.id, active: true },
+      orderBy: { name: "asc" },
+      select: { name: true, unit: true, pricePerUnit: true },
+    }),
   ]);
   if (!result) notFound();
 
@@ -25,54 +31,75 @@ export default async function CustomerDetailPage({ params }: { params: Promise<{
   // then the month total and the amount still due.
   const now = new Date();
   const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+
+  // Split the outstanding balance into "this month" vs "previous" (carried in).
+  // Charges = deliveries + unpaid one-time orders. Payments made this month are
+  // applied to the older (previous) balance first, so what's left in each bucket
+  // reads the way a seller thinks: "purana hisaab" vs "is mahine ka".
+  const charges = [
+    ...customer.deliveries.map((d) => ({ date: d.date, amt: d.quantity * d.pricePerUnit })),
+    ...customer.oneTimeOrders.filter((o) => !o.paid).map((o) => ({ date: o.date, amt: o.amount })),
+  ];
+  const sum = (arr: number[]) => arr.reduce((s, n) => s + n, 0);
+  const beforeBilled = sum(charges.filter((c) => c.date < monthStart).map((c) => c.amt));
+  const monthBilled = sum(charges.filter((c) => c.date >= monthStart).map((c) => c.amt));
+  const beforePaid = sum(customer.payments.filter((p) => p.date < monthStart).map((p) => p.amount));
+  const monthPaid = sum(customer.payments.filter((p) => p.date >= monthStart).map((p) => p.amount));
+  const openingDue = beforeBilled - beforePaid; // balance entering this month
+  const previousDue = Math.max(0, openingDue - monthPaid);
+  const leftoverPaid = Math.max(0, monthPaid - Math.max(0, openingDue));
+  const thisMonthDue = Math.max(0, monthBilled - leftoverPaid);
   const monthEnd = new Date(now.getFullYear(), now.getMonth() + 1, 1);
   const monthLabel = now.toLocaleDateString(undefined, { month: "long", year: "numeric" });
 
-  type DayItem = { product: string; unit: string; quantity: number; amount: number };
-  const byDay = new Map<string, { date: Date; items: DayItem[]; dayTotal: number }>();
-  const addToDay = (date: Date, item: DayItem) => {
-    const key = `${date.getFullYear()}-${date.getMonth()}-${date.getDate()}`;
-    const entry = byDay.get(key) ?? { date, items: [], dayTotal: 0 };
-    entry.items.push(item);
-    entry.dayTotal += item.amount;
-    byDay.set(key, entry);
+  const inMonth = (d: Date) => d >= monthStart && d < monthEnd;
+
+  // Milk deliveries this month, one line per delivery (skip zero-litre days).
+  const milkThisMonth = customer.deliveries
+    .filter((d) => d.product === "Milk" && d.quantity > 0 && inMonth(d.date))
+    .sort((a, b) => a.date.getTime() - b.date.getTime());
+  const milkDays = milkThisMonth.map((d) => ({
+    dateLabel: d.date.toLocaleDateString(undefined, { day: "numeric", month: "short" }),
+    litres: d.quantity,
+    amount: Math.round(d.quantity * d.pricePerUnit * 100) / 100,
+  }));
+  const totalMilkLitres = Math.round(milkDays.reduce((s, d) => s + d.litres, 0) * 100) / 100;
+  // Latest ₹/L charged this month (deliveries are ordered newest-first).
+  const milkRate = milkThisMonth.length ? milkThisMonth[milkThisMonth.length - 1].pricePerUnit : null;
+
+  // Non-milk items this month (deliveries + unpaid one-time), summed per product.
+  const extrasMap = new Map<string, { product: string; unit: string; quantity: number; amount: number }>();
+  const addExtra = (product: string, unit: string, quantity: number, amount: number) => {
+    const e = extrasMap.get(product) ?? { product, unit, quantity: 0, amount: 0 };
+    e.quantity += quantity;
+    e.amount += amount;
+    extrasMap.set(product, e);
   };
-
   for (const d of customer.deliveries) {
-    if (d.date >= monthStart && d.date < monthEnd) {
-      addToDay(d.date, {
-        product: d.product,
-        unit: d.unit,
-        quantity: d.quantity,
-        amount: Math.round(d.quantity * d.pricePerUnit * 100) / 100,
-      });
+    if (d.product !== "Milk" && d.quantity > 0 && inMonth(d.date)) {
+      addExtra(d.product, d.unit, d.quantity, Math.round(d.quantity * d.pricePerUnit * 100) / 100);
     }
   }
-  // Unpaid one-time items tied to this customer (e.g. ghee bought on credit).
   for (const o of customer.oneTimeOrders) {
-    if (!o.paid && o.date >= monthStart && o.date < monthEnd) {
-      addToDay(o.date, { product: o.product, unit: o.unit, quantity: o.quantity, amount: o.amount });
-    }
+    if (!o.paid && inMonth(o.date)) addExtra(o.product, o.unit, o.quantity, o.amount);
   }
-
-  const days = Array.from(byDay.values())
-    .sort((a, b) => a.date.getTime() - b.date.getTime())
-    .map((d) => ({
-      dateLabel: d.date.toLocaleDateString(undefined, { day: "numeric", month: "short" }),
-      items: d.items,
-      dayTotal: Math.round(d.dayTotal * 100) / 100,
-    }));
-  const monthTotal = Math.round(days.reduce((s, d) => s + d.dayTotal, 0) * 100) / 100;
+  const extras = Array.from(extrasMap.values()).map((e) => ({
+    ...e,
+    quantity: Math.round(e.quantity * 100) / 100,
+    amount: Math.round(e.amount * 100) / 100,
+  }));
 
   const waNumber = toWhatsAppNumber(customer.phone);
   const billMessage = buildBillMessage({
-    customerName: customer.name,
     businessName: setting.businessName,
     monthLabel,
-    days,
-    monthTotal,
-    totalPaid: duesInfo.totalPaid,
-    dues: duesInfo.dues,
+    milkDays,
+    totalMilkLitres,
+    milkRate,
+    extras,
+    previousDue,
+    thisMonthDue,
+    totalDue: duesInfo.dues,
   });
   const waLink = waNumber ? buildWhatsAppLink(waNumber, billMessage) : null;
 
@@ -96,13 +123,16 @@ export default async function CustomerDetailPage({ params }: { params: Promise<{
         </div>
       </div>
 
-      <div className="grid grid-cols-3 gap-3">
-        <StatCard label="Billed" value={`₹${duesInfo.totalBilled.toFixed(2)}`} accent="text-[var(--color-accent-900)]" />
-        <StatCard label="Paid" value={`₹${duesInfo.totalPaid.toFixed(2)}`} accent="text-[var(--color-accent-2-700)]" />
+      <div className="grid grid-cols-2 gap-3">
         <StatCard
-          label="Outstanding"
-          value={`₹${duesInfo.dues.toFixed(2)}`}
-          accent={duesInfo.dues > 0 ? "text-[var(--color-accent-700)]" : "text-[var(--color-accent-2-700)]"}
+          label="This month due"
+          value={`₹${thisMonthDue.toFixed(2)}`}
+          accent={thisMonthDue > 0 ? "text-[var(--color-accent-900)]" : "text-[var(--color-accent-2-700)]"}
+        />
+        <StatCard
+          label="Previous due"
+          value={`₹${previousDue.toFixed(2)}`}
+          accent={previousDue > 0 ? "text-[var(--color-accent-700)]" : "text-[var(--color-accent-2-700)]"}
         />
       </div>
 
@@ -110,13 +140,7 @@ export default async function CustomerDetailPage({ params }: { params: Promise<{
       <div className="space-y-3 rounded-2xl border border-[var(--color-accent-2-300)] bg-[var(--color-accent-2-100)] p-3">
         {duesInfo.dues > 0 && (
           <section className="rounded-xl border border-[var(--color-neutral-300)] bg-[var(--color-neutral-100)] p-4">
-            <div className="mb-2 flex items-center justify-between gap-2">
-              <h2 className="text-sm font-semibold text-[var(--color-neutral-700)]">Send bill on WhatsApp</h2>
-              <RemindButton
-                customerId={customer.id}
-                lastRemindedAt={customer.lastReminderSentAt ? customer.lastReminderSentAt.toISOString() : null}
-              />
-            </div>
+            <h2 className="mb-2 text-sm font-semibold text-[var(--color-neutral-700)]">Send bill on WhatsApp</h2>
             <WhatsAppBillButton customerId={customer.id} link={waLink} />
             {customer.lastReminderSentAt && (
               <p className="mt-2 text-xs text-[var(--color-neutral-500)]">
@@ -170,6 +194,14 @@ export default async function CustomerDetailPage({ params }: { params: Promise<{
           </ul>
         )}
       </Collapsible>
+
+      <CustomerRates
+        customerId={customer.id}
+        customerName={customer.name}
+        products={products.map((p) => ({ name: p.name, unit: p.unit, globalPrice: p.pricePerUnit }))}
+        starred={setting.starredProducts}
+        initialRates={parseCustomRates(customer.customRates)}
+      />
     </div>
   );
 }
