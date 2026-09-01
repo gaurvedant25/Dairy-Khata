@@ -23,6 +23,7 @@ export function CustomProductsManager({ products }: { products: CustomProduct[] 
   const [saving, setSaving] = useState(false);
   const [busyId, setBusyId] = useState<string | null>(null);
   const [confirmingId, setConfirmingId] = useState<string | null>(null);
+  const [pricedMsg, setPricedMsg] = useState<string | null>(null);
 
   const noUnit = unit === "__none__";
   const effectiveUnit = noUnit ? "" : unit === "__custom__" ? customUnit.trim() : unit;
@@ -66,12 +67,19 @@ export function CustomProductsManager({ products }: { products: CustomProduct[] 
     const n = Number(newPrice);
     if (!Number.isFinite(n) || n < 0 || n === p.pricePerUnit) return;
     setBusyId(p.id);
-    await fetch(`/api/products/${p.id}`, {
+    setPricedMsg(null);
+    const res = await fetch(`/api/products/${p.id}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ pricePerUnit: n }),
     });
     setBusyId(null);
+    if (res.ok) {
+      const data = (await res.json().catch(() => ({}))) as { repriced?: number };
+      if (data.repriced && data.repriced > 0) {
+        setPricedMsg(`${p.name}: this month's ${data.repriced} deliveries re-priced. Custom-rate customers unchanged.`);
+      }
+    }
     router.refresh();
   }
 
@@ -98,6 +106,15 @@ export function CustomProductsManager({ products }: { products: CustomProduct[] 
           </button>
         )}
       </div>
+
+      {pricedMsg && (
+        <p
+          className="rounded-xl px-3 py-2 text-[12.5px] font-medium"
+          style={{ background: "var(--color-accent-2-100)", color: "var(--color-accent-2-800)" }}
+        >
+          {pricedMsg}
+        </p>
+      )}
 
       {open && (
         <form

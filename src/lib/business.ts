@@ -547,7 +547,7 @@ export async function getDeliverySheet(userId: string, dateStr: string): Promise
   const dayEnd = new Date(dayStart);
   dayEnd.setDate(dayEnd.getDate() + 1);
 
-  const [customers, todays, milkProduct] = await Promise.all([
+  const [customers, todays, products] = await Promise.all([
     prisma.customer.findMany({
       where: { userId, active: true },
       orderBy: { name: "asc" },
@@ -556,8 +556,15 @@ export async function getDeliverySheet(userId: string, dateStr: string): Promise
     prisma.deliveryEntry.findMany({
       where: { customer: { userId }, date: { gte: dayStart, lt: dayEnd } },
     }),
-    prisma.customProduct.findFirst({ where: { userId, name: "Milk" } }),
+    prisma.customProduct.findMany({
+      where: { userId, active: true },
+      select: { name: true, unit: true, pricePerUnit: true },
+    }),
   ]);
+  // Current global price per product. Standard-rate customers (no custom rate)
+  // are prefilled at this price, so a change to the standard rate reaches them.
+  const priceMap = new Map(products.map((p) => [p.name, p.pricePerUnit]));
+  const milkProduct = products.find((p) => p.name === "Milk") ?? null;
 
   const todaysByCustomer = new Map<string, typeof todays>();
   for (const e of todays) {
@@ -616,7 +623,9 @@ export async function getDeliverySheet(userId: string, dateStr: string): Promise
 
     const carried = carryByCustomer.get(c.id);
     if (carried && carried.length > 0) {
-      // Prefill from the last order, but let a custom rate win over the old snapshot.
+      // Prefill from the last order. Price priority: this customer's custom rate,
+      // else the current standard price (so standard-rate customers follow a
+      // rate change), else the last snapshot (for a since-deleted product).
       return {
         customerId: c.id,
         name: c.name,
@@ -624,7 +633,7 @@ export async function getDeliverySheet(userId: string, dateStr: string): Promise
         saved: false,
         lines: carried.map((e) => ({
           ...e,
-          pricePerUnit: rateOf(e.product) ?? e.pricePerUnit,
+          pricePerUnit: rateOf(e.product) ?? priceMap.get(e.product) ?? e.pricePerUnit,
           isMilk: e.product === "Milk",
         })),
       };
