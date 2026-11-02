@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
+import { useRouter } from "next/navigation";
 
 // Wires up the landing page's interactive bits. The page itself is static
 // HTML (see app/page.tsx), so everything here hangs off data-* hooks:
@@ -60,6 +61,8 @@ const HI: Record<string, string> = {
 const DAYS_HI: Record<string, string> = { Mon: "सोम", Tue: "मंगल", Wed: "बुध", Thu: "गुरु", Fri: "शुक्र", Sat: "शनि" };
 
 export function LandingInteractions() {
+  const router = useRouter();
+
   useEffect(() => {
     const root = document.querySelector<HTMLElement>(".dl");
     if (!root) return;
@@ -73,6 +76,25 @@ export function LandingInteractions() {
       el.addEventListener(type, fn as EventListener);
       cleanups.push(() => el.removeEventListener(type, fn as EventListener));
     };
+
+    // Instant navigation: preload the pages the landing links to and move
+    // there client-side instead of reloading the whole site. /demo and
+    // /demo/exit are route handlers (they sign people in and out), so those
+    // stay normal page loads.
+    const appLink = (a: HTMLAnchorElement | null) => {
+      const href = a?.getAttribute("href");
+      return href && href.startsWith("/") && !href.startsWith("/demo") ? href : null;
+    };
+    new Set(Array.from(root.querySelectorAll<HTMLAnchorElement>("a")).map(appLink)).forEach(
+      (href) => href && router.prefetch(href),
+    );
+    on(root, "click", (e) => {
+      const a = (e.target as Element).closest("a");
+      const href = appLink(a);
+      if (!href || e.metaKey || e.ctrlKey || e.shiftKey || e.button !== 0) return;
+      e.preventDefault();
+      router.push(href);
+    });
 
     // Sticky header
     const top = root.querySelector<HTMLElement>("[data-top]");
@@ -178,7 +200,7 @@ export function LandingInteractions() {
     applyLang(lang, false);
 
     return () => cleanups.forEach((c) => c());
-  }, []);
+  }, [router]);
 
   return null;
 }

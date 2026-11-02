@@ -3,8 +3,6 @@ import { getLang } from "@/lib/lang";
 import { NavLinks } from "@/components/NavLinks";
 import { SignOutButton } from "@/components/SignOutButton";
 import { PageTransition } from "@/components/PageTransition";
-import { prisma } from "@/lib/prisma";
-import { isDemoUsername } from "@/lib/demo";
 
 // Pinned to the top of every screen while a visitor explores the demo. Plain
 // <a> links (not <Link>) so the exit route is never prefetched.
@@ -52,11 +50,8 @@ export default async function AppLayout({ children }: { children: React.ReactNod
   const session = await auth();
   const lang = await getLang();
 
-  const account = await prisma.user.findUnique({
-    where: { id: session!.user.id },
-    select: { username: true },
-  });
-  const isDemo = isDemoUsername(account?.username);
+  // Carried in the session (see auth.config.ts), so no DB hit per page.
+  const isDemo = session?.user?.demo === true;
 
   return (
     <>

@@ -111,7 +111,7 @@ export default async function CustomerDetailPage({ params }: { params: Promise<{
   return (
     <div className="space-y-5">
       <div>
-        <Link href="/customers" className="text-sm text-[var(--color-accent)] hover:underline">
+        <Link prefetch href="/customers" className="text-sm text-[var(--color-accent)] hover:underline">
           ← Back to daily customers
         </Link>
         <div className="mt-2">

@@ -39,7 +39,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       authorize: async () => {
         try {
           const user = await createDemoUser();
-          return { id: user.id, name: user.name };
+          return { id: user.id, name: user.name, demo: true };
         } catch (e) {
           console.error("[demo] could not create demo account", e);
           throw e;

@@ -134,7 +134,7 @@ async function HomeBody({
           <ul className="flex flex-col gap-0.5">
             {dues.dailyRows.map((r) => (
               <li key={r.customerId} style={{ borderTop: "1px solid rgba(86,99,63,.22)" }}>
-                <Link href={`/customers/${r.customerId}`} className="flex items-center justify-between gap-3 py-[11px]">
+                <Link prefetch href={`/customers/${r.customerId}`} className="flex items-center justify-between gap-3 py-[11px]">
                   <span
                     className="min-w-0 truncate text-[15px] font-semibold"
                     style={{ color: "var(--color-accent-2-900, #272e1b)" }}
@@ -245,7 +245,7 @@ async function HomeBody({
               {day.deliveries.map((d) => (
                 <li key={d.id} className="flex items-center justify-between gap-3 py-2.5">
                   <div className="min-w-0">
-                    <Link href={`/customers/${d.customerId}`} className="truncate text-sm font-medium text-[var(--color-accent-900)]">
+                    <Link prefetch href={`/customers/${d.customerId}`} className="truncate text-sm font-medium text-[var(--color-accent-900)]">
                       {d.customerName}
                     </Link>
                     <p className="text-xs text-[var(--color-neutral-600)]">

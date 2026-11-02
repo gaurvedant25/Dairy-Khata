@@ -97,6 +97,7 @@ export function CustomerList({ customers, lang = "en" }: { customers: CustomerRo
           {shown.map((c, i) => (
             <li key={c.id} style={i > 0 ? { borderTop: "1px solid var(--color-divider)" } : undefined}>
               <Link
+                prefetch
                 href={`/customers/${c.id}`}
                 className="flex min-h-[64px] items-center gap-3 px-3.5 py-2.5 transition active:bg-[var(--color-neutral-200)]"
               >
