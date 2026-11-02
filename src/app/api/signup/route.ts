@@ -18,13 +18,11 @@ export async function POST(req: Request) {
   }
 
   const passwordHash = await bcrypt.hash(password, 10);
-  const trialEndsAt = new Date(Date.now() + 14 * 24 * 60 * 60 * 1000);
   const user = await prisma.user.create({
     data: {
       name,
       username,
       passwordHash,
-      trialEndsAt,
       setting: { create: {} },
       // Seed the one default item; the owner edits/removes it in Settings.
       customProducts: { create: { name: "Milk", unit: "L", pricePerUnit: 60 } },

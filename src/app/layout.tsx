@@ -56,7 +56,7 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
         }}
       >
         <Providers>
-          {/* The (app) layout awaits auth + subscription (a DB hit). Suspending
+          {/* The (app) layout awaits auth (a DB hit). Suspending
               here lets the splash stream first on a cold load, so the user sees
               the animation instead of a blank page while the server wakes. */}
           <Suspense fallback={<AppSplash />}>{children}</Suspense>

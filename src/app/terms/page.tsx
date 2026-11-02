@@ -11,7 +11,7 @@ export default function TermsPage() {
 
       <h2>The service</h2>
       <p>
-        Dairy Ledger is a subscription tool that helps milk delivery businesses record deliveries, track dues,
+        Dairy Ledger is a free tool that helps milk delivery businesses record deliveries, track dues,
         and manage customers. You are responsible for the accuracy of the data you enter.
       </p>
 
@@ -20,11 +20,9 @@ export default function TermsPage() {
         You are responsible for keeping your login secure and for all activity under your account.
       </p>
 
-      <h2>Subscription &amp; payment</h2>
+      <h2>Price</h2>
       <p>
-        The Service is offered with a 14-day free trial, after which it costs ₹249 per month. Fees are billed each
-        cycle until you cancel. Cancellation and refund terms are described in our Cancellation &amp; Refund
-        Policy.
+        The Service is free to use. There are no subscriptions or charges.
       </p>
 
       <h2>Acceptable use</h2>

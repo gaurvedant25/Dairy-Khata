@@ -3,6 +3,7 @@ import Credentials from "next-auth/providers/credentials";
 import bcrypt from "bcryptjs";
 import { prisma } from "@/lib/prisma";
 import { authConfig } from "@/lib/auth.config";
+import { createDemoUser } from "@/lib/demo";
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
   ...authConfig,
@@ -28,6 +29,21 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         if (!valid) return null;
 
         return { id: user.id, name: user.name };
+      },
+    }),
+    // "See it in action": signs the visitor into a fresh, pre-filled demo account.
+    Credentials({
+      id: "demo",
+      name: "Demo",
+      credentials: {},
+      authorize: async () => {
+        try {
+          const user = await createDemoUser();
+          return { id: user.id, name: user.name };
+        } catch (e) {
+          console.error("[demo] could not create demo account", e);
+          throw e;
+        }
       },
     }),
   ],

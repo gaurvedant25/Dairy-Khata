@@ -9,7 +9,6 @@ import { LanguageSwitcher } from "@/components/LanguageSwitcher";
 import { ThemeSwitcher } from "@/components/ThemeSwitcher";
 import { InstallAppBox } from "@/components/InstallAppBox";
 import { getTheme } from "@/lib/theme";
-import Link from "next/link";
 
 export default async function SettingsPage() {
   const session = await auth();
@@ -97,20 +96,6 @@ export default async function SettingsPage() {
         />
       </div>
 
-      {/* Subscription — brown */}
-      <Link
-        href="/subscription"
-        className="flex items-center justify-between gap-3 rounded-[28px] p-5 text-white transition active:scale-[0.99]"
-        style={{ background: "var(--color-accent)" }}
-      >
-        <div>
-          <h2 className="text-[14.5px] font-semibold">{t("set.subscription")}</h2>
-          <p className="mt-0.5 text-xs" style={{ color: "var(--color-accent-100)" }}>
-            {t("set.subManage")}
-          </p>
-        </div>
-        <span className="text-xl">›</span>
-      </Link>
     </div>
   );
 }

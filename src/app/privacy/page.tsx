@@ -18,9 +18,8 @@ export default function PrivacyPage() {
 
       <h2>How we use it</h2>
       <p>
-        Solely to provide the service — storing and displaying your ledger, calculating dues, and managing your
-        subscription. Payment processing is handled by our payment provider; we do not store your card or bank
-        details.
+        Solely to provide the service — storing and displaying your ledger, and calculating dues. We do not
+        collect any card or bank details.
       </p>
 
       <h2>Data storage</h2>

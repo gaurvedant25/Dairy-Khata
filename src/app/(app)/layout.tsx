@@ -1,11 +1,39 @@
-import { redirect } from "next/navigation";
-import Link from "next/link";
 import { auth } from "@/lib/auth";
 import { getLang } from "@/lib/lang";
-import { getSubscription } from "@/lib/subscription";
 import { NavLinks } from "@/components/NavLinks";
 import { SignOutButton } from "@/components/SignOutButton";
 import { PageTransition } from "@/components/PageTransition";
+import { prisma } from "@/lib/prisma";
+import { isDemoUsername } from "@/lib/demo";
+
+// Pinned to the top of every screen while a visitor explores the demo. Plain
+// <a> links (not <Link>) so the exit route is never prefetched.
+function DemoBanner() {
+  return (
+    <div
+      className="sticky top-0 z-40 flex flex-wrap items-center gap-x-3 gap-y-2 px-4 py-2.5 text-[13.5px]"
+      style={{ background: "var(--color-peach-bg)", color: "var(--color-peach-fg)" }}
+    >
+      <a href="/demo/exit" className="inline-flex items-center gap-1 font-semibold hover:underline">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.75" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+          <path d="M19 12H5" />
+          <path d="m11 18-6-6 6-6" />
+        </svg>
+        Back
+      </a>
+      <span className="min-w-0 flex-1">
+        <b>Demo mode</b> · sample data from the last 2 months
+      </span>
+      <a
+        href="/demo/exit?to=signup"
+        className="rounded-full px-4 py-1.5 font-bold"
+        style={{ background: "var(--color-accent-500)", color: "#fff" }}
+      >
+        Create my account
+      </a>
+    </div>
+  );
+}
 
 function Wordmark() {
   return (
@@ -24,11 +52,15 @@ export default async function AppLayout({ children }: { children: React.ReactNod
   const session = await auth();
   const lang = await getLang();
 
-  // Gate the app behind the trial / subscription.
-  const sub = await getSubscription(session!.user.id);
-  if (!sub.hasAccess) redirect("/billing");
+  const account = await prisma.user.findUnique({
+    where: { id: session!.user.id },
+    select: { username: true },
+  });
+  const isDemo = isDemoUsername(account?.username);
 
   return (
+    <>
+    {isDemo && <DemoBanner />}
     <div className="relative flex min-h-screen flex-col md:flex-row">
       <aside
         className="hidden w-60 shrink-0 border-r p-4 md:flex md:flex-col"
@@ -60,34 +92,6 @@ export default async function AppLayout({ children }: { children: React.ReactNod
           </div>
         </header>
 
-        {sub.status === "trialing" && (
-          <Link
-            href="/billing"
-            className="relative mx-4 mt-1.5 flex items-center justify-center gap-2.5 rounded-full px-4 py-2.5 text-[13.5px] font-medium"
-            style={{ background: "var(--color-peach-bg)", color: "var(--color-peach-fg)" }}
-          >
-            <span>
-              {sub.daysLeft} {sub.daysLeft === 1 ? "day" : "days"} left in your free trial
-            </span>
-            <span className="inline-flex items-center gap-1 font-bold">
-              Subscribe
-              <svg
-                width="14"
-                height="14"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2.75"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                aria-hidden
-              >
-                <path d="M5 12h14" />
-                <path d="m13 6 6 6-6 6" />
-              </svg>
-            </span>
-          </Link>
-        )}
 
         <div className="relative mx-auto max-w-5xl px-4 py-4 md:py-8">
           <PageTransition>{children}</PageTransition>
@@ -105,5 +109,6 @@ export default async function AppLayout({ children }: { children: React.ReactNod
         <NavLinks orientation="horizontal" lang={lang} />
       </nav>
     </div>
+    </>
   );
 }

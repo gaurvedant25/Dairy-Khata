@@ -8,7 +8,9 @@ export const signupSchema = z.object({
     .toLowerCase()
     .min(3, "Username must be at least 3 characters")
     .max(30, "Username is too long")
-    .regex(/^[a-z0-9._-]+$/, "Use only letters, numbers, and . _ -"),
+    .regex(/^[a-z0-9._-]+$/, "Use only letters, numbers, and . _ -")
+    // Reserved for throwaway demo accounts (see lib/demo.ts).
+    .refine((u) => !u.startsWith("demo-"), "Usernames can't start with \"demo-\""),
   password: z.string().min(6, "Password must be at least 6 characters").max(100),
 });
 

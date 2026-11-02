@@ -9,12 +9,10 @@ const PUBLIC_PREFIXES = [
   "/login",
   "/signup",
   "/api/signup",
-  "/api/razorpay/webhook",
   "/terms",
   "/privacy",
-  "/refund",
   "/contact",
-  "/pricing",
+  "/demo",
 ];
 // Auth pages we bounce logged-in users away from.
 const AUTH_ONLY = ["/login", "/signup"];

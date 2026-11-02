@@ -138,8 +138,6 @@ const en: Dict = {
   "set.installIos": "On iPhone: tap the Share button in Safari, then “Add to Home Screen”.",
   "set.installed": "App is installed. ✓",
   "set.installBtn": "Install app",
-  "set.subscription": "Your subscription",
-  "set.subManage": "View your plan, billing and cancellation",
 
   // home (mobile redesign)
   "home.greeting": "Namaste, {name}",
@@ -305,8 +303,6 @@ const hi: Dict = {
   "set.installIos": "आईफ़ोन पर: Safari में Share बटन दबाएँ, फिर “Add to Home Screen” चुनें।",
   "set.installed": "ऐप इंस्टॉल हो चुका है। ✓",
   "set.installBtn": "ऐप इंस्टॉल करें",
-  "set.subscription": "आपकी सदस्यता",
-  "set.subManage": "अपना प्लान, बिलिंग और रद्दीकरण देखें",
 
   "home.greeting": "नमस्ते, {name}",
   "home.todaySales": "आज की बिक्री",

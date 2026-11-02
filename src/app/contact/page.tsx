@@ -5,7 +5,7 @@ export const metadata = { title: "Contact · Dairy Ledger" };
 export default function ContactPage() {
   return (
     <LegalPage title="Contact Us">
-      <p>Questions, help, or subscription support? Reach us at:</p>
+      <p>Questions or need help? Reach us at:</p>
       <p>
         <strong>Email:</strong> gaurvedant479@gmail.com
         <br />
